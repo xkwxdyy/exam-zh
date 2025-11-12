@@ -599,6 +599,6 @@
 
 - 在 Gitee 发布。
 
-[Unreleased]: https://gitee.com/zepinglee/exam-zh/compare/v0.1.0...HEAD
-[v0.1.0]: https://gitee.com/zepinglee/exam-zh/releases/v0.1.0
-[v0.1.1]: https://gitee.com/zepinglee/exam-zh/releases/v0.1.1
+[Unreleased]: https://github.com/xkwxdyy/exam-zh/compare/v0.1.0...HEAD
+[v0.1.0]: https://github.com/xkwxdyy/exam-zh/releases/v0.1.0
+[v0.1.1]: https://github.com/xkwxdyy/exam-zh/releases/v0.1.1

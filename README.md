@@ -2,7 +2,8 @@
 > `exam-zh` 作为开源项目开发至今，基础功能算是完善了，且没有严重的 bug，而开发者精力有限，决定于 2024 年 04 月 26 日 开始无限期停止维护 `exam-zh`。未来可能会继续维护，但不保证时间，但也可能不再维护了。
 > 
 > Gitee 的项目仓库不会关闭，也欢迎有能力的开发者继续维护。
-> Gitee：https://gitee.com/xkwxdyy/exam-zh
+> GitHub：https://github.com/xkwxdyy/exam-zh
+> Gitee（国内镜像）：https://gitee.com/xkwxdyy/exam-zh
 > 
 > 感谢使用过此模板的用户的支持。
 
@@ -23,14 +24,22 @@ In exam-zh, you can
 - QQ group: 652500180
 
 
-Repository: https://gitee.com/xkwxdyy/exam-zh
+Repository:
+- GitHub: https://github.com/xkwxdyy/exam-zh
+- Gitee (Mirror): https://gitee.com/xkwxdyy/exam-zh
+
 Author: Zeping Lee
 Maintainer: Kangwei Xia, Lijun Guo
-Issues and pull requests are welcome: [issues]( https://gitee.com/xkwxdyy/exam-zh/issues) and [pulls](https://gitee.com/xkwxdyy/exam-zh/pulls)
+
+Issues and pull requests are welcome:
+- GitHub: https://github.com/xkwxdyy/exam-zh/issues | https://github.com/xkwxdyy/exam-zh/pulls
+- Gitee: https://gitee.com/xkwxdyy/exam-zh/issues | https://gitee.com/xkwxdyy/exam-zh/pulls
 
 # exam-zh：中国试卷 LaTeX 模板
 
-- 项目主页：<https://gitee.com/xkwxdyy/exam-zh>
+- 项目主页：
+  - GitHub: https://github.com/xkwxdyy/exam-zh
+  - Gitee（国内镜像）: https://gitee.com/xkwxdyy/exam-zh
 - 作者：Zeping Lee
 - 维护者：Kangwei Xia, Lijun Guo
 - 授权：[LaTeX Project Public License 1.3c](https://www.latex-project.org/lppl.txt)
@@ -44,7 +53,9 @@ Issues and pull requests are welcome: [issues]( https://gitee.com/xkwxdyy/exam-z
 3. 通过用户接口可以方便更改密封线样式；
 4. 在 Windows, macOS 和 Linux 跨平台编译。
 
-使用前请仔细阅读 [发行版](https://gitee.com/xkwxdyy/exam-zh/releases) 的用户手册 `exam-zh-doc.pdf`。
+使用前请仔细阅读用户手册 `exam-zh-doc.pdf`，可从以下发行版下载：
+- GitHub Releases: https://github.com/xkwxdyy/exam-zh/releases
+- Gitee 发行版: https://gitee.com/xkwxdyy/exam-zh/releases
 
 ## 示例（simple example）
 
@@ -91,7 +102,9 @@ exam-zh 提供**两份文档**，请根据需求选择：
   - 常用功能教程（选择题、填空题、解答题等）
   - 完整示例代码（可直接复制使用）
   - 常见问题 FAQ（覆盖80%的使用问题）
-- **下载**：见 [发行版](https://gitee.com/xkwxdyy/exam-zh/releases)
+- **下载**：
+  - GitHub Releases: https://github.com/xkwxdyy/exam-zh/releases
+  - Gitee 发行版: https://gitee.com/xkwxdyy/exam-zh/releases
 
 ### 📚 完整文档（API参考手册）
 - **文件名**：`exam-zh-doc.pdf`
@@ -101,7 +114,9 @@ exam-zh 提供**两份文档**，请根据需求选择：
   - 完整的 API 参考
   - 所有功能详细说明
   - 高级用法和定制选项
-- **下载**：见 [发行版](https://gitee.com/xkwxdyy/exam-zh/releases)
+- **下载**：
+  - GitHub Releases: https://github.com/xkwxdyy/exam-zh/releases
+  - Gitee 发行版: https://gitee.com/xkwxdyy/exam-zh/releases
 
 ### 📝 学习路径建议
 1. **完全新手**：先看《入门文档》→ 尝试 `examples-basic/` 中的示例 → 遇到问题查《完整文档》
