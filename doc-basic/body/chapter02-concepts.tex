@@ -19,7 +19,7 @@
 \textbf{示例：}
 \begin{latexcode}
   \title{我的标题}           % 设置标题
-  \fillin[答案]{默认文本}    % 有可选参数的命令
+  \fillin[答案]              % 有可选参数的命令
   \maketitle                 % 无参数的命令
 \end{latexcode}
 
@@ -67,17 +67,17 @@
 以下字符在 \LaTeX{} 中有特殊含义：
 
 \begin{center}
-\begin{tabular}{ll}
-  \textbf{字符} & \textbf{用途} \\
+\begin{tabular}{lll}
+  \textbf{字符} & \textbf{用途} & \textbf{如何输入该字符} \\
   \hline
-  |\{| 和 |\}| & 参数分组 \\
-  |[| 和 |]| & 可选参数 \\
-  |\$| & 数学公式标记 \\
-  |\%| & 注释标记 \\
-  |\&| & 表格对齐符 \\
-  |\_| & 下标符号 \\
-  |\textasciicircum| & 上标符号 \\
-  |\textbackslash| & 命令开始符 \\
+  |\{| 和 |\}| & 参数分组 & |\{| 和 |\}| \\
+  |[| 和 |]| & 可选参数 & |[| 和 |]|（直接输入） \\
+  |\$| & 数学公式标记 & |\$| \\
+  |\%| & 注释标记 & |\%| \\
+  |\&| & 表格对齐符 & |\&| \\
+  |\_| & 下标符号 & |\_| 或 |\textunderscore| \\
+  |\textasciicircum| & 上标符号 & |\textasciicircum| \\
+  |\textbackslash| & 命令开始符 & |\textbackslash| \\
 \end{tabular}
 \end{center}
 
@@ -86,8 +86,17 @@
   % 需要显示这些特殊字符时，前面加反斜杠
   价格是 \$100        % 显示 $100
   50\% 的概率         % 显示 50%
-  下划线：\_          % 显示 _
+  变量 a\_1           % 显示 a_1
+  集合 \{1, 2, 3\}    % 显示 {1, 2, 3}
 \end{latexcode}
+
+\begin{tcolorbox}[colback=yellow!10!white, colframe=orange!75!black, title=\textbf{易错点提示}]
+\textbf{注意：}方括号 |[| |]| 通常不需要转义，可以直接输入。但在 |\fillin| 命令中，由于方括号用于标记可选参数，如果答案本身包含方括号，需要用花括号保护：
+
+|\fillin[{$[2,3)$}]|  （正确）
+
+|\fillin[[2,3)]|      （错误，会解析失败）
+\end{tcolorbox}
 
 
 \subsection{exam-zh 核心概念}
@@ -192,8 +201,10 @@ exam-zh 的一个核心功能是控制答案显示/隐藏：
 
 \textbf{相关键值：}
 \begin{itemize}
-  \item |question/show-answer|：控制填空题答案
-  \item |paren/show-paren|：控制选择题答案括号
+  \item |question/show-answer|：同时控制选择题和填空题答案
+  \item |paren/show-answer|：只控制选择题括号内的答案
+  \item |paren/show-paren|：控制选择题括号是否出现
+  \item |fillin/show-answer|：只控制填空题答案
   \item |solution/show-solution|：控制解答题答案
 \end{itemize}
 
@@ -204,7 +215,6 @@ exam-zh 的一个核心功能是控制答案显示/隐藏：
 
   % 教师版（显示所有答案）
   \examsetup{
-    paren/show-paren = true,
     question/show-answer = true,
     solution/show-solution = show-stay
   }

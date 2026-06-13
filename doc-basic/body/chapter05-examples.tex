@@ -7,21 +7,56 @@
 \subsection{示例文件说明}
 
 \begin{description}
-  \item[\file{00-minimal.tex}] 最小示例（10行代码）
-  \item[\file{01-first-exam.tex}] 第一份完整试卷
-  \item[\file{02-math-basic.tex}] 数学试卷完整示例
+  \item[\file{00-minimal.tex}] 最小示例（10行代码创建试卷）
+  \item[\file{01-first-exam.tex}] 第一份完整试卷（包含选择题、填空题、解答题）
+  \item[\file{02-math-basic.tex}] 高中数学期末考试（带草稿纸）
+  \item[\file{03-real-exam-scenario.tex}] 真实考试场景（带密封线、完整答案、评分标准）
 \end{description}
+
+\begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black, title=\textbf{如何使用这些示例}]
+\textbf{方法一：直接编译}
+\begin{enumerate}
+  \item 进入 \file{examples-basic/} 目录
+  \item 选择一个示例文件，如 \file{01-first-exam.tex}
+  \item 使用 XeLaTeX 编译：\texttt{xelatex 01-first-exam.tex}
+  \item 查看生成的 PDF 文件
+\end{enumerate}
+
+\textbf{方法二：复制修改}
+\begin{enumerate}
+  \item 复制示例文件到你的工作目录
+  \item 修改标题、科目、题目内容
+  \item 注释或取消注释 |\examsetup| 切换学生版/教师版
+  \item 编译生成你自己的试卷
+\end{enumerate}
+
+\textbf{推荐：}从 \file{01-first-exam.tex} 开始，这是最适合新手的模板。
+\end{tcolorbox}
+
+\subsection{示例对比}
+
+\begin{center}
+\begin{tabular}{lp{5cm}p{5cm}}
+\hline
+\textbf{示例} & \textbf{特点} & \textbf{适用场景} \\
+\hline
+00-minimal & 最简代码，无答案控制 & 快速测试、学习基础语法 \\
+01-first-exam & 完整结构，有答案控制 & 日常测验、课堂小考 \\
+02-math-basic & 带草稿纸，题目较多 & 期中/期末考试 \\
+03-real-exam & 带密封线、评分标准 & 正式考试、月考 \\
+\hline
+\end{tabular}
+\end{center}
 
 \subsection{数学试卷示例}
 
-完整代码见 \file{examples-basic/02-math-basic.tex}，这里展示主要结构：
+完整代码见 \file{examples-basic/01-first-exam.tex}，这里展示主要结构：
 
 \begin{latexcode}[deletetexcs={\documentclass},morekeywords={\documentclass}]
   \documentclass{exam-zh}
 
   % 教师版配置（注释掉生成学生版）
   % \examsetup{
-  %   paren/show-paren = true,
   %   question/show-answer = true,
   %   solution/show-solution = show-stay
   % }
@@ -33,22 +68,145 @@
   \subject{数学}
   \maketitle
 
-  \information{姓名\underline{\hspace{6em}}, ...}
+  \information{
+    姓名\underline{\hspace{6em}},
+    班级\underline{\hspace{6em}},
+    座号\underline{\hspace{4em}}
+  }
 
   \begin{notice}
-    \item 本试卷共3大题，满分100分。
-    \item 考试时间120分钟。
+    \item 本试卷共3大题，满分100分，考试时间90分钟。
+    \item 请用黑色签字笔在答题卡上作答。
   \end{notice}
 
-  % 一、选择题（10道）
-  \section{选择题（每题4分，共40分）}
+  % 一、选择题
+  \section{选择题（每题5分，共20分）}
   \begin{question}
-    ...
+    已知集合 $A = \{1, 2, 3\}$，$B = \{2, 3, 4\}$，
+    则 $A \cap B = $ \paren[B]
+    \begin{choices}
+      \item $\{1\}$
+      \item $\{2, 3\}$   % 正确答案
+      \item $\{1, 2, 3, 4\}$
+      \item $\varnothing$
+    \end{choices}
   \end{question}
 
-  % 二、填空题（5道）
-  \section{填空题（每题4分，共20分）}
+  % 二、填空题
+  \section{填空题（每题5分，共20分）}
+  \examsetup{question/index = 0}  % 重置题号
+
+  \begin{question}
+    若 $f(x) = 3x - 2$，则 $f(2) = $ \fillin[4]。
+  \end{question}
+
+  % 三、解答题
+  \section{解答题（共60分）}
   \examsetup{question/index = 0}
+
+  \begin{problem}[points = 15]
+    已知函数 $f(x) = x^2 - 4x + 3$。
+    \begin{enumerate}
+      \item 求 $f(x)$ 的对称轴；
+      \item 求 $f(x)$ 的最小值。
+    \end{enumerate}
+
+    \begin{solution}
+      \begin{enumerate}
+        \item 对称轴为 $x = 2$。\score{7}
+        \item 最小值为 $-1$。\score{8}
+      \end{enumerate}
+    \end{solution}
+  \end{problem}
+
+  \end{document}
+\end{latexcode}
+
+\subsection{真实考试场景示例}
+
+完整代码见 \file{examples-basic/03-real-exam-scenario.tex}，展示了真实考试的完整要素：
+
+\textbf{特色功能：}
+\begin{enumerate}
+  \item \textbf{密封线：}使用 |\secret| 命令生成左侧密封线
+  \item \textbf{详细注意事项：}符合正式考试要求的考生须知
+  \item \textbf{完整评分标准：}每个给分点都用 |\score{分值}| 标记
+  \item \textbf{草稿纸：}使用 |\draftpaper| 命令生成方格纸
+\end{enumerate}
+
+\textbf{代码片段：}
+
+\begin{latexcode}
+  % 密封线
+  \secret
+
+  % 试卷信息
+  \information{
+    姓名\underline{\hspace{6em}},
+    班级\underline{\hspace{6em}},
+    学号\underline{\hspace{6em}},
+    考场\underline{\hspace{4em}},
+    座号\underline{\hspace{3em}}
+  }
+
+  % 详细注意事项
+  \begin{notice}
+    \item 本试卷共 4 页，22 小题，满分 150 分。
+    \item 答卷前，考生务必将自己的姓名、学号填写在答题卡上。
+    \item 作答选择题时，选出答案后，用2B铅笔在答题卡上涂黑。
+    \item 非选择题必须用黑色字迹的钢笔或签字笔作答。
+  \end{notice}
+
+  % ... 题目内容 ...
+
+  % 草稿纸（在新页面）
+  \newpage
+  \section*{草稿纸}
+  \draftpaper
+\end{latexcode}
+
+\subsection{自定义你的试卷}
+
+基于这些示例，你可以轻松自定义：
+
+\begin{enumerate}
+  \item \textbf{修改标题和科目}
+    \begin{latexcode}
+      \title{你的考试名称}
+      \subject{你的科目}
+    \end{latexcode}
+
+  \item \textbf{调整题型分值}
+    \begin{latexcode}
+      \section{选择题（每题5分，共40分）}
+      % 或
+      \section{选择题（本题共8小题，每小题5分，共40分）}
+    \end{latexcode}
+
+  \item \textbf{添加或删除题目}
+
+    直接复制 |question|、|problem| 环境块，修改内容即可
+
+  \item \textbf{切换学生版/教师版}
+
+    注释或取消注释文档开头的 |\examsetup| 配置
+\end{enumerate}
+
+\subsection{更多示例}
+
+\textbf{官方仓库：}
+\begin{itemize}
+  \item GitHub: \url{https://github.com/xkwxdyy/exam-zh}
+  \item 查看 \file{examples-basic/} 目录获取最新示例
+  \item 查看 \file{example-single.tex} 获取高考真题示例
+\end{itemize}
+
+\textbf{社区贡献：}
+\begin{itemize}
+  \item 加入 QQ 交流群：652500180
+  \item 分享你的试卷模板
+  \item 获取更多使用技巧
+\end{itemize}
   \begin{question}
     ...
   \end{question}

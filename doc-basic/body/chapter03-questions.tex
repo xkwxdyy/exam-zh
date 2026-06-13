@@ -232,6 +232,26 @@
   \item 或使用简单的文本列举：A. ... B. ... C. ... D. ...
 \end{itemize}
 
+\begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black, title=\textbf{推荐做法}]
+当解答题包含选择题小问时，采用以下结构：
+
+\begin{latexcode}
+\begin{problem}
+  已知函数 $f(x) = x^2 - 2x + 1$。
+  \begin{enumerate}
+    \item 求 $f(x)$ 的对称轴；
+    \item $f(x)$ 的图像与 $x$ 轴的交点个数是\paren[A]
+  \end{enumerate}
+
+  % 选项单独放在 enumerate 外面
+  （第2问选项）
+  \begin{choices}
+    \item 0个  \item 1个  \item 2个  \item 3个
+  \end{choices}
+\end{problem}
+\end{latexcode}
+\end{tcolorbox}
+
 \textbf{限制 2：与 wrapstuff 图文绕排冲突}
 
 \begin{latexcode}
@@ -326,8 +346,11 @@
   % 错误：方括号会被解析为可选参数
   区间为 \fillin[[2,3)]
 
-  % 正确：用花括号包裹
+  % 正确：用花括号包裹整个答案
   区间为 \fillin[{$[2,3)$}]
+
+  % 正确：不配对的方括号也需要花括号保护
+  区间为 \fillin[{$(−\infty, 1]$}]
 \end{latexcode}
 
 \textbf{其他特殊符号：}
@@ -341,9 +364,20 @@
   美元符号 |\$| & |\fillin[$100]| & |\fillin[\$100]| \\
   和号 |&| & |\fillin[A&B]| & |\fillin[A\&B]| \\
   下划线 |_| & |\fillin[a_1]| & |\fillin[a\_1]| 或 |\fillin[$a_1$]| \\
+  花括号 |\{| |\}| & |\fillin[{1,2}]| & |\fillin[\{1,2\}]| 或 |\fillin[{$\{1,2\}$}]| \\
   \hline
 \end{tabular}
 \end{center}
+
+\begin{tcolorbox}[colback=yellow!10!white, colframe=orange!75!black, title=\textbf{易错点提示}]
+\textbf{规则总结：}
+\begin{enumerate}
+  \item 如果答案包含方括号 |[| |]|，必须用花括号 |\{| |\}| 包裹整个答案
+  \item 如果答案包含数学符号，建议用 |$...$| 包裹（如 |\fillin[$[2,3)$]|）
+  \item LaTeX 特殊字符（|% $ & _ { } # ^ ~|）需要转义（加反斜杠 |\|）
+  \item 不确定时，用花括号保护总是安全的：|\fillin[{答案}]|
+\end{enumerate}
+\end{tcolorbox}
 
 \textbf{数学符号答案：}
 
@@ -594,12 +628,23 @@
 
 下面是一份包含多种题型的完整试卷示例：
 
+\begin{tcolorbox}[colback=green!5!white, colframe=green!75!black, title=\textbf{完整示例说明}]
+此示例展示了一份标准试卷的完整结构，包含：
+\begin{itemize}
+  \item 试卷抬头（标题、科目、学生信息、注意事项）
+  \item 三种题型（选择题、填空题、解答题）
+  \item 题号重置和分值设置
+  \item 答案显示/隐藏的切换方式
+\end{itemize}
+
+\textbf{提示：}可复制此代码作为模板，也可参考 \file{examples-basic/01-first-exam.tex} 获取更实用的示例。
+\end{tcolorbox}
+
 \begin{latexcode}[deletetexcs={\documentclass},morekeywords={\documentclass}]
   \documentclass{exam-zh}
 
   % 显示答案（教师版）
   % \examsetup{
-  %  paren/show-paren = true,
   %  question/show-answer = true,
   %  solution/show-solution = show-stay
   % }

@@ -164,19 +164,17 @@ exam-zh 提供**两份文档**，请根据需求选择：
 选择题和填空题使用 `question` 环境，解答题使用 `problem` 环境。两者的内容对齐方式不同。
 
 `question` 和 `problem` 环境还接受一个可选参数，其中可以使用以下 key—value 进行设置。
-- `answer-color` 答案的颜色（默认：`black`）。
 - `index` 题号。
 - `points` 题目的分数（默认：`0`）。
-- `show-paren` 是否显示选择题的括号（默认 `false`）。
 - `show-points` 是否显示题目的分数（默认 `auto`：选择题和填空题默认 `false`，解答题默认 `true`）。
-- `show-answer` 是否显示答案（默认：`false`）。
-- `top-sep` 题目上方垂直方向的空白距离（默认：`.5em plus .5em minus .2em`）。
-- `bottom-sep` 题目下方垂直方向的空白距离，与 `top-sep` 不叠加（默认：`.5em plus .5em minus .2em`）。
+- `show-answer` 是否同时显示 `\paren` 和 `\fillin` 的答案（默认：`false`）。
+- `top-sep` 题目上方垂直方向的空白距离（默认：`.25em plus .25em minus .1em`）。
+- `bottom-sep` 题目下方垂直方向的空白距离，与 `top-sep` 不叠加（默认：`.25em plus .25em minus .1em`）。
 
-其中 `index`、`show-points`、`show-answer`、`top-sep` 和 `bottom-sep` 可以使用 `\examsetup` 命令的 `choices` 层级进行全局设置。比如设置同一层级的多个选项：
+其中 `index`、`show-points`、`show-answer`、`top-sep` 和 `bottom-sep` 可以使用 `\examsetup` 命令的 `question` 层级进行全局设置。比如设置同一层级的多个选项：
 ```latex
 \examsetup{
-  choices = {
+  question = {
     show-points = true,
     show-answer = true,
   },
@@ -206,7 +204,7 @@ exam-zh 提供**两份文档**，请根据需求选择：
   }
 }
 ```
-也可以局部更改单个 `\fillin` 的样式：`\fill[type = paren][foo]`（有答案）或`\fill[type = paren][]`（无答案）
+也可以局部更改单个 `\fillin` 的样式：`\fillin[type = paren][foo]`（有答案）或 `\fillin[type = paren][]`（无答案）。
 
 
 ### 选项环境 `choices`
@@ -236,7 +234,7 @@ exam-zh 提供**两份文档**，请根据需求选择：
 
 `exam-zh-choices` 模块还提供了 `\circlednumber` 命令调用中文字体生成带圈数字，该命令既可以接受 LaTeX2e 计数器的名字（如 `section`）作为参数，也可以接受数值表达式，比如 `\circlednumber{7}`，但仅限 0～50 的整数。而且有的字体可能没有提供 10 以上的字形，建议只对 10 以内的值使用。
 
-如果用户需要使用其他形式的数字作为 `choices` 的标签，需要使用 `\AddChoicesCounter` 命令将其添加进 `label` 选项的识别范围内（类似 `enumitem` 的 `\AddEnumerateCounter`）。它的格式是 `\AddChoicesCounter{⟨LaTeX command⟩}{⟨internal command⟩}{⟨widest label⟩}`，其中 `⟨LaTeX command⟩` 是在 `label` 选项中的形式，`⟨internal command⟩` 是内部的实现，`⟨widest label⟩` 是最宽的标签。比如带圈数字的添加方法：`\AddChoicesCounter{\circlednumber}{\__examzh_choices_circled_number:n}{1}`。
+如果用户需要使用其他形式的数字作为 `choices` 的标签，需要使用 `\AddChoicesCounter` 命令将其添加进 `label` 选项的识别范围内（类似 `enumitem` 的 `\AddEnumerateCounter`）。它的格式是 `\AddChoicesCounter{⟨LaTeX command⟩}{⟨internal command⟩}`，其中 `⟨LaTeX command⟩` 是在 `label` 选项中的形式，`⟨internal command⟩` 是内部的实现。比如带圈数字的添加方法：`\AddChoicesCounter{\circlednumber}{\__examzh_choices_circled_number:n}`。
 
 
 ### 解答环境 `solution` 和分数命令 `\score`

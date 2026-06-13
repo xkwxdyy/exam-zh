@@ -1,0 +1,189 @@
+% !TeX root = ../exam-zh-doc-basic.tex
+
+\section*{快速参考卡片}
+\addcontentsline{toc}{section}{快速参考卡片}
+
+本页提供最常用的 \cls{exam-zh} 命令速查，方便快速查阅。
+
+\subsection*{试卷基本结构}
+
+\begin{latexcode}[deletetexcs={\documentclass},morekeywords={\documentclass}]
+\documentclass{exam-zh}
+
+% 配置（可选）
+\examsetup{
+  question/show-answer = true,  % 显示答案
+  solution/show-solution = show-stay
+}
+
+\begin{document}
+
+\title{试卷标题}
+\subject{科目}
+\maketitle
+
+\information{
+  姓名\underline{\hspace{6em}},
+  班级\underline{\hspace{6em}}
+}
+
+\begin{notice}
+  \item 注意事项1
+  \item 注意事项2
+\end{notice}
+
+% ... 题目内容 ...
+
+\end{document}
+\end{latexcode}
+
+\subsection*{常用命令速查表}
+
+\begin{center}
+\begin{tabular}{lp{8cm}}
+\hline
+\textbf{命令} & \textbf{说明} \\
+\hline
+\multicolumn{2}{l}{\textbf{选择题}} \\
+|\begin{question}...\end{question}| & 创建题目 \\
+|\paren[A]| & 添加答案括号（A 是答案） \\
+|\begin{choices}...\end{choices}| & 创建选项列表 \\
+|\item| & 选项（自动标号 A, B, C, D...） \\
+\hline
+\multicolumn{2}{l}{\textbf{填空题}} \\
+|\fillin[答案]| & 创建填空（答案默认隐藏） \\
+|\fillin[width=4em][答案]| & 指定填空宽度 \\
+|\fillin[{$x^2+1$}]| & 答案包含特殊符号需用 \{\} 保护 \\
+\hline
+\multicolumn{2}{l}{\textbf{解答题}} \\
+|\begin{problem}[points=10]| & 创建解答题（10 分） \\
+|\begin{solution}...\end{solution}| & 解答过程 \\
+|\score{5}| & 标记给分点（5 分） \\
+\hline
+\multicolumn{2}{l}{\textbf{题号控制}} \\
+|\examsetup{question/index = 0}| & 重置题号为 0 \\
+|\examsetup{question/index = 10}| & 下一题从 11 开始 \\
+\hline
+\multicolumn{2}{l}{\textbf{答案控制}} \\
+|question/show-answer = true| & 显示选择题和填空题答案 \\
+|solution/show-solution = show-stay| & 原位显示解答 \\
+|solution/show-solution = hide| & 隐藏解答 \\
+\hline
+\multicolumn{2}{l}{\textbf{选项排版}} \\
+|choices/columns = 2| & 强制选项排成 2 列 \\
+|choices/columns = 0| & 自动选择列数（默认） \\
+|\begin{choices}[columns=4]| & 单独设置此题排 4 列 \\
+\hline
+\multicolumn{2}{l}{\textbf{数学符号}} \\
+|\uppi| & 正体圆周率 π \\
+|\eu| & 正体自然对数底 e \\
+|\iu| & 正体虚数单位 i \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{快速切换学生版/教师版}
+
+\textbf{方法一：注释法}
+
+\begin{latexcode}
+% 学生版：注释掉下面几行
+% \examsetup{
+%   question/show-answer = true,
+%   solution/show-solution = show-stay
+% }
+
+% 教师版：取消注释上面几行
+\examsetup{
+  question/show-answer = true,
+  solution/show-solution = show-stay
+}
+\end{latexcode}
+
+\textbf{方法二：条件编译}
+
+\begin{latexcode}
+% 在文档开头定义
+\newif\ifteacher
+\teachertrue   % 教师版
+% \teacherfalse  % 学生版
+
+\ifteacher
+  \examsetup{
+    question/show-answer = true,
+    solution/show-solution = show-stay
+  }
+\fi
+\end{latexcode}
+
+\subsection*{常见错误速查}
+
+\begin{center}
+\begin{tabular}{lp{7cm}}
+\hline
+\textbf{错误信息} & \textbf{原因与解决} \\
+\hline
+|Missing \$ inserted| & 数学符号未用 \$ 包裹，改为 |$x^2$| \\
+|Undefined control sequence| & 命令拼写错误或未加载宏包 \\
+|Missing \} inserted| & 花括号或环境未闭合 \\
+|File not found| & 文件路径错误或文件不存在 \\
+中文乱码 & 未使用 XeLaTeX 编译 \\
+选项错位 & choices 在深层嵌套或 wrapstuff 中 \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{进阶技巧}
+
+\textbf{1. 批量生成不同版本}
+
+创建 Makefile 或脚本，自动生成学生版和教师版：
+
+\begin{shellcode}
+# 学生版
+xelatex "\def\showAnswers{false}\input{exam.tex}"
+
+# 教师版
+xelatex "\def\showAnswers{true}\input{exam.tex}"
+\end{shellcode}
+
+\textbf{2. 特殊符号处理}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{符号} & \textbf{写法} \\
+\hline
+方括号 |[2,3)| & |\fillin[{$[2,3)$}]| \\
+百分号 50\% & |\fillin[50\%]| \\
+美元符号 \$100 & |\fillin[\$100]| \\
+和号 A\&B & |\fillin[A\&B]| \\
+下划线 |a_1| & |\fillin[$a_1$]| \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{3. 题目分值显示}
+
+\begin{latexcode}
+% 全局显示分值
+\examsetup{question/show-points = true}
+
+% 单题设置分值
+\begin{question}[points=5]
+  题目内容...
+\end{question}
+\end{latexcode}
+
+\vfill
+
+\begin{center}
+\textbf{更多帮助}
+
+完整文档：\file{exam-zh-doc.pdf} \quad
+示例代码：\file{examples-basic/} 目录
+
+GitHub: \url{https://github.com/xkwxdyy/exam-zh}
+
+Gitee: \url{https://gitee.com/xkwxdyy/exam-zh}
+\end{center}

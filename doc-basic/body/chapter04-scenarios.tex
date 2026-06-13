@@ -20,26 +20,67 @@
 
 \begin{latexcode}
   \examsetup{
-    paren/show-paren = true,            % 显示选择题答案
-    question/show-answer = true,        % 显示填空题答案
+    question/show-answer = true,        % 显示选择题和填空题答案
     solution/show-solution = show-stay, % 显示解答题答案
     question/show-points = true         % 显示分值（可选）
   }
 \end{latexcode}
 
-\textbf{快速切换技巧：}
+\begin{tcolorbox}[colback=green!5!white, colframe=green!75!black, title=\textbf{最佳实践：版本切换方法对比}]
+\textbf{方法一：注释法（推荐新手）}
 
-用注释快速切换：
+适合场景：偶尔切换版本，手动编译
 
 \begin{latexcode}
-  % 生成学生版：注释掉下面的代码
-  % 生成教师版：取消注释
-  % \examsetup{
-  %   paren/show-paren = true,
-  %   question/show-answer = true,
-  %   solution/show-solution = show-stay
-  % }
+% 生成学生版：注释掉下面的代码
+% 生成教师版：取消注释
+% \examsetup{
+%   question/show-answer = true,
+%   solution/show-solution = show-stay
+% }
 \end{latexcode}
+
+\textbf{方法二：条件编译（推荐进阶用户）}
+
+适合场景：频繁切换版本，或需要自动化编译
+
+\begin{latexcode}
+% 在文档开头定义开关
+\newif\ifteacher
+\teachertrue   % 教师版：改为 \teachertrue
+% \teacherfalse  % 学生版：改为 \teacherfalse
+
+\ifteacher
+  \examsetup{
+    question/show-answer = true,
+    solution/show-solution = show-stay
+  }
+\fi
+\end{latexcode}
+
+\textbf{方法三：命令行参数（推荐批量生成）}
+
+适合场景：自动化脚本，一次编译生成两个版本
+
+创建主文件 \file{exam-main.tex}：
+\begin{latexcode}
+\ifdefined\SHOWANSWER
+  \examsetup{
+    question/show-answer = true,
+    solution/show-solution = show-stay
+  }
+\fi
+\end{latexcode}
+
+命令行编译：
+\begin{shellcode}
+# 学生版
+xelatex exam-main.tex
+
+# 教师版
+xelatex "\def\SHOWANSWER{1}\input{exam-main.tex}"
+\end{shellcode}
+\end{tcolorbox}
 
 \subsubsection{解答显示位置}
 
@@ -412,8 +453,7 @@
 \begin{latexcode}
   \examsetup{
     % === 答案控制 ===
-    paren/show-paren = true,  % 显示选择题答案
-    question/show-answer = true,  % 显示填空题答案
+    question/show-answer = true,  % 显示选择题和填空题答案
     solution/show-solution = show-stay,  % 显示解答题答案
 
     % === 分值显示 ===

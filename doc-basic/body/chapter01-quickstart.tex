@@ -66,6 +66,30 @@
   \item 在 Overleaf 或 TeXPage 等在线平台使用时，需在文档开头添加 |\let\stop\empty|
 \end{itemize}
 
+\begin{tcolorbox}[colback=red!5!white, colframe=red!75!black, title=\textbf{常见编译错误速查}]
+\textbf{1. 错误：}|! LaTeX Error: File 'exam-zh.cls' not found|
+
+\textbf{原因：}未安装 exam-zh 或安装失败
+
+\textbf{解决：}运行 |tlmgr install exam-zh|
+
+\vspace{0.5em}
+
+\textbf{2. 错误：}中文显示为乱码或方框
+
+\textbf{原因：}使用了 pdflatex 而非 xelatex
+
+\textbf{解决：}切换编译器为 XeLaTeX
+
+\vspace{0.5em}
+
+\textbf{3. 错误：}|! Missing $ inserted|
+
+\textbf{原因：}数学符号未用 |$| 包裹
+
+\textbf{解决：}将 |x^2| 改为 |$x^2$|
+\end{tcolorbox}
+
 
 \subsection{5分钟创建第一份试卷}
 
@@ -135,7 +159,6 @@
 
   % 显示答案（教师版）
   \examsetup{
-    paren/show-paren = true,
     question/show-answer = true
   }
 
@@ -144,7 +167,7 @@
   \end{document}
 \end{latexcode}
 
-再次编译，你会发现答案显示出来了！
+再次编译，你会发现选择题和填空题答案显示出来了！
 
 \textbf{小技巧：}通过注释或取消注释 |\examsetup| 这几行，就能轻松切换学生版和教师版。
 

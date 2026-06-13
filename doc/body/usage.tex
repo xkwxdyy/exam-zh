@@ -380,7 +380,7 @@
   \begin{examzhsyntax}[emph={[2]\AddQuestionCounter}]
     \AddQuestionCounter(*\marg{LaTeX command}*)(*\marg{internal command}*)
   \end{examzhsyntax}
-  如果用户需要使用其它形式的数字作为 \env{question} 环境和 \env{problem} 的标签，需要使用 \tn{AddQuestionCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现，\meta{widest label} 是最宽的标签。比如带圈数字的添加方法：
+  如果用户需要使用其它形式的数字作为 \env{question} 环境和 \env{problem} 的标签，需要使用 \tn{AddQuestionCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现。比如带圈数字的添加方法：
   \begin{latexcode}[gobble=4]
     \AddQuestionCounter{\circlednumber}{\__examzh_question_circled_number:n}
   \end{latexcode}
@@ -420,7 +420,7 @@
   \begin{examzhsyntax}[emph={[2]\AddChoicesCounter}]
     \AddChoicesCounter(*\marg{LaTeX command}*)(*\marg{internal command}*)
   \end{examzhsyntax}
-  如果用户需要使用其它形式的数字作为 \env{choices} 环境的标签，需要使用 \tn{AddChoicesCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现，\meta{widest label} 是最宽的标签。比如带圈数字的添加方法：
+  如果用户需要使用其它形式的数字作为 \env{choices} 环境的标签，需要使用 \tn{AddChoicesCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现。比如带圈数字的添加方法：
   \begin{latexcode}[gobble=4]
     \AddChoicesCounter{\circlednumber}{\__examzh_choices_circled_number:n}
   \end{latexcode}
@@ -507,7 +507,7 @@
   \end{latexcode}
   即可。
 
-需要注意的是，如果 \tn{fillin} 的参数重含有不配对的中括号时会报错，如 |\fillin[$(−\infty, 1]$]|。这时需要使用大括号将内容保护起来：|\fillin[{$(−\infty, 1]$}]|。
+需要注意的是，如果 \tn{fillin} 的参数中含有不配对的中括号时会报错，如 |\fillin[$(−\infty, 1]$]|。这时需要使用大括号将内容保护起来：|\fillin[{$(−\infty, 1]$}]|。
 
 \begin{latexexample}{\tn{fillin} 和 \tn{fillin*} 的换行行为对比}
   \examsetup{fillin/no-answer-type=none}
@@ -539,7 +539,7 @@
   \begin{examzhsyntax}[emph={[1]\AddFillinCounter}]
     \AddFillinCounter(*\marg{LaTeX command}*)(*\marg{internal command}*)
   \end{examzhsyntax}
-  如果用户需要使用其它形式的数字作为 \kvopt{fillin/no-answer-type}{counter} 下 \opt{counter} 的标签，需要使用 \tn{AddFillinCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现，\meta{widest label} 是最宽的标签。比如带圈数字的添加方法：
+  如果用户需要使用其它形式的数字作为 \kvopt{fillin/no-answer-type}{counter} 下 \opt{counter} 的标签，需要使用 \tn{AddFillinCounter} 命令将其添加进 \opt{label} 选项的识别范围内（类似 \pkg{enumitem} 宏包的 \tn{AddEnumerateCounter} ）。其中 \meta{LaTeX command} 是在 \opt{label} 选项中的形式，\meta{internal command} 是内部的实现。比如带圈数字的添加方法：
   \begin{latexcode}[gobble=4]
     \AddFillinCounter{\circlednumber}{\__examzh_fillin_circled_number:n}
   \end{latexcode}
@@ -909,8 +909,7 @@
   ]{
     page/size=a3paper,
     solution/show-solution=show-stay,
-    paren/show-paren=true,
-    paren/show-answer=true
+    question/show-answer=true
   }
 \end{latexcode}
 
