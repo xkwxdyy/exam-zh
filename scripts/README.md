@@ -12,6 +12,8 @@
 | `build-ctan.sh` | CTAN 发布包 | 提交到 CTAN |
 | `build-release.sh` | GitHub Release 包 | GitHub 发布 |
 | `git-update.sh` | Git 工作流助手 | 快速提交和推送 |
+| `gitee-release.sh` | **Gitee Release 创建** | 使用 Gitee API 自动发布 |
+| `test-build.sh` | 测试构建流程 | 验证构建脚本 |
 | `build-common.sh` | 公共函数库 | 被其他脚本引用 |
 
 ### 使用方法
@@ -84,6 +86,37 @@ bash scripts/git-update.sh -f --amend
 # 显示帮助
 bash scripts/git-update.sh --help
 ```
+
+#### 5. Gitee Release 创建
+
+**前置要求**：配置 Gitee Personal Access Token
+
+```bash
+# 1. 获取 Token
+# 访问：https://gitee.com/profile/personal_access_tokens
+# 权限：projects（仓库读写）
+
+# 2. 设置环境变量
+export GITEE_TOKEN="your_token_here"
+
+# 3. 持久化配置（可选）
+echo 'export GITEE_TOKEN="your_token_here"' >> ~/.zshrc
+source ~/.zshrc
+
+# 4. 创建 Release
+bash scripts/gitee-release.sh v0.2.7 "Release v0.2.7" release-notes.md
+
+# 5. 创建预发布版本
+bash scripts/gitee-release.sh v0.2.8-beta "Beta v0.2.8" notes.md --prerelease
+```
+
+**依赖**：
+- `curl`：发送 HTTP 请求
+- `jq`：JSON 处理 (`brew install jq`)
+
+**注意**：
+- 通常由 `/examzh-release` Claude Code 技能自动调用
+- 如果未设置 `GITEE_TOKEN`，脚本会显示详细的设置说明
 
 ## 构建流程
 
