@@ -2,8 +2,6 @@ This is a generated file for the l3build validation system.
 Don't change this file in any respect.
 Completed box being shipped out [1]
 \vbox(633.0+0.0)x407.0
-.\hbox(0.0+0.0)x0.0
-..\special{pdfcolorstackinit 1 page direct (0 g 0 G)}
 .\glue 16.0
 .\vbox(617.0+0.0)x345.0, shifted 62.0
 ..\vbox(12.0+0.0)x345.0, glue set 12.0fil
@@ -12,204 +10,185 @@ Completed box being shipped out [1]
 ....\hbox(0.0+0.0)x345.0
 ..\glue 25.0
 ..\glue(\lineskip) 0.0
-..\vbox(550.0+0.0)x345.0, glue set 292.16823fil
+..\vbox(550.0+0.0)x345.0, glue set 277.7698fil
 ...\write-{}
-...\glue(\topskip) 1.60004
-...\hbox(8.39996+36.59839)x345.0
-....\hbox(8.39996+36.59839)x78.75
-.....\hbox(0.0+0.0)x0.0
-.....\kern 0.0
-.....\kern 0.0
-.....\hbox(8.39996+36.59839)x78.75
-......\kern 15.42
-......\hbox(8.39996+36.59839)x63.33
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+36.59839)x63.33
-........\hbox(0.0+0.0)x0.0
-........\kern 0.0
-........\kern 0.0
-........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
-.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
-..........\hbox(41.39832+0.0)x62.09747
-...........\hbox(41.39832+0.0)x62.09747
-............\rule(41.39832+0.0)x62.09747
-..........\rule(8.39996+3.60004)x0.0
-..........\penalty 10000
-..........\glue(\parfillskip) 0.0 plus 1.0fil
-..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -63.33
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 16.49918
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 A.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 68.33
-....\glue 10.0
-....\glue 0.0 plus 1.0 minus 1.0
-....\hbox(8.39996+36.59839)x78.75
-.....\hbox(0.0+0.0)x0.0
-.....\kern 0.0
-.....\kern 0.0
-.....\hbox(8.39996+36.59839)x78.75
-......\kern 15.42
-......\hbox(8.39996+36.59839)x63.33
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+36.59839)x63.33
-........\hbox(0.0+0.0)x0.0
-........\kern 0.0
-........\kern 0.0
-........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
-.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
-..........\hbox(41.39832+0.0)x62.09747
-...........\hbox(41.39832+0.0)x62.09747
-............\rule(41.39832+0.0)x62.09747
-..........\rule(8.39996+3.60004)x0.0
-..........\penalty 10000
-..........\glue(\parfillskip) 0.0 plus 1.0fil
-..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -63.33
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 16.49918
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(6.83+0.0)x0.0, glue set - 9.86fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 B.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 68.33
-....\glue 10.0
-....\glue 0.0 plus 1.0 minus 1.0
-....\hbox(8.39996+36.59839)x78.75
-.....\hbox(0.0+0.0)x0.0
-.....\kern 0.0
-.....\kern 0.0
-.....\hbox(8.39996+36.59839)x78.75
-......\kern 15.42
-......\hbox(8.39996+36.59839)x63.33
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+36.59839)x63.33
-........\hbox(0.0+0.0)x0.0
-........\kern 0.0
-........\kern 0.0
-........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
-.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
-..........\hbox(41.39832+0.0)x62.09747
-...........\hbox(41.39832+0.0)x62.09747
-............\rule(41.39832+0.0)x62.09747
-..........\rule(8.39996+3.60004)x0.0
-..........\penalty 10000
-..........\glue(\parfillskip) 0.0 plus 1.0fil
-..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -63.33
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 16.49918
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 C.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 68.33
-....\glue 10.0
-....\glue 0.0 plus 1.0 minus 1.0
-....\hbox(8.39996+36.59839)x78.75
-.....\hbox(0.0+0.0)x0.0
-.....\kern 0.0
-.....\kern 0.0
-.....\hbox(8.39996+36.59839)x78.75
-......\kern 15.42
-......\hbox(8.39996+36.59839)x63.33
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+36.59839)x63.33
-........\hbox(0.0+0.0)x0.0
-........\kern 0.0
-........\kern 0.0
-........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
-.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
-..........\hbox(41.39832+0.0)x62.09747
-...........\hbox(41.39832+0.0)x62.09747
-............\rule(41.39832+0.0)x62.09747
-..........\rule(8.39996+3.60004)x0.0
-..........\penalty 10000
-..........\glue(\parfillskip) 0.0 plus 1.0fil
-..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -63.33
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 16.49918
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 D.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 68.33
-....\penalty 10000
-....\glue(\parfillskip) 0.0 plus 1.0fil
-....\glue(\rightskip) 0.0
+...\glue(\topskip) 10.0
+...\rule(0.0+0.0)x*
 ...\penalty 10000
+...\glue 0.0
+...\glue 0.0
 ...\glue(\parskip) 0.0 plus 1.0
 ...\glue(\parskip) 0.0
 ...\glue(\lineskip) 1.0
-...\hbox(8.39996+98.70113)x345.0
-....\hbox(8.39996+98.70113)x167.5
+...\hbox(24.89914+20.09921)x345.0
+....\hbox(24.89914+20.09921)x78.75
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+98.70113)x167.5
+.....\hbox(24.89914+20.09921)x78.75
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
+.........\TU/lmr/m/n/10 A.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+98.70113)x152.08
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+98.70113)x152.08
+......\hbox(8.39996+36.59839)x63.33, shifted -16.49918
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+36.59839)x63.33
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
 ........\kern 0.0
-........\vbox(103.50105+3.60004)x152.08, shifted 95.10109
-.........\hbox(103.50105+3.60004)x152.08, glue set 14.0821fil
-..........\hbox(103.50105+0.0)x137.9979
-...........\hbox(103.50105+0.0)x137.9979
-............\rule(103.50105+0.0)x137.9979
+........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
+.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
+..........\hbox(41.39832+0.0)x62.09747
+...........\hbox(41.39832+0.0)x62.09747
+............\rule(41.39832+0.0)x62.09747
 ..........\rule(8.39996+3.60004)x0.0
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -152.08
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 47.55055
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 A.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 157.08
+.......\special{pdf:ec}
 ....\glue 10.0
 ....\glue 0.0 plus 1.0 minus 1.0
-....\hbox(8.39996+98.70113)x167.5
+....\hbox(24.89914+20.09921)x78.75
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+98.70113)x167.5
+.....\hbox(24.89914+20.09921)x78.75
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(6.83+0.0)x0.0, glue set - 9.86fil
+.........\TU/lmr/m/n/10 B.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+98.70113)x152.08
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+36.59839)x63.33, shifted -16.49918
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+36.59839)x63.33
+........\hbox(0.0+0.0)x0.0
+........\kern 0.0
+........\kern 0.0
+........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
+.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
+..........\hbox(41.39832+0.0)x62.09747
+...........\hbox(41.39832+0.0)x62.09747
+............\rule(41.39832+0.0)x62.09747
+..........\rule(8.39996+3.60004)x0.0
+..........\penalty 10000
+..........\glue(\parfillskip) 0.0 plus 1.0fil
+..........\glue(\rightskip) 0.0
+.......\special{pdf:ec}
+....\glue 10.0
+....\glue 0.0 plus 1.0 minus 1.0
+....\hbox(24.89914+20.09921)x78.75
+.....\hbox(0.0+0.0)x0.0
+.....\kern 0.0
+.....\kern 0.0
+.....\hbox(24.89914+20.09921)x78.75
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
+.........\TU/lmr/m/n/10 C.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
+......\kern 15.42
+......\hbox(8.39996+36.59839)x63.33, shifted -16.49918
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+36.59839)x63.33
+........\hbox(0.0+0.0)x0.0
+........\kern 0.0
+........\kern 0.0
+........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
+.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
+..........\hbox(41.39832+0.0)x62.09747
+...........\hbox(41.39832+0.0)x62.09747
+............\rule(41.39832+0.0)x62.09747
+..........\rule(8.39996+3.60004)x0.0
+..........\penalty 10000
+..........\glue(\parfillskip) 0.0 plus 1.0fil
+..........\glue(\rightskip) 0.0
+.......\special{pdf:ec}
+....\glue 10.0
+....\glue 0.0 plus 1.0 minus 1.0
+....\hbox(24.89914+20.09921)x78.75
+.....\hbox(0.0+0.0)x0.0
+.....\kern 0.0
+.....\kern 0.0
+.....\hbox(24.89914+20.09921)x78.75
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
+.........\TU/lmr/m/n/10 D.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
+......\kern 15.42
+......\hbox(8.39996+36.59839)x63.33, shifted -16.49918
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+36.59839)x63.33
+........\hbox(0.0+0.0)x0.0
+........\kern 0.0
+........\kern 0.0
+........\vbox(41.39832+3.60004)x63.33, shifted 32.99835
+.........\hbox(41.39832+3.60004)x63.33, glue set 1.23253fil
+..........\hbox(41.39832+0.0)x62.09747
+...........\hbox(41.39832+0.0)x62.09747
+............\rule(41.39832+0.0)x62.09747
+..........\rule(8.39996+3.60004)x0.0
+..........\penalty 10000
+..........\glue(\parfillskip) 0.0 plus 1.0fil
+..........\glue(\rightskip) 0.0
+.......\special{pdf:ec}
+....\penalty 10000
+....\glue(\parfillskip) 0.0 plus 1.0fil
+....\glue(\rightskip) 0.0
+...\rule(0.0+0.0)x*
+...\penalty 10000
+...\glue 0.0
+...\glue 0.0
+...\penalty 10000
+...\rule(0.0+0.0)x*
+...\penalty 10000
+...\glue 0.0
+...\glue 0.0
+...\glue(\parskip) 0.0 plus 1.0
+...\glue(\parskip) 0.0
+...\glue(\lineskip) 1.0
+...\hbox(55.95052+51.15057)x345.0
+....\hbox(55.95052+51.15057)x167.5
+.....\hbox(0.0+0.0)x0.0
+.....\kern 0.0
+.....\kern 0.0
+.....\hbox(55.95052+51.15057)x167.5
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
+.........\TU/lmr/m/n/10 A.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
+......\kern 15.42
+......\hbox(8.39996+98.70113)x152.08, shifted -47.55055
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+98.70113)x152.08
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -223,34 +202,67 @@ Completed box being shipped out [1]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -152.08
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 47.55055
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+.......\special{pdf:ec}
+....\glue 10.0
+....\glue 0.0 plus 1.0 minus 1.0
+....\hbox(55.95052+51.15057)x167.5
+.....\hbox(0.0+0.0)x0.0
+.....\kern 0.0
+.....\kern 0.0
+.....\hbox(55.95052+51.15057)x167.5
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
 ........\hbox(6.83+0.0)x0.0, glue set - 9.86fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
 .........\TU/lmr/m/n/10 B.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
 ........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 157.08
+.......\special{pdf:ec}
+......\kern -10.42
+......\kern 15.42
+......\hbox(8.39996+98.70113)x152.08, shifted -47.55055
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+98.70113)x152.08
+........\hbox(0.0+0.0)x0.0
+........\kern 0.0
+........\kern 0.0
+........\vbox(103.50105+3.60004)x152.08, shifted 95.10109
+.........\hbox(103.50105+3.60004)x152.08, glue set 14.0821fil
+..........\hbox(103.50105+0.0)x137.9979
+...........\hbox(103.50105+0.0)x137.9979
+............\rule(103.50105+0.0)x137.9979
+..........\rule(8.39996+3.60004)x0.0
+..........\penalty 10000
+..........\glue(\parfillskip) 0.0 plus 1.0fil
+..........\glue(\rightskip) 0.0
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue 0.0 plus 1.0fil
 ....\penalty -10000
 ....\glue(\rightskip) 0.0
+...\glue 0.0 plus 2.155
 ...\penalty 20301
 ...\glue(\lineskip) 1.0
-...\hbox(8.39996+98.70113)x345.0
-....\hbox(8.39996+98.70113)x167.5
+...\hbox(55.95052+51.15057)x345.0
+....\hbox(55.95052+51.15057)x167.5
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+98.70113)x167.5
+.....\hbox(55.95052+51.15057)x167.5
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
+.........\TU/lmr/m/n/10 C.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+98.70113)x152.08
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+98.70113)x152.08, shifted -47.55055
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+98.70113)x152.08
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -264,29 +276,27 @@ Completed box being shipped out [1]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -152.08
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 47.55055
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 C.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 157.08
+.......\special{pdf:ec}
 ....\glue 10.0
 ....\glue 0.0 plus 1.0 minus 1.0
-....\hbox(8.39996+98.70113)x167.5
+....\hbox(55.95052+51.15057)x167.5
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+98.70113)x167.5
+.....\hbox(55.95052+51.15057)x167.5
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
+.........\TU/lmr/m/n/10 D.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+98.70113)x152.08
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+98.70113)x152.08, shifted -47.55055
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+98.70113)x152.08
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -300,23 +310,14 @@ Completed box being shipped out [1]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -152.08
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 47.55055
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 D.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 157.08
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue(\parfillskip) 0.0 plus 1.0fil
 ....\glue(\rightskip) 0.0
-...\glue -5.0
+...\rule(0.0+0.0)x*
+...\penalty 10000
+...\glue 0.0
+...\glue 0.0
 ...\glue 0.0 plus 1.0fil
 ...\glue 0.0
 ...\glue 0.0 plus 0.0001fil
@@ -326,7 +327,6 @@ Completed box being shipped out [1]
 ....\glue 0.0 plus 1.0fil
 ....\TU/lmr/m/n/10 1
 ....\glue 0.0 plus 1.0fil
-.\kern 0.0
 Completed box being shipped out [2]
 \vbox(633.0+0.0)x407.0
 .\glue 16.0
@@ -337,18 +337,35 @@ Completed box being shipped out [2]
 ....\hbox(0.0+0.0)x345.0
 ..\glue 25.0
 ..\glue(\lineskip) 0.0
-..\vbox(550.0+0.0)x345.0, glue set 259.97626fil
+..\vbox(550.0+0.0)x345.0, glue set 245.57784fil
 ...\write-{}
-...\glue(\topskip) 1.60004
-...\hbox(8.39996+64.19902)x345.0
-....\hbox(8.39996+64.19902)x345.0
+...\glue(\topskip) 10.0
+...\rule(0.0+0.0)x*
+...\penalty 10000
+...\glue 0.0
+...\glue 0.0
+...\glue(\parskip) 0.0 plus 1.0
+...\glue(\parskip) 0.0
+...\glue(\lineskip) 1.0
+...\hbox(38.69946+33.89952)x345.0
+....\hbox(38.69946+33.89952)x345.0
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+64.19902)x345.0
+.....\hbox(38.69946+33.89952)x345.0
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
+.........\TU/lmr/m/n/10 A.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+64.19902)x329.58
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+64.19902)x329.58, shifted -30.2995
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+64.19902)x329.58
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -362,34 +379,33 @@ Completed box being shipped out [2]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -329.58
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 30.2995
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.16+0.0)x0.0, glue set - 10.28fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 A.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 334.58
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue 0.0 plus 1.0fil
 ....\penalty -10000
 ....\glue(\rightskip) 0.0
+...\glue 0.0 plus 2.155
 ...\penalty 10301
 ...\glue(\lineskip) 1.0
-...\hbox(8.39996+64.19902)x345.0
-....\hbox(8.39996+64.19902)x345.0
+...\hbox(38.69946+33.89952)x345.0
+....\hbox(38.69946+33.89952)x345.0
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+64.19902)x345.0
+.....\hbox(38.69946+33.89952)x345.0
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(6.83+0.0)x0.0, glue set - 9.86fil
+.........\TU/lmr/m/n/10 B.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+64.19902)x329.58
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+64.19902)x329.58, shifted -30.2995
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+64.19902)x329.58
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -403,34 +419,33 @@ Completed box being shipped out [2]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -329.58
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 30.2995
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(6.83+0.0)x0.0, glue set - 9.86fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 B.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 334.58
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue 0.0 plus 1.0fil
 ....\penalty -10000
 ....\glue(\rightskip) 0.0
+...\glue 0.0 plus 2.155
 ...\penalty 301
 ...\glue(\lineskip) 1.0
-...\hbox(8.39996+64.19902)x345.0
-....\hbox(8.39996+64.19902)x345.0
+...\hbox(38.69946+33.89952)x345.0
+....\hbox(38.69946+33.89952)x345.0
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+64.19902)x345.0
+.....\hbox(38.69946+33.89952)x345.0
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
+.........\TU/lmr/m/n/10 C.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+64.19902)x329.58
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+64.19902)x329.58, shifted -30.2995
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+64.19902)x329.58
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -444,34 +459,33 @@ Completed box being shipped out [2]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -329.58
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 30.2995
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(7.05+0.21999)x0.0, glue set - 10.0fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 C.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 334.58
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue 0.0 plus 1.0fil
 ....\penalty -10000
 ....\glue(\rightskip) 0.0
+...\glue 0.0 plus 2.155
 ...\penalty 10301
 ...\glue(\lineskip) 1.0
-...\hbox(8.39996+64.19902)x345.0
-....\hbox(8.39996+64.19902)x345.0
+...\hbox(38.69946+33.89952)x345.0
+....\hbox(38.69946+33.89952)x345.0
 .....\hbox(0.0+0.0)x0.0
 .....\kern 0.0
 .....\kern 0.0
-.....\hbox(8.39996+64.19902)x345.0
+.....\hbox(38.69946+33.89952)x345.0
+......\hbox(8.39996+3.60004)x10.42
+.......\special{pdf:bc [0]}
+.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
+........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
+.........\TU/lmr/m/n/10 D.
+.........\glue 0.0 plus 1.0fil minus 1.0fil
+........\glue 0.0 plus 1.0fil minus 1.0fil
+........\rule(8.39996+3.60004)x0.0
+.......\special{pdf:ec}
+......\kern -10.42
 ......\kern 15.42
-......\hbox(8.39996+64.19902)x329.58
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
+......\hbox(8.39996+64.19902)x329.58, shifted -30.2995
+.......\special{pdf:bc [0]}
 .......\hbox(8.39996+64.19902)x329.58
 ........\hbox(0.0+0.0)x0.0
 ........\kern 0.0
@@ -485,23 +499,14 @@ Completed box being shipped out [2]
 ..........\penalty 10000
 ..........\glue(\parfillskip) 0.0 plus 1.0fil
 ..........\glue(\rightskip) 0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern -329.58
-......\kern -15.42
-......\hbox(8.39996+3.60004)x10.42, shifted 30.2995
-.......\special{pdfcolorstack 1 push (0 g 0 G)}
-.......\hbox(8.39996+3.60004)x10.42, glue set 10.42fil
-........\glue 0.0 plus 1.0fil minus 1.0fil
-........\hbox(6.83+0.0)x0.0, glue set - 10.42fil
-.........\glue 0.0 plus 1.0fil minus 1.0fil
-.........\TU/lmr/m/n/10 D.
-........\rule(8.39996+3.60004)x0.0
-.......\special{pdfcolorstack 1 pop}
-......\kern 334.58
+.......\special{pdf:ec}
 ....\penalty 10000
 ....\glue(\parfillskip) 0.0 plus 1.0fil
 ....\glue(\rightskip) 0.0
-...\glue -5.0
+...\rule(0.0+0.0)x*
+...\penalty 10000
+...\glue 0.0
+...\glue 0.0
 ...\glue 0.0 plus 1.0fil
 ...\glue 0.0
 ...\glue 0.0 plus 0.0001fil
