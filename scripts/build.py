@@ -1,295 +1,468 @@
-#! python3
-# build.py
-# 1. 更新 sty、cls 和手册的版本并编译手册
-# 2. 将文件传输到 CTAN 目录并压缩
-# 3. 将文件传输到 release 目录并压缩
+#!/usr/bin/env python3
+"""
+exam-zh 项目完整构建脚本
+功能：
+1. 更新版本号和日期
+2. 编译文档和示例
+3. 创建 CTAN 和 Release 发布包
+"""
 
+import argparse
+import datetime
 import os
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-import datetime
-import re
-import zipfile
+from typing import List, Optional
 
-import pyperclip
-import send2trash
-import pyinputplus as pyip
-
-# 几个目录常量
-originPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh")
-docPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/doc")
-ctanZipPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/CTAN")
-ctanPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/CTAN/exam-zh")
-ctanDocPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/CTAN/exam-zh/doc")
-ctanTeXPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/CTAN/exam-zh/tex")
-ctanExamplesPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/CTAN/exam-zh/examples")
-releasePath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/release")
-docBasicPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/doc-basic")
-examplesBasicPath = Path("/Users/xiakangwei/Nutstore/Github/repository/exam-zh/examples-basic")
-
-# 版本
+# 可选依赖
 try:
-    version = str(sys.argv[1])
-    # 让用户确认版本的输入
-    while True:
-        print('New version will be: v' + version + '. Are you sure?')
-        answer = pyip.inputYesNo()
-        if answer == 'no':
-            version = input('Please type the new version: ')
-            continue
+    import pyperclip
+except ImportError:
+    pyperclip = None
+
+try:
+    import send2trash
+except ImportError:
+    send2trash = None
+
+
+# ==================== 颜色输出 ====================
+class Colors:
+    RED = '\033[0;31m'
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    BLUE = '\033[0;34m'
+    NC = '\033[0m'  # No Color
+
+
+def log_info(msg: str) -> None:
+    print(f"{Colors.GREEN}[INFO]{Colors.NC} {msg}")
+
+
+def log_warn(msg: str) -> None:
+    print(f"{Colors.YELLOW}[WARN]{Colors.NC} {msg}", file=sys.stderr)
+
+
+def log_error(msg: str) -> None:
+    print(f"{Colors.RED}[ERROR]{Colors.NC} {msg}", file=sys.stderr)
+
+
+def log_step(step: int, total: int, msg: str) -> None:
+    print(f"\n{Colors.BLUE}[{step}/{total}]{Colors.NC} {msg}")
+
+
+# ==================== 路径配置 ====================
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DOC_DIR = PROJECT_ROOT / "doc"
+DOC_BASIC_DIR = PROJECT_ROOT / "doc-basic"
+EXAMPLES_BASIC_DIR = PROJECT_ROOT / "examples-basic"
+CTAN_ZIP_DIR = PROJECT_ROOT / "CTAN"
+CTAN_DIR = CTAN_ZIP_DIR / "exam-zh"
+RELEASE_DIR = PROJECT_ROOT / "release"
+BUILD_LUA = PROJECT_ROOT / "build.lua"
+
+# 创建必要的目录
+for path in (CTAN_DIR, RELEASE_DIR):
+    path.mkdir(parents=True, exist_ok=True)
+
+
+# ==================== 版本验证 ====================
+def validate_version(version: str) -> bool:
+    """验证版本号格式 (X.Y.Z)"""
+    pattern = r'^\d+\.\d+\.\d+$'
+    if not re.match(pattern, version):
+        log_error(f"Invalid version format: {version}")
+        log_error("Expected format: X.Y.Z (e.g., 0.2.7)")
+        return False
+    return True
+
+
+def get_version_from_build_lua() -> Optional[str]:
+    """从 build.lua 提取当前版本"""
+    if not BUILD_LUA.exists():
+        log_error(f"build.lua not found: {BUILD_LUA}")
+        return None
+
+    pattern = re.compile(r'^version\s*=\s*"v([^"]+)"', re.MULTILINE)
+    content = BUILD_LUA.read_text(encoding='utf-8')
+    match = pattern.search(content)
+
+    if match:
+        return match.group(1)
+    return None
+
+
+def prompt_version(non_interactive: bool, initial_version: Optional[str] = None) -> str:
+    """交互式获取版本号"""
+    if non_interactive:
+        if initial_version:
+            if not validate_version(initial_version):
+                sys.exit(1)
+            log_info(f"Using version: v{initial_version} (non-interactive mode)")
+            return initial_version
         else:
-            break
-except IndexError:
-    version = input('Please type the new version: ')
-    # 让用户确认版本的输入
+            log_error("Version argument required in non-interactive mode")
+            sys.exit(1)
+
+    version = initial_version or input("Please type the new version (X.Y.Z): ").strip()
+
     while True:
-        print('New version will be: v' + version + '. Are you sure?')
-        answer = pyip.inputYesNo()
-        if answer == 'no':
-            print('Please type the new version: ')
-            version = input()
+        if not validate_version(version):
+            version = input("Please type the new version (X.Y.Z): ").strip()
             continue
+
+        print(f"New version will be: v{version}. Are you sure? [y/n]: ", end='')
+        answer = input().strip().lower()
+
+        if answer in ('y', 'yes'):
+            return version
+        elif answer in ('n', 'no'):
+            version = input("Please type the new version (X.Y.Z): ").strip()
         else:
-            break
+            print("Please answer yes or no.")
 
-# 时间
-dateNow = datetime.datetime.now()
-# 将月份和日期都变成两位数，否则编译会报错
-month = dateNow.month
-month = f"{month:02d}"
-day = dateNow.day
-day = f"{day:02d}"
-date = str(dateNow.year) + '-' + str(month) + '-' + str(day)
 
-# 压缩包名称
-ctanZipName = 'exam-zh.zip'
-releaseZipName = 'exam-zh-v' + version + '.zip'
+# ==================== 文件操作 ====================
+def safe_delete(path: Path) -> None:
+    """安全删除文件（优先使用回收站）"""
+    if not path.exists():
+        return
 
-# 1. 更新 sty 和 cls 的版本
+    if send2trash is not None:
+        try:
+            send2trash.send2trash(str(path))
+            return
+        except Exception as e:
+            log_warn(f"Failed to move to trash: {e}")
 
-# 正则表达式
-styDateRegex = re.compile(r'\\ProvidesExplPackage\s\{.*\}\s\{(\d{4}-\d{1,2}-\d{1,2})\}\s\{v(\d+\.\d+\.?\d*)\}')
-clsDateRegex = re.compile(r'\\ProvidesExplClass\s\{.*\}\s\{(\d{4}-\d{1,2}-\d{1,2})\}\s\{v(\d+\.\d+\.?\d*)\}')
-docDateRegex = re.compile(r'\\newcommand\{\\DocDate\}\{(\d{4}-\d{1,2}-\d{2})\}')
-docVersionRegex = re.compile(r'\\newcommand\{\\DocVersion\}\{v(\d+\.\d+\.?\d*)\}')
+    # 回退到直接删除
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
 
-# 将 originPath 目录下的所有 sty 后缀文件名加入 styfiles 中
-styfiles = []
-for styfile in originPath.glob('*.sty'):
-    styfiles.append(str(styfile))
-# 因为上面的遍历，styfile 已经是绝对路径了，但为了下面的替换，要改为文件名
-for i in range(len(styfiles)):
-    temp = styfiles[i].split('/')
-    styfiles[i] = temp[-1]
-clsFile = 'exam-zh.cls'
-docFiles = ['exam-zh-doc.tex', 'exam-zh-doc.pdf', 'exam-zh-doc-setup.tex', 'xdyydoc.cls']
-exampleFiles = ['example-single.tex', 'example-multiple.tex', 'example-single.pdf', 'example-multiple.pdf']
-helpFiles = ['CHANGELOG.md', 'README.md', 'LICENSE']
-docBasicFiles = ['exam-zh-doc-basic.tex', 'exam-zh-doc-basic.pdf']
-examplesBasicFiles = ['00-minimal.tex', '01-first-exam.tex', '02-math-basic.tex']
 
-# 替换 sty 中的时间和版本
-for styfile in styfiles:
-    with open(originPath / styfile, 'r') as file:
-        content = file.read()
-        pre, mid, after = styfile.partition('.')
-        content = styDateRegex.sub(r'\\ProvidesExplPackage {%s} {%s} {v%s}' % (pre, date, version), content)
-        with open(originPath / styfile, 'w') as newFile:
-            newFile.write(content)
+def clean_directory(directory: Path, pattern: str = "*") -> None:
+    """清理目录中的特定文件"""
+    if not directory.exists():
+        return
 
-# 替换 cls 中的时间和版本
-with open(originPath / clsFile, 'r') as file:
-    content = file.read()
-    content = clsDateRegex.sub(r'\\ProvidesExplClass {exam-zh} {%s} {v%s}' % (date, version), content)
-    with open(originPath / clsFile, 'w') as newFile:
-        newFile.write(content)
+    for item in directory.glob(pattern):
+        if item.is_file():
+            item.unlink()
 
-# 2. 更新手册版本并编译
-with open(docPath / docFiles[0], 'r') as file:
-    content = file.read()
-    content = docDateRegex.sub(r'\\newcommand{\\DocDate}{%s}' % (date), content)
-    content = docVersionRegex.sub(r'\\newcommand{\\DocVersion}{v%s}' % (version), content)
-    with open(docPath / docFiles[0], 'w') as newFile:
-        newFile.write(content)
 
-# 更新 doc-basic 手册版本
-with open(docBasicPath / docBasicFiles[0], 'r') as file:
-    content = file.read()
-    content = docDateRegex.sub(r'\\newcommand{\\DocDate}{%s}' % (date), content)
-    content = docVersionRegex.sub(r'\\newcommand{\\DocVersion}{v%s}' % (version), content)
-    with open(docBasicPath / docBasicFiles[0], 'w') as newFile:
-        newFile.write(content)
+# ==================== 版本更新 ====================
+def update_package_version(file_path: Path, version: str, date: str) -> None:
+    """更新 .sty 文件的版本信息"""
+    if not file_path.exists():
+        log_warn(f"File not found: {file_path}")
+        return
 
-# 编译
+    content = file_path.read_text(encoding='utf-8')
+    pkg_name = file_path.stem
 
-# 先将 working directory 改到 doc 再编译，这样可以使得一些相对路径不依赖 py 的位置
-# （其实就是相对路径要相对 tex 文件，所以要到那个目录下）
-os.chdir(originPath)
-print('\n' + '='*60)
-print('开始编译示例文件...')
-print('='*60)
-for i in range(2):
-    print(f'\n[{i+1}/2] 正在编译: {exampleFiles[i]}')
-    result = subprocess.run(['latexmk', '-xelatex', exampleFiles[i]])
-    if result.returncode != 0:
-        print(f'✗ 错误: {exampleFiles[i]} 编译失败 (返回码: {result.returncode})')
+    pattern = re.compile(
+        r'(\\ProvidesExplPackage\s*\{' + re.escape(pkg_name) + r'\}\s*\{)[^}]+(\}\s*\{)v[^}]+(\})',
+        re.MULTILINE
+    )
+
+    new_content = pattern.sub(rf'\g<1>{date}\g<2>v{version}\g<3>', content)
+
+    if content != new_content:
+        file_path.write_text(new_content, encoding='utf-8')
+        log_info(f"  Updated: {file_path.name}")
+    else:
+        log_warn(f"  No changes in: {file_path.name}")
+
+
+def update_class_version(file_path: Path, version: str, date: str) -> None:
+    """更新 .cls 文件的版本信息"""
+    if not file_path.exists():
+        log_error(f"Critical file not found: {file_path}")
         sys.exit(1)
-    print(f'✓ {exampleFiles[i]} 编译成功')
 
-# 编译 examples-basic 示例文件
-os.chdir(examplesBasicPath)
-print('\n' + '='*60)
-print('开始编译 basic 示例文件...')
-print('='*60)
-for i, example_file in enumerate(examplesBasicFiles):
-    print(f'\n[{i+1}/{len(examplesBasicFiles)}] 正在编译: {example_file}')
-    result = subprocess.run(['latexmk', '-xelatex', example_file])
+    content = file_path.read_text(encoding='utf-8')
+
+    pattern = re.compile(
+        r'(\\ProvidesExplClass\s*\{exam-zh\}\s*\{)[^}]+(\}\s*\{)v[^}]+(\})',
+        re.MULTILINE
+    )
+
+    new_content = pattern.sub(rf'\g<1>{date}\g<2>v{version}\g<3>', content)
+    file_path.write_text(new_content, encoding='utf-8')
+    log_info(f"  Updated: {file_path.name}")
+
+
+def update_doc_version(file_path: Path, version: str, date: str) -> None:
+    """更新文档的版本和日期"""
+    if not file_path.exists():
+        log_warn(f"Documentation file not found: {file_path}")
+        return
+
+    content = file_path.read_text(encoding='utf-8')
+
+    date_pattern = re.compile(r'(\\newcommand\{\\DocDate\}\{)[^}]+(\})', re.MULTILINE)
+    version_pattern = re.compile(r'(\\newcommand\{\\DocVersion\}\{)v[^}]+(\})', re.MULTILINE)
+
+    content = date_pattern.sub(rf'\g<1>{date}\g<2>', content)
+    content = version_pattern.sub(rf'\g<1>v{version}\g<2>', content)
+
+    file_path.write_text(content, encoding='utf-8')
+    log_info(f"  Updated: {file_path.name}")
+
+
+def update_all_versions(version: str, date: str) -> None:
+    """更新所有文件的版本信息"""
+    log_step(1, 5, "Updating version information...")
+
+    # 更新 .sty 文件
+    sty_files = list(PROJECT_ROOT.glob("*.sty"))
+    log_info(f"Updating {len(sty_files)} .sty files...")
+    for sty_file in sty_files:
+        update_package_version(sty_file, version, date)
+
+    # 更新 .cls 文件
+    log_info("Updating exam-zh.cls...")
+    update_class_version(PROJECT_ROOT / "exam-zh.cls", version, date)
+
+    # 更新文档
+    log_info("Updating documentation versions...")
+    update_doc_version(DOC_DIR / "exam-zh-doc.tex", version, date)
+    update_doc_version(DOC_BASIC_DIR / "exam-zh-doc-basic.tex", version, date)
+
+
+# ==================== 编译 ====================
+def compile_latex(tex_file: Path, work_dir: Path) -> bool:
+    """编译单个 LaTeX 文件"""
+    log_info(f"  Compiling: {tex_file.name}")
+
+    result = subprocess.run(
+        ['latexmk', '-xelatex', '-interaction=nonstopmode', str(tex_file.name)],
+        cwd=work_dir,
+        capture_output=True,
+        text=True
+    )
+
     if result.returncode != 0:
-        print(f'✗ 错误: {example_file} 编译失败 (返回码: {result.returncode})')
-        sys.exit(1)
-    print(f'✓ {example_file} 编译成功')
+        log_error(f"  Failed to compile: {tex_file.name}")
+        log_error(f"  Return code: {result.returncode}")
+        if result.stderr:
+            log_error(f"  Error output:\n{result.stderr}")
+        return False
 
-os.chdir(docPath)
-print('\n' + '='*60)
-print('开始编译文档...')
-print('='*60)
-print(f'\n正在编译: {docFiles[0]}')
-LaTeXcompile = subprocess.run(['latexmk', '-xelatex', docFiles[0]])
+    log_info(f"  ✓ {tex_file.name} compiled successfully")
+    return True
 
-# 检查编译返回码（0 表示成功，包括文件已是最新的情况）
-if LaTeXcompile.returncode != 0:
-    print(f'✗ 错误: 文档编译失败 (返回码: {LaTeXcompile.returncode})')
-    sys.exit(1)
 
-print(f'✓ 文档编译成功')
+def compile_examples() -> bool:
+    """编译示例文件"""
+    log_step(2, 5, "Compiling example files...")
 
-# 编译 doc-basic 文档
-os.chdir(docBasicPath)
-print('\n' + '='*60)
-print('开始编译 basic 文档...')
-print('='*60)
-print(f'\n正在编译: {docBasicFiles[0]}')
-LaTeXcompileBasic = subprocess.run(['latexmk', '-xelatex', docBasicFiles[0]])
+    examples = [
+        (PROJECT_ROOT, ["example-single.tex", "example-multiple.tex"]),
+        (EXAMPLES_BASIC_DIR, ["00-minimal.tex", "01-first-exam.tex", "02-math-basic.tex"])
+    ]
 
-# 检查编译返回码（0 表示成功，包括文件已是最新的情况）
-if LaTeXcompileBasic.returncode != 0:
-    print(f'✗ 错误: basic 文档编译失败 (返回码: {LaTeXcompileBasic.returncode})')
-    sys.exit(1)
+    for work_dir, files in examples:
+        for tex_file in files:
+            full_path = work_dir / tex_file
+            if not full_path.exists():
+                log_warn(f"  Example not found: {tex_file}")
+                continue
 
-print(f'✓ basic 文档编译成功')
+            if not compile_latex(full_path, work_dir):
+                return False
 
-# 复制文件到 release 和 CTAN / exam-zh 并压缩
+    return True
 
-print('\n' + '='*60)
-print('开始复制文件和打包...')
-print('='*60)
 
-if True:  # 编译成功后总是执行复制和打包
-    # 辅助文件
-    print('\n[1/8] 复制辅助文件 (README, CHANGELOG, LICENSE)...')
-    for helpFile in helpFiles:
-        shutil.copy(originPath / helpFile, ctanPath)
-        shutil.copy(originPath / helpFile, releasePath)
-    print(f'  ✓ 已复制 {len(helpFiles)} 个辅助文件')
+def compile_documentation() -> bool:
+    """编译文档"""
+    log_step(3, 5, "Compiling documentation...")
 
-    # sty 和 cls 文件
-    print('\n[2/8] 复制 sty 和 cls 文件...')
-    for styfile in styfiles:
-        shutil.copy(originPath / styfile, ctanTeXPath)
-        shutil.copy(originPath / styfile, releasePath)
-    shutil.copy(originPath / clsFile, ctanTeXPath)
-    shutil.copy(originPath / clsFile, releasePath)
-    print(f'  ✓ 已复制 {len(styfiles)} 个 sty 文件和 1 个 cls 文件')
+    docs = [
+        (DOC_DIR / "exam-zh-doc.tex", DOC_DIR),
+        (DOC_BASIC_DIR / "exam-zh-doc-basic.tex", DOC_BASIC_DIR)
+    ]
 
-    # doc 文件
-    print('\n[3/8] 复制文档文件...')
-    for docFile in docFiles:
-        shutil.copy(docPath / docFile, ctanDocPath)
-    shutil.copy(docPath / docFiles[1], releasePath)
-    shutil.copytree(docPath / 'back', ctanDocPath / 'back', dirs_exist_ok=True)
-    shutil.copytree(docPath / 'body', ctanDocPath / 'body', dirs_exist_ok=True)
-    shutil.copytree(docPath / 'figures', ctanDocPath / 'figures', dirs_exist_ok=True)
-    print(f'  ✓ 已复制文档文件和目录 (back, body, figures)')
+    for doc_file, work_dir in docs:
+        if not doc_file.exists():
+            log_error(f"  Documentation file not found: {doc_file}")
+            return False
 
-    # doc-basic 文件
-    print('\n[4/8] 复制 basic 文档文件...')
-    shutil.copy(docBasicPath / docBasicFiles[1], releasePath)
-    print(f'  ✓ 已复制 basic 文档 PDF')
+        if not compile_latex(doc_file, work_dir):
+            return False
 
-    # 示例文件
-    print('\n[5/8] 复制示例文件...')
-    for exampleFile in exampleFiles:
-        shutil.copy(originPath / exampleFile, ctanExamplesPath)
-        shutil.copy(originPath / exampleFile, releasePath)
-    print(f'  ✓ 已复制 {len(exampleFiles)} 个示例文件')
+    return True
 
-    # basic 示例文件
-    print('\n[6/8] 复制 basic 示例文件...')
-    for example_file in examplesBasicFiles:
-        # 复制 .tex 源文件
-        shutil.copy(examplesBasicPath / example_file, releasePath)
-        # 复制生成的 PDF 文件
-        pdf_file = example_file.replace('.tex', '.pdf')
-        shutil.copy(examplesBasicPath / pdf_file, releasePath)
-    print(f'  ✓ 已复制 {len(examplesBasicFiles)} 个 basic 示例文件（含 .tex 和 .pdf）')
 
-    # 删除之前的压缩包
-    print('\n[7/8] 清理旧的压缩包...')
-    # 删除 release 目录的压缩包
-    if list(releasePath.glob('*.zip')):
-        old_zip = list(releasePath.glob('*.zip'))[0]
-        send2trash.send2trash(old_zip)
-        print(f'  ✓ 已删除旧的 release 压缩包')
-    # 删除 CTAN 目录的压缩包
-    if list(ctanZipPath.glob('*.zip')):
-        old_zip = list(ctanZipPath.glob('*.zip'))[0]
-        send2trash.send2trash(old_zip)
-        print(f'  ✓ 已删除旧的 CTAN 压缩包')
+# ==================== 打包 ====================
+def call_build_script(script_name: str, version: str) -> bool:
+    """调用 bash 打包脚本"""
+    script_path = PROJECT_ROOT / "scripts" / script_name
 
-    # 压缩
-    print('\n[8/8] 创建压缩包...')
+    if not script_path.exists():
+        log_error(f"Build script not found: {script_path}")
+        return False
 
-    # 压缩 release
-    print(f'  正在创建 {releaseZipName}...')
-    os.chdir(releasePath)
-    with zipfile.ZipFile(releasePath / releaseZipName, 'w') as releaseZip:
-        for file in os.listdir(releasePath):
-            # 不把 zip 去掉的话会循环压缩
-            if not file.endswith('zip') and not file.endswith('DS_Store') and not file.startswith('__MACOSX/'):
-                releaseZip.write(file)
-        for file in releaseZip.namelist():
-            if file.endswith('DS_Store'):
-                print('  ✗ 警告: 发现 .DS_Store 文件，请检查！')
-    print(f'  ✓ {releaseZipName} 创建成功')
+    log_info(f"  Running: {script_name}")
+    result = subprocess.run(
+        ['bash', str(script_path), version],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True
+    )
 
-    # 压缩 CTAN / exam-zh
-    print(f'  正在创建 {ctanZipName}...')
-    os.chdir(ctanZipPath)
-    with zipfile.ZipFile(ctanZipName, 'w') as ctanZip:
-        file_count = 0
-        for path, dirnames, filenames in os.walk(ctanPath):
-            relativePath = path.replace(str(ctanZipPath), '')  # 把父目录路径去掉，剩下相对路径
-            for filename in filenames:
-                if not filename.endswith('DS_Store') and not filename.startswith('__MACOSX/'):
-                    #1 表示原位置， #2 表示目标位置
-                    ctanZip.write(os.path.join(path, filename), os.path.join(relativePath, filename))
-                    file_count += 1
-        for file in ctanZip.namelist():
-            if file.endswith('DS_Store'):
-                print('  ✗ 警告: 发现 .DS_Store 文件，请检查！')
-    print(f'  ✓ {ctanZipName} 创建成功 (包含 {file_count} 个文件)')
+    if result.returncode != 0:
+        log_error(f"  Failed to run {script_name}")
+        log_error(f"  Return code: {result.returncode}")
+        if result.stderr:
+            log_error(f"  Error output:\n{result.stderr}")
+        return False
 
-# 复制版本和时间信息到剪切板
+    # 输出脚本的标准输出
+    if result.stdout:
+        print(result.stdout)
 
-pyperclip.copy('v' + version + ' - ' + date)
+    return True
 
-print('\n' + '='*60)
-print('✓ 构建完成！')
-print('='*60)
-print(f'\n版本信息: v{version} - {date}')
-print(f'已复制到剪贴板: v{version} - {date}')
-print(f'\nRelease 包: {releasePath / releaseZipName}')
-print(f'CTAN 包: {ctanZipPath / ctanZipName}')
-print('\n构建成功！ 🎉\n')
+
+def create_packages(version: str) -> bool:
+    """创建发布包"""
+    log_step(4, 5, "Creating distribution packages...")
+
+    # CTAN 包
+    log_info("Creating CTAN package...")
+    if not call_build_script("build-ctan.sh", version):
+        return False
+
+    # Release 包
+    log_info("Creating release package...")
+    if not call_build_script("build-release.sh", version):
+        return False
+
+    return True
+
+
+def verify_packages(version: str) -> bool:
+    """验证生成的包"""
+    log_step(5, 5, "Verifying packages...")
+
+    packages = [
+        CTAN_ZIP_DIR / "exam-zh.zip",
+        RELEASE_DIR / f"exam-zh-v{version}.zip"
+    ]
+
+    all_exist = True
+    for pkg in packages:
+        if pkg.exists() and pkg.stat().st_size > 0:
+            log_info(f"  ✓ {pkg.name} ({pkg.stat().st_size} bytes)")
+        else:
+            log_error(f"  ✗ {pkg.name} missing or empty")
+            all_exist = False
+
+    return all_exist
+
+
+# ==================== 主函数 ====================
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="exam-zh 项目完整构建脚本",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s 0.2.7              # 构建指定版本
+  %(prog)s --non-interactive 0.2.7  # 非交互模式（CI 环境）
+  %(prog)s --skip-compile     # 跳过编译，仅打包
+        """
+    )
+
+    parser.add_argument('version', nargs='?', help='版本号 (e.g., 0.2.7)')
+    parser.add_argument('--non-interactive', action='store_true',
+                        help='非交互模式（不询问确认）')
+    parser.add_argument('--skip-compile', action='store_true',
+                        help='跳过编译步骤（假设已编译）')
+
+    args = parser.parse_args()
+
+    # 打印横幅
+    print("=" * 60)
+    print("exam-zh Project Build Script")
+    print("=" * 60)
+
+    # 确定版本号
+    initial_version = args.version or get_version_from_build_lua()
+    version = prompt_version(args.non_interactive, initial_version)
+
+    # 生成日期（ISO 格式）
+    now = datetime.datetime.now()
+    date = now.strftime("%Y-%m-%d")
+
+    log_info(f"Build version: v{version}")
+    log_info(f"Build date: {date}")
+
+    try:
+        # 步骤 1: 更新版本
+        update_all_versions(version, date)
+
+        # 步骤 2-3: 编译（可选跳过）
+        if not args.skip_compile:
+            if not compile_examples():
+                log_error("Failed to compile examples")
+                return 1
+
+            if not compile_documentation():
+                log_error("Failed to compile documentation")
+                return 1
+        else:
+            log_warn("Skipping compilation as requested")
+
+        # 步骤 4: 创建包
+        if not create_packages(version):
+            log_error("Failed to create packages")
+            return 1
+
+        # 步骤 5: 验证
+        if not verify_packages(version):
+            log_error("Package verification failed")
+            return 1
+
+        # 复制版本信息到剪贴板
+        version_info = f"v{version} - {date}"
+        if pyperclip is not None:
+            try:
+                pyperclip.copy(version_info)
+                log_info(f"Copied to clipboard: {version_info}")
+            except Exception as e:
+                log_warn(f"Failed to copy to clipboard: {e}")
+        else:
+            log_info(f"Version info: {version_info}")
+            log_warn("pyperclip not installed, clipboard feature disabled")
+
+        # 成功
+        print("\n" + "=" * 60)
+        print(f"{Colors.GREEN}✓ Build completed successfully!{Colors.NC}")
+        print("=" * 60)
+        print(f"\nVersion: v{version} - {date}")
+        print(f"CTAN package: {CTAN_ZIP_DIR / 'exam-zh.zip'}")
+        print(f"Release package: {RELEASE_DIR / f'exam-zh-v{version}.zip'}")
+        print("\n🎉 Build successful!\n")
+
+        return 0
+
+    except KeyboardInterrupt:
+        log_error("\nBuild interrupted by user")
+        return 130
+    except Exception as e:
+        log_error(f"Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
