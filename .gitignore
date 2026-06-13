@@ -348,3 +348,5 @@ requirements.txt
 !.claude/skills/**
 
 issues/
+
+*.zip

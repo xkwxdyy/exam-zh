@@ -45,6 +45,7 @@ main() {
 
   # 清理旧压缩包
   safe_delete_old_zips "$CTAN_ZIP_DIR" "$PROJECT_ROOT"
+  rm -f "$CTAN_ZIP_DIR"/*.sha256
 
   # 创建压缩包
   log_info "Creating CTAN zip package..."
@@ -61,7 +62,6 @@ main() {
 
   log_info "=== CTAN build completed successfully ==="
   log_info "Package: $CTAN_ZIP_DIR/exam-zh.zip"
-  log_info "Checksum: $CTAN_ZIP_DIR/exam-zh.zip.sha256"
 }
 
 copy_ctan_files() {
@@ -80,7 +80,7 @@ copy_ctan_files() {
   local sty_count=0
   while IFS= read -r -d '' styfile; do
     cp "$styfile" "$CTAN_TEX_DIR/"
-    ((sty_count++))
+    ((sty_count += 1))
   done < <(find "$PROJECT_ROOT" -maxdepth 1 -name "*.sty" -type f -print0)
 
   if [[ -f "$PROJECT_ROOT/exam-zh.cls" ]]; then
@@ -223,12 +223,7 @@ create_ctan_zip() {
       -x "*.aux"
   )
 
-  # 生成校验和
-  if command -v shasum >/dev/null 2>&1; then
-    (cd "$CTAN_ZIP_DIR" && shasum -a 256 exam-zh.zip > exam-zh.zip.sha256)
-  elif command -v sha256sum >/dev/null 2>&1; then
-    (cd "$CTAN_ZIP_DIR" && sha256sum exam-zh.zip > exam-zh.zip.sha256)
-  fi
+  verify_file_exists "$CTAN_ZIP_DIR/exam-zh.zip"
 }
 
 # 执行主函数

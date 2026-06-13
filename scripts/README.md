@@ -37,7 +37,6 @@ python scripts/build.py --skip-compile 0.2.7
 - ✅ 更新所有文件的版本号和日期
 - ✅ 编译示例文件和文档
 - ✅ 创建 CTAN 和 Release 两个发布包
-- ✅ 生成 SHA256 校验和
 - ✅ 验证包的完整性
 
 #### 2. 单独创建 CTAN 包
@@ -87,7 +86,7 @@ bash scripts/git-update.sh -f --amend
 bash scripts/git-update.sh --help
 ```
 
-#### 5. Gitee Release 创建
+#### 5. Gitee Release 创建与附件上传
 
 **前置要求**：配置 Gitee Personal Access Token
 
@@ -103,8 +102,10 @@ export GITEE_TOKEN="your_token_here"
 echo 'export GITEE_TOKEN="your_token_here"' >> ~/.zshrc
 source ~/.zshrc
 
-# 4. 创建 Release
-bash scripts/gitee-release.sh v0.2.7 "Release v0.2.7" release-notes.md
+# 4. 创建或更新 Release，并上传发行包
+bash scripts/gitee-release.sh \
+  v0.2.7 "Release v0.2.7" release-notes.md \
+  release/exam-zh-v0.2.7.zip
 
 # 5. 创建预发布版本
 bash scripts/gitee-release.sh v0.2.8-beta "Beta v0.2.8" notes.md --prerelease
@@ -116,6 +117,7 @@ bash scripts/gitee-release.sh v0.2.8-beta "Beta v0.2.8" notes.md --prerelease
 
 **注意**：
 - 通常由 `/examzh-release` Claude Code 技能自动调用
+- 已存在的同名附件会按文件大小判断；大小一致时复用，大小不一致时替换
 - 如果未设置 `GITEE_TOKEN`，脚本会显示详细的设置说明
 
 ## 构建流程
@@ -129,7 +131,7 @@ graph LR
     C --> D[创建 CTAN 包]
     D --> E[创建 Release 包]
     E --> F[验证包完整性]
-    F --> G[生成校验和]
+    F --> G[发布包就绪]
 ```
 
 ### 文件组织
@@ -144,7 +146,7 @@ exam-zh/
 │           └── examples/     # 示例文件
 │
 └── release/
-    └── exam-zh-v0.2.7.zip    # GitHub Release 包（扁平结构）
+    └── exam-zh-v0.2.7.zip    # GitHub/Gitee Release 包（扁平结构）
 ```
 
 ## 安全特性
@@ -167,7 +169,6 @@ exam-zh/
 ### 4. 文件完整性
 - ✅ 编译前检查必需文件
 - ✅ 打包后验证文件存在性和大小
-- ✅ 生成 SHA256 校验和
 
 ### 5. 错误处理
 - ✅ 所有脚本使用 `set -euo pipefail`

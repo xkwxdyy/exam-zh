@@ -117,19 +117,7 @@ create_zip() {
       -x "*.zip"
   )
 
-  # 生成 SHA256 校验和
-  local checksum_file="${zip_name}.sha256"
-  log_info "Generating checksum: $checksum_file"
-  (
-    cd "$source_dir"
-    if command -v shasum >/dev/null 2>&1; then
-      shasum -a 256 "$zip_name" > "$checksum_file"
-    elif command -v sha256sum >/dev/null 2>&1; then
-      sha256sum "$zip_name" > "$checksum_file"
-    else
-      log_warn "No SHA256 tool found, skipping checksum"
-    fi
-  )
+  verify_file_exists "$source_dir/$zip_name"
 }
 
 # 检查必需的命令是否存在
@@ -210,7 +198,7 @@ acquire_lock() {
     fi
     log_warn "Waiting for other build process to finish..."
     sleep 1
-    ((waited++))
+    ((waited += 1))
   done
 
   # 创建锁文件

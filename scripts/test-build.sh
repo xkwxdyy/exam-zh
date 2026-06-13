@@ -21,15 +21,15 @@ run_test() {
   local test_name="$1"
   local test_func="$2"
 
-  ((TESTS_RUN++))
+  ((TESTS_RUN += 1))
 
   log_info "Running test: $test_name"
 
   if $test_func; then
-    ((TESTS_PASSED++))
+    ((TESTS_PASSED += 1))
     log_info "  ✓ PASSED"
   else
-    ((TESTS_FAILED++))
+    ((TESTS_FAILED += 1))
     log_error "  ✗ FAILED"
   fi
 
@@ -99,6 +99,7 @@ test_build_scripts_exist() {
     "build-common.sh"
     "build-ctan.sh"
     "build-release.sh"
+    "gitee-release.sh"
     "build.py"
   )
 
@@ -152,6 +153,12 @@ test_dry_run_release() {
   return 0
 }
 
+test_dry_run_gitee_release() {
+  log_info "  Testing Gitee release script (syntax check only)..."
+  bash -n "$PROJECT_ROOT/scripts/gitee-release.sh" || return 1
+  return 0
+}
+
 test_python_script_syntax() {
   log_info "  Testing Python script syntax..."
   python3 -m py_compile "$PROJECT_ROOT/scripts/build.py" || return 1
@@ -179,16 +186,17 @@ main() {
   run_test "Source files exist" test_source_files_exist
   run_test "CTAN script syntax" test_dry_run_ctan
   run_test "Release script syntax" test_dry_run_release
+  run_test "Gitee release script syntax" test_dry_run_gitee_release
   run_test "Python script syntax" test_python_script_syntax
 
   # 输出结果
   echo ""
-  echo "=" * 60
+  echo "============================================================"
   echo "Test Results:"
   echo "  Total:  $TESTS_RUN"
   echo "  Passed: $TESTS_PASSED"
   echo "  Failed: $TESTS_FAILED"
-  echo "=" * 60
+  echo "============================================================"
 
   if [[ $TESTS_FAILED -eq 0 ]]; then
     log_info "All tests passed! ✓"

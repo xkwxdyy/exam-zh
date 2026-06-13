@@ -69,7 +69,6 @@ main() {
 
   log_info "=== Release build completed successfully ==="
   log_info "Package: $RELEASE_DIR/$zip_name"
-  log_info "Checksum: $RELEASE_DIR/${zip_name}.sha256"
 }
 
 copy_release_files() {
@@ -113,7 +112,7 @@ copy_release_files() {
   local sty_count=0
   while IFS= read -r -d '' styfile; do
     cp "$styfile" "$RELEASE_DIR/"
-    ((sty_count++))
+    ((sty_count += 1))
   done < <(find "$PROJECT_ROOT" -maxdepth 1 -name "*.sty" -type f -print0)
   log_info "  Copied $sty_count .sty files"
 

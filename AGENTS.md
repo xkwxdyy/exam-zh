@@ -16,7 +16,7 @@
 - `make doc`: compile full documentation; `make doc-basic`: compile beginner documentation.
 
 ### Release & Packaging
-- `python scripts/build.py [version]`: **complete release workflow** — updates versions, compiles all docs/examples, creates CTAN and Release packages with SHA256 checksums. Supports `--non-interactive` (CI/CD) and `--skip-compile` flags.
+- `python scripts/build.py [version]`: **complete release workflow** — updates versions, compiles all docs/examples, creates CTAN and Release packages. Supports `--non-interactive` (CI/CD) and `--skip-compile` flags.
 - `bash scripts/build-ctan.sh [version]`: build CTAN package only (`CTAN/exam-zh.zip`).
 - `bash scripts/build-release.sh [version]`: build GitHub Release package only (`release/exam-zh-v*.zip`).
 - `l3build ctan`: alternative CTAN build (l3build's built-in method).
@@ -29,7 +29,7 @@ All packaging scripts use the common library (`scripts/build-common.sh`) for:
 - Path validation (prevents operations outside project root)
 - Version format validation (enforces X.Y.Z format)
 - Lock mechanism (prevents concurrent builds)
-- Safe file operations (cleanup, compression, checksum generation)
+- Safe file operations (cleanup, compression, package verification)
 - Unified logging (color-coded INFO/WARN/ERROR)
 
 Use XeLaTeX for local checks; the class explicitly rejects other engines.
@@ -76,7 +76,7 @@ bash scripts/git-update.sh --no-push "WIP: feature"
 - **Version validation**: Enforces semantic versioning format (X.Y.Z); rejects invalid formats.
 - **Build locking**: Prevents concurrent builds via `/tmp/exam-zh-build.lock`.
 - **Integrity verification**: Post-build validation ensures all required files exist and are non-empty.
-- **Checksum generation**: SHA256 checksums created for all distribution packages.
+- **Package verification**: Distribution packages are checked for existence and non-empty output.
 - **Safe deletion**: Preferentially uses trash/recycle bin for file removal when available.
 
 For detailed documentation, see `scripts/README.md` and `scripts/REVIEW.md`.
