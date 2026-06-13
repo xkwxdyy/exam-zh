@@ -6,6 +6,40 @@
 并且此项目遵守 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
 
+## [Unreleased]
+
+### Added
+
+- 新增 `scripts/git-update.sh`：智能 Git 工作流脚本，支持自动按模块分组提交
+- 新增 `scripts/test-build.sh`：测试构建流程验证脚本
+- 新增 `scripts/build-common.sh`：构建脚本公共函数库
+- 新增 `scripts/README.md`：脚本使用说明文档
+- 新增 `examples-basic/03-real-exam-scenario.tex`：真实试卷场景示例
+- 新增 `doc-basic/body/quick-reference.tex`：快速参考手册
+- 新增 `AGENTS.md`：代理协作文档
+
+### Changed
+
+- 重构 `scripts/build.py`：优化代码结构和 CTAN 打包逻辑
+- 增强 `scripts/build-ctan.sh`：改进 CTAN 构建流程
+- 优化 `scripts/build-release.sh`：完善发布流程处理
+- 改进 `Makefile`：新增 `examples-basic` 编译目标
+- 优化 `examples-basic/` 下所有示例文件的内容和格式
+- 全面更新入门文档 `doc-basic/` 各章节内容
+- 更新 `doc/body/usage.tex`：修正选项值说明
+- 更新 `README.md`：改进项目说明和使用指南
+- 优化 `.gitignore`：添加 Python 缓存排除规则，修正 `.claude/` 排除逻辑
+
+### Fixed
+
+- 移除 `exam-zh-question.sty` 中未使用的答案颜色变量
+- 统一代码格式：清理尾随空格，规范缩进
+
+### Testing
+
+- 更新所有测试基准文件（`.lvt` 和 `.tlg`），确保测试与代码修改同步
+
+
 ## [0.2.6] - 2025-11-07
 
 ### Added
