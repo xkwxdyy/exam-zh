@@ -50,6 +50,25 @@ bash scripts/build-ctan.sh 0.2.7
 
 **输出：** `CTAN/exam-zh.zip`
 
+#### CTAN Tag 自动发布
+
+推送形如 `v0.3.0` 的 Tag 后，`.github/workflows/ctan-upload.yml` 会自动：
+
+1. 校验 Tag、`build.lua`、类/宏包、手册与 `CHANGELOG.md` 的版本和日期一致性；
+2. 运行构建脚本测试、`l3build` 回归测试并生成 `exam-zh.zip`；
+3. 检查压缩包结构、必需文件和临时文件，再调用 CTAN Validate 接口；
+4. 保存已校验的压缩包，并等待 `ctan` GitHub Environment 审批后正式上传。
+
+首次启用时，在 GitHub 的 **Settings → Environments** 中创建 `ctan`：
+
+- 配置 Required reviewers，保留正式上传前的人工批准；
+- 添加 Environment variable `CTAN_UPLOAD_ENABLED=true`，作为显式启用开关。
+
+CTAN 当前的 `l3build upload` 表单接口不使用 API Token，因此无需创建
+`CTAN_UPLOAD_TOKEN` Secret。工作流通过 `L3BUILD_CTAN_UPLOAD=true` 只在审批后的
+上传步骤关闭交互确认；本地运行 `l3build upload` 仍会询问确认。发布公告从对应
+版本的 `CHANGELOG.md` 小节自动生成。
+
 #### 3. 单独创建 Release 包
 
 ```bash

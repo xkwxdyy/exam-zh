@@ -1,0 +1,91 @@
+name: Publish to CTAN
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ctan-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Test and package
+    if: github.repository == 'xkwxdyy/exam-zh'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v7
+
+      - name: Install TeX Live
+        uses: zauguin/install-texlive@v4
+        with:
+          package_file: .github/tl_packages
+
+      - name: Check release metadata
+        run: >-
+          python3 scripts/check-ctan-release.py
+          --tag "${GITHUB_REF_NAME}"
+          --announcement-output build/ctan-announcement.md
+
+      - name: Test build helpers
+        run: bash scripts/test-build.sh
+
+      - name: Run regression tests and build CTAN archive
+        run: l3build ctan
+
+      - name: Inspect CTAN archive
+        run: >-
+          python3 scripts/check-ctan-release.py
+          --tag "${GITHUB_REF_NAME}"
+          --archive exam-zh.zip
+
+      - name: Validate submission with CTAN
+        run: >-
+          l3build upload --dry-run
+          --file build/ctan-announcement.md
+
+      - name: Save reviewed upload inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctan-${{ github.ref_name }}
+          path: |
+            exam-zh.zip
+            build/ctan-announcement.md
+          if-no-files-found: error
+          retention-days: 30
+
+  upload:
+    name: Upload approved archive
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ctan
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v7
+
+      - name: Install l3build
+        uses: zauguin/install-texlive@v4
+        with:
+          packages: scheme-basic l3build
+
+      - name: Download reviewed upload inputs
+        uses: actions/download-artifact@v4
+        with:
+          name: ctan-${{ github.ref_name }}
+
+      - name: Require explicit CTAN environment opt-in
+        env:
+          CTAN_UPLOAD_ENABLED: ${{ vars.CTAN_UPLOAD_ENABLED }}
+        run: test "${CTAN_UPLOAD_ENABLED}" = "true"
+
+      - name: Upload to CTAN
+        env:
+          L3BUILD_CTAN_UPLOAD: "true"
+        run: >-
+          l3build upload
+          --file build/ctan-announcement.md

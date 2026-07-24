@@ -16,7 +16,7 @@ version          = "v0.3.0"
 date             = "2026-07-12"
 maintainer       = "Kangwei Xia"
 uploader         = maintainer
-email            = "xia.kangwei@outlook.com"
+email            = "kangweixia_xdyy@163.com"
 repository       = "https://github.com/xkwxdyy/exam-zh"
 announcement     = ""
 note             = ""
@@ -36,7 +36,9 @@ answer control, draft mode, and more. Written with expl3 and requires XeLaTeX.
 ctanzip          = module
 sourcefiles      = {"*.sty", "exam-zh.cls"}
 installfiles     = {"*.sty", "exam-zh.cls"}
-textfiles        = {"*.md", "LICENSE"}
+-- Keep repository-only guidance (for example AGENTS.md and CLAUDE.md) out of
+-- the public CTAN archive.
+textfiles        = {"README.md", "CHANGELOG.md", "LICENSE"}
 excludefiles     = {"*~", "test.tex", "issue-test.tex"}
 
 -- Tagging configuration
@@ -84,6 +86,26 @@ checkengines     = {"xetex"}
 stdengine        = "xetex"
 
 -- CTAN upload configuration
+-- TeX Live 2026 initializes default variables after loading build.lua, which
+-- turns the upload module's false dry-run marker back into "ask".  Set the
+-- final state immediately before the target runs.  Local uploads otherwise
+-- retain l3build's confirmation prompt.
+local upload_pre = target_list.upload.pre
+target_list.upload.pre = function(names)
+  if upload_pre then
+    local result = upload_pre(names)
+    if result ~= 0 then
+      return result
+    end
+  end
+  if options["dry-run"] then
+    ctanupload = false
+  elseif os.getenv("L3BUILD_CTAN_UPLOAD") == "true" then
+    ctanupload = true
+  end
+  return 0
+end
+
 uploadconfig = {
   pkg          = module,
   version      = version .. " " .. date,

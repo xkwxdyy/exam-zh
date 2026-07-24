@@ -1,0 +1,31 @@
+# Build and test framework
+l3build
+latex
+latex-bin
+latexmk
+xetex
+
+# Class, package, and example dependencies
+amsmath
+asana-math
+ctex
+enumitem
+fancyhdr
+filehook
+geometry
+hyperref
+lastpage
+linegoal
+listings
+mwe
+newcomputermodern
+pgf
+siunitx
+tabularray
+tcolorbox
+tikzfill
+tikzpagenodes
+unicode-math
+varwidth
+wrapstuff
+xcolor

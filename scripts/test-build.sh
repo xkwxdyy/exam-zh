@@ -162,7 +162,14 @@ test_dry_run_gitee_release() {
 test_python_script_syntax() {
   log_info "  Testing Python script syntax..."
   python3 -m py_compile "$PROJECT_ROOT/scripts/build.py" || return 1
+  python3 -m py_compile "$PROJECT_ROOT/scripts/check-ctan-release.py" || return 1
   return 0
+}
+
+test_ctan_release_metadata() {
+  local version
+  version=$(get_version_from_build_lua "$PROJECT_ROOT/build.lua") || return 1
+  python3 "$PROJECT_ROOT/scripts/check-ctan-release.py" --tag "v$version" || return 1
 }
 
 # ==================== 主函数 ====================
@@ -188,6 +195,7 @@ main() {
   run_test "Release script syntax" test_dry_run_release
   run_test "Gitee release script syntax" test_dry_run_gitee_release
   run_test "Python script syntax" test_python_script_syntax
+  run_test "CTAN release metadata" test_ctan_release_metadata
 
   # 输出结果
   echo ""
