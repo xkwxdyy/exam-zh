@@ -12,8 +12,8 @@
 --]==========================================]--
 
 module           = "exam-zh"
-version          = "v0.3.0"
-date             = "2026-07-12"
+version          = "v0.3.1"
+date             = "2026-07-28"
 maintainer       = "Kangwei Xia"
 uploader         = maintainer
 email            = "kangweixia_xdyy@163.com"
@@ -143,8 +143,10 @@ function update_tag(file, content, tagname, tagdate)
   -- Update .sty files: \ProvidesExplPackage {name} {date} {version}
   if string.match(file, "%.sty$") then
     local pkg_name = string.match(file, "^(.*)%.sty$")
+    -- Escape Lua pattern magic characters (especially '-') in the package name
+    local pkg_name_pat = string.gsub(pkg_name, "([%-%.%(%)%[%]%+%*%?%^%$%%])", "%%%1")
     content = string.gsub(content,
-      "\\ProvidesExplPackage%s*{" .. pkg_name .. "}%s*{[^}]+}%s*{[^}]+}",
+      "\\ProvidesExplPackage%s*{" .. pkg_name_pat .. "}%s*{[^}]+}%s*{[^}]+}",
       "\\ProvidesExplPackage {" .. pkg_name .. "} {" .. tagdate_stripped .. "} {" .. tagname .. "}")
   end
 
