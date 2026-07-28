@@ -977,8 +977,10 @@
 % no-answer-type = counter 的计数器
 \int_new:N \g__examzh_fillin_no_answer_counter_int
 
-% 控制fillin 没答案的时候的长度由内容长度决定
-\bool_new:N \l__examzh_fillin_width_type_hidden_bool
+% 不显示答案时，是否按答案的自然宽度生成占位
+\bool_new:N \l__examzh_fillin_width_auto_bool
+\dim_new:N \l__examzh_fillin_F_width_dim
+\dim_new:N \l__examzh_fillin_width_extra_dim
 
 \keys_define:nn { exam-zh / fillin }
   {
@@ -987,7 +989,16 @@
         \str_set:Nn \l__examzh_fillin_type_str {#1}
       },
     show-answer .bool_set:N = \l__examzh_question_show_fillin_answer_bool,
-    width .dim_set:N = \l__examzh_fillin_F_width_dim,
+    width .code:n =
+      {
+        \str_if_eq:nnTF {#1} { auto }
+          { \bool_set_true:N \l__examzh_fillin_width_auto_bool }
+          {
+            \bool_set_false:N \l__examzh_fillin_width_auto_bool
+            \dim_set:Nn \l__examzh_fillin_F_width_dim {#1}
+          }
+      },
+    width-extra .dim_set:N = \l__examzh_fillin_width_extra_dim,
     width-type .choice:,
     width-type / fill .code:n =
       { \bool_set_true:N \l__examzh_fillin_width_fill_bool },
@@ -1012,6 +1023,7 @@
     type                     = line,
     show-answer              = false,
     width                    = 3em,
+    width-extra              = 0pt,
     box-color                = black,
     text-color               = black,
     no-answer-type           = blacktriangle,
@@ -1028,6 +1040,126 @@
 
 \dim_new:N \l__examzh_question_answer_depth_dim
 \dim_new:N \l__examzh_fillin_effective_line_depth_dim
+\dim_new:N \l__examzh_fillin_following_punctuation_width_dim
+\box_new:N \l__examzh_fillin_following_punctuation_box
+\bool_new:N \l__examzh_fillin_following_punctuation_captured_bool
+\tl_new:N \l__examzh_fillin_following_punctuation_tl
+\tl_new:N \l__examzh_fillin_star_tl
+\tl_new:N \l__examzh_fillin_keys_tl
+\tl_new:N \l__examzh_fillin_answer_tl
+
+\cs_new_protected:Npn \__examzh_fillin_reserve_following_punctuation:N #1
+  {
+    \hbox_set:Nn \l__examzh_fillin_following_punctuation_box {#1}
+    \dim_set:Nn \l__examzh_fillin_following_punctuation_width_dim
+      { \box_wd:N \l__examzh_fillin_following_punctuation_box }
+    % xeCJK 会把全角右标点的右侧留白悬挂到行外，只预留其实际占用宽度。
+    \__xeCJK_punct_if_right:NT #1
+      {
+        \xeCJK_get_punct_bounds:NN \c__xeCJK_right_tl #1
+        \dim_sub:Nn \l__examzh_fillin_following_punctuation_width_dim
+          {
+            \__xeCJK_use_punct_dim:nNN
+              { margin } \c__xeCJK_right_tl #1
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_set_following_punctuation:N #1
+  {
+    \tl_set:Nn \l__examzh_fillin_following_punctuation_tl {#1}
+    \__examzh_fillin_reserve_following_punctuation:N #1
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_set_following_punctuation_width:
+  {
+    \dim_zero:N \l__examzh_fillin_following_punctuation_width_dim
+    \tl_clear:N \l__examzh_fillin_following_punctuation_tl
+    \token_case_meaning:Nn \l_peek_token
+      {
+        ,  { \__examzh_fillin_set_following_punctuation:N , }
+        .  { \__examzh_fillin_set_following_punctuation:N . }
+        ;  { \__examzh_fillin_set_following_punctuation:N ; }
+        :  { \__examzh_fillin_set_following_punctuation:N : }
+        !  { \__examzh_fillin_set_following_punctuation:N ! }
+        ?  { \__examzh_fillin_set_following_punctuation:N ? }
+        )  { \__examzh_fillin_set_following_punctuation:N ) }
+        ]  { \__examzh_fillin_set_following_punctuation:N ] }
+        ， { \__examzh_fillin_set_following_punctuation:N ， }
+        。 { \__examzh_fillin_set_following_punctuation:N 。 }
+        ； { \__examzh_fillin_set_following_punctuation:N ； }
+        ： { \__examzh_fillin_set_following_punctuation:N ： }
+        ！ { \__examzh_fillin_set_following_punctuation:N ！ }
+        ？ { \__examzh_fillin_set_following_punctuation:N ？ }
+        、 { \__examzh_fillin_set_following_punctuation:N 、 }
+        ） { \__examzh_fillin_set_following_punctuation:N ） }
+        》 { \__examzh_fillin_set_following_punctuation:N 》 }
+        」 { \__examzh_fillin_set_following_punctuation:N 」 }
+        』 { \__examzh_fillin_set_following_punctuation:N 』 }
+        】 { \__examzh_fillin_set_following_punctuation:N 】 }
+        〕 { \__examzh_fillin_set_following_punctuation:N 〕 }
+        〗 { \__examzh_fillin_set_following_punctuation:N 〗 }
+        〙 { \__examzh_fillin_set_following_punctuation:N 〙 }
+        〛 { \__examzh_fillin_set_following_punctuation:N 〛 }
+        ’  { \__examzh_fillin_set_following_punctuation:N ’ }
+        ”  { \__examzh_fillin_set_following_punctuation:N ” }
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_typeset_prepared:
+  {
+    \__examzh_fillin_typeset_prepared:VVV
+      \l__examzh_fillin_star_tl
+      \l__examzh_fillin_keys_tl
+      \l__examzh_fillin_answer_tl
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_capture_following_punctuation:N #1
+  {
+    \peek_meaning_remove:NTF #1
+      {
+        \bool_set_true:N \l__examzh_fillin_following_punctuation_captured_bool
+        \tl_set:Nn \l__examzh_fillin_following_punctuation_tl {#1}
+        \__examzh_fillin_typeset_prepared:
+      }
+      { \__examzh_fillin_typeset_prepared: }
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_capture_following_punctuation:
+  {
+    \bool_set_false:N \l__examzh_fillin_following_punctuation_captured_bool
+    \bool_if:NTF \l__examzh_fillin_width_auto_bool
+      {
+        \bool_if:NTF \l__examzh_question_show_fillin_answer_bool
+          { \__examzh_fillin_typeset_prepared: }
+          {
+            \str_if_eq:VnTF \l__examzh_fillin_type_str { line }
+              {
+                \str_if_eq:VnTF \l__examzh_fillin_no_answer_type_str { none }
+                  {
+                    \dim_compare:nNnTF
+                      {
+                        \l__examzh_fillin_F_width_dim
+                        + \l__examzh_fillin_following_punctuation_width_dim
+                      } < { \linewidth }
+                      {
+                        \tl_if_empty:NTF \l__examzh_fillin_following_punctuation_tl
+                          { \__examzh_fillin_typeset_prepared: }
+                          {
+                            \exp_args:NV
+                              \__examzh_fillin_capture_following_punctuation:N
+                              \l__examzh_fillin_following_punctuation_tl
+                          }
+                      }
+                      { \__examzh_fillin_typeset_prepared: }
+                  }
+                  { \__examzh_fillin_typeset_prepared: }
+              }
+              { \__examzh_fillin_typeset_prepared: }
+          }
+      }
+      { \__examzh_fillin_typeset_prepared: }
+  }
 
 \prg_new_conditional:Npnn \__examzh_fillin_answer_should_break: { TF }
   {
@@ -1059,6 +1191,110 @@
       }
   }
 
+\cs_new_protected:Npn \__examzh_fillin_set_auto_width:n #1
+  {
+    \bool_if:NT \l__examzh_fillin_width_auto_bool
+      {
+        \tl_if_blank:nTF {#1}
+          {
+            % 没有答案时无法推断长度，沿用 \fillin 的默认宽度。
+            \dim_set:Nn \l__examzh_fillin_F_width_dim { 3em }
+          }
+          {
+            \hbox_set:Nn \l_tmpa_box
+              { \__examzh_fillin_print_answer:n {#1} }
+            \dim_set:Nn \l__examzh_fillin_F_width_dim
+              {
+                \box_wd:N \l_tmpa_box
+                + \l__examzh_fillin_width_extra_dim
+              }
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_typeset:nnn #1#2#3
+  {
+    \IfNoValueTF {#3}
+      {
+        \__examzh_fillin_set_auto_width:n {#2}
+      }
+      {
+        \keys_set:nn { exam-zh / fillin } {#2}
+        \__examzh_fillin_set_auto_width:n {#3}
+      }
+    \__examzh_fillin_set_following_punctuation_width:
+    \__examzh_fillin_capture_following_punctuation:
+  }
+\cs_new_protected:Npn \__examzh_fillin_typeset_prepared:nnn #1#2#3
+  {
+    \IfNoValueTF {#3}
+      {
+        \bool_if:NTF \l__examzh_question_show_fillin_answer_bool
+          {
+            % 显示答案
+            \IfBooleanTF {#1}
+              {
+                % \fillin*[]
+                \__examzh_fillin_breakline:n {#2}
+              }
+              {
+                % \fillin[]
+                \__examzh_fillin:n {#2}
+              }
+          }
+          {
+            % 不显示答案
+            \IfBooleanTF {#1}
+              { \__examzh_fillin_no_answer_breakable_typeset: }
+              { \__examzh_fillin_no_answer_unbreakable_typeset: }
+          }
+      }
+      {
+        \bool_if:NTF \l__examzh_question_show_fillin_answer_bool
+          {
+            % 显示答案
+            \IfBooleanTF {#1}
+              {
+                % \fillin*[][]
+                \__examzh_fillin_breakline:n {#3}
+              }
+              {
+                % \fillin[][]
+                \__examzh_fillin:n {#3}
+              }
+          }
+          {
+            % 不显示答案
+            \IfBooleanTF {#1}
+              { \__examzh_fillin_no_answer_breakable_typeset: }
+              { \__examzh_fillin_no_answer_unbreakable_typeset: }
+          }
+      }
+    \bool_if:NTF \l__examzh_fillin_following_punctuation_captured_bool
+      { \space }
+      {
+        \bool_if:NTF \l__examzh_fillin_width_auto_bool
+          {
+            \dim_compare:nNnTF
+              { \l__examzh_fillin_following_punctuation_width_dim } > { 0pt }
+              { \nobreak }
+              { \space }
+          }
+          { \space }
+      }
+    \group_end:
+  }
+\cs_generate_variant:Nn \__examzh_fillin_typeset:nnn { VVV }
+\cs_generate_variant:Nn \__examzh_fillin_typeset_prepared:nnn { VVV }
+
+\cs_new_protected:Npn \__examzh_fillin_typeset_after_peek:
+  {
+    \__examzh_fillin_typeset:VVV
+      \l__examzh_fillin_star_tl
+      \l__examzh_fillin_keys_tl
+      \l__examzh_fillin_answer_tl
+  }
+
 % 填空命令
 % \fillin \fillin[] \fillin[][] 在 show-answer = false 的情况下
 % no-answer-type = blacktriangle 就显示黑色三角形
@@ -1067,52 +1303,13 @@
 \NewDocumentCommand \fillin { s O{} o }
   {
     \group_begin:
-      \IfNoValueTF {#3}
+      \tl_set:Nn \l__examzh_fillin_star_tl {#1}
+      \tl_set:Nn \l__examzh_fillin_keys_tl {#2}
+      \tl_set:Nn \l__examzh_fillin_answer_tl {#3}
+      \peek_remove_spaces:n
         {
-          \bool_if:NTF \l__examzh_question_show_fillin_answer_bool
-            {
-              % 显示答案
-              \IfBooleanTF {#1}
-                {
-                  % \fillin*[]
-                  \__examzh_fillin_breakline:n {#2}
-                }
-                {
-                  % \fillin[]
-                  \__examzh_fillin:n {#2}
-                }
-            }
-            {
-              % 不显示答案
-              \IfBooleanTF {#1}
-                { \__examzh_fillin_no_answer_breakable_typeset: }
-                { \__examzh_fillin_no_answer_unbreakable_typeset: }
-            }
+          \peek_after:Nw \__examzh_fillin_typeset_after_peek:
         }
-        {
-          \keys_set:nn { exam-zh / fillin } {#2}
-          \bool_if:NTF \l__examzh_question_show_fillin_answer_bool
-            {
-              % 显示答案
-              \IfBooleanTF {#1}
-                {
-                  % \fillin*[][]
-                  \__examzh_fillin_breakline:n {#3}
-                }
-                {
-                  % \fillin[][]
-                  \__examzh_fillin:n {#3}
-                }
-            }
-            {
-              % 不显示答案
-              \IfBooleanTF {#1}
-                { \__examzh_fillin_no_answer_breakable_typeset: }
-                { \__examzh_fillin_no_answer_unbreakable_typeset: }
-            }
-        }
-    \group_end:
-    \space \ignorespaces
   }
 \msg_new:nnn { exam-zh / fillin } { no-such-noanswertype }
   {
@@ -1127,11 +1324,18 @@
         { counter } { \__examzh_fillin_no_answer_typeset_counter: }
         { none }
           {
-            % 宽度达到或超出版心时必须使用可换行实现；等于 \linewidth
-            % 时还要计入填空前后的留白，否则仍会产生 overfull hbox。
-            \dim_compare:nNnTF { \l__examzh_fillin_F_width_dim } < { \linewidth }
-              { \__examzh_fillin_output_unbreakable_F: }
-              { \__examzh_fillin_output_breakable_F: }
+            \bool_if:NTF \l__examzh_fillin_width_auto_bool
+              {
+                % 自动宽度还必须考虑当前位置的剩余空间，交给可换行实现。
+                \__examzh_fillin_output_breakable_F:
+              }
+              {
+                % 宽度达到或超出版心时必须使用可换行实现；等于 \linewidth
+                % 时还要计入填空前后的留白，否则仍会产生 overfull hbox。
+                \dim_compare:nNnTF { \l__examzh_fillin_F_width_dim } < { \linewidth }
+                  { \__examzh_fillin_output_unbreakable_F: }
+                  { \__examzh_fillin_output_breakable_F: }
+              }
           }
       }
       {
@@ -1303,7 +1507,21 @@
 \cs_new:Npn \__examzh_fillin_uline_breakable_F:
   {
     % \uline { \hspace* { \l__examzh_fillin_F_width_dim } }
-    \__examzh_fillin_breakable_hspace:NN \CJKunderline \allowbreak
+    \bool_if:NTF \l__examzh_fillin_following_punctuation_captured_bool
+      {
+        % 将短填空和紧随其后的右标点作为一个不可分割的行内单元，
+        % 使其无法被拆成“行末下划线 + 行首标点”。
+        \hbox
+          {
+            \CJKunderline { \hspace* { \l__examzh_fillin_F_width_dim } }
+            \tl_use:N \l__examzh_fillin_following_punctuation_tl
+          }
+      }
+      {
+        \bool_if:NTF \l__examzh_fillin_width_auto_bool
+          { \__examzh_fillin_breakable_hspace:NN \CJKunderline \prg_do_nothing: }
+          { \__examzh_fillin_breakable_hspace:NN \CJKunderline \allowbreak }
+      }
   }
 \cs_new:Npn \__examzh_fillin_uline_unbreakable_F:
   {
@@ -1416,10 +1634,12 @@
     \hspace* { 0.5em plus .5em minus .5em }
     \bool_if:NTF \l__examzh_fillin_paren_banjiao_bool
       {
-        ( \__examzh_fillin_breakable_hspace:NN \use:n \nobreak \kern-\c__examzh_banjiao_right_brace_width_dim ) \allowbreak
+        ( \__examzh_fillin_breakable_hspace:NN \use:n \nobreak \kern-\c__examzh_banjiao_right_brace_width_dim )
+        \bool_if:NF \l__examzh_fillin_width_auto_bool { \allowbreak }
       }
       {
-        （ \__examzh_fillin_breakable_hspace:NN \use:n \nobreak \kern-\c__examzh_quanjiao_right_brace_width_dim ）\allowbreak
+        （ \__examzh_fillin_breakable_hspace:NN \use:n \nobreak \kern-\c__examzh_quanjiao_right_brace_width_dim ）
+        \bool_if:NF \l__examzh_fillin_width_auto_bool { \allowbreak }
       }
     \ignorespaces
   }
@@ -1457,7 +1677,9 @@
 \cs_new:Npn \__examzh_fillin_blank_breakable_F:
   {
     % \hspace* { \l__examzh_fillin_F_width_dim }
-    \__examzh_fillin_breakable_hspace:NN \use:n \allowbreak
+    \bool_if:NTF \l__examzh_fillin_width_auto_bool
+      { \__examzh_fillin_breakable_hspace:NN \use:n \prg_do_nothing: }
+      { \__examzh_fillin_breakable_hspace:NN \use:n \allowbreak }
   }
 \cs_new:Npn \__examzh_fillin_blank_unbreakable_F:
   {
@@ -1534,11 +1756,60 @@
 \AddToHook { cmd / endlist  / before }
   { \int_zero:N \l__list_depth_int }
 
+\cs_new:Npn \__examzh_fillin_full_segment_width:n #1
+  {
+    \bool_if:NTF \l__examzh_fillin_width_fill_bool
+      {
+        \dim_max:nn
+          { 0pt }
+          { #1 - \l__examzh_fillin_following_punctuation_width_dim }
+      }
+      {#1}
+  }
+
+\cs_new:Npn \__examzh_fillin_full_segment_reserve:
+  {
+    \bool_if:NT \l__examzh_fillin_width_fill_bool
+      {
+        \hspace*
+          { \l__examzh_fillin_following_punctuation_width_dim }
+      }
+  }
+
+\cs_new:Npn \__examzh_fillin_final_segment_width:n #1
+  {
+    \bool_if:NTF \l__examzh_fillin_width_auto_bool
+      {
+        \dim_compare:nNnTF
+          { \l__examzh_fillin_following_punctuation_width_dim } > { 0pt }
+          {
+            \dim_eval:n
+              {
+                \dim_max:nn
+                  { 0pt }
+                  { #1 - \l__examzh_fillin_following_punctuation_width_dim }
+              }
+            plus \l__examzh_fillin_following_punctuation_width_dim
+          }
+          {#1}
+      }
+      {#1}
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_adjust_paragraph_start_width:N #1
+  {
+    \mode_if_vertical:T
+      { \dim_sub:Nn #1 { \parindent } }
+  }
+
 \cs_new:Npn \__examzh_fillin_breakable_hspace:NN #1#2
   % #1: CJKunderline / use:n
-  % #2: \allowbreak
+  % #2: command to run after the fillin
   {
     \dim_set_eq:NN \l_tmpb_dim \linegoal
+    % 段首调用时，linegoal 尚未计入随后由 TeX 插入的首行缩进。
+    \bool_if:NT \l__examzh_fillin_width_auto_bool
+      { \__examzh_fillin_adjust_paragraph_start_width:N \l_tmpb_dim }
     % 比较 \l__examzh_fillin_F_width_dim 和 linegoal
     \dim_compare:nNnTF { \l__examzh_fillin_F_width_dim } > { \l_tmpb_dim }
       {
@@ -1553,17 +1824,32 @@
               {
                 \dim_add:Nn \l_tmpa_dim { \dim_use:c { l__list_leftmargin_ \int_to_roman:n { ##1 } _dim } }
               }
-            #1 { \hspace { \l_tmpa_dim } }
+            #1
+              {
+                \hspace
+                  { \__examzh_fillin_full_segment_width:n { \l_tmpa_dim } }
+              }
+            \__examzh_fillin_full_segment_reserve:
           }
           {
             % 正文中
-            #1 { \hspace { \l_tmpb_dim } }
+            #1
+              {
+                \hspace
+                  { \__examzh_fillin_full_segment_width:n { \l_tmpb_dim } }
+              }
+            \__examzh_fillin_full_segment_reserve:
           }
         \dim_sub:NV \l__examzh_fillin_F_width_dim \l_tmpa_dim
         \dim_while_do:nNnn { \l__examzh_fillin_F_width_dim } > { \linewidth }
           {
             % 循环：\l__examzh_fillin_F_width_dim 和 \linewidth 比较，大的话就排一个，然后减掉 linewidth
-            \\ #1 { \hspace* { \linewidth } }
+            \\ #1
+              {
+                \hspace*
+                  { \__examzh_fillin_full_segment_width:n { \linewidth } }
+              }
+            \__examzh_fillin_full_segment_reserve:
             \dim_sub:Nn \l__examzh_fillin_F_width_dim { \linewidth }
           }
         % \\ #1 { \hspace* { \linewidth } }
@@ -1572,15 +1858,42 @@
             % 最后一行是否 fill
             \bool_if:NTF \l__examzh_fillin_width_fill_bool
               {
-                \\ #1 { \hspace* { \linewidth } }
+                % 无标点时铺满整行；有标点时为其精确预留行末宽度。
+                \\ #1
+                  {
+                    \hspace*
+                      {
+                        \dim_eval:n
+                          {
+                            \linewidth
+                            - \l__examzh_fillin_following_punctuation_width_dim
+                          }
+                        plus
+                        \l__examzh_fillin_following_punctuation_width_dim
+                      }
+                  }
               }
               {
-                \\ #1 { \hspace* { \l__examzh_fillin_F_width_dim } }
+                \\ #1
+                  {
+                    \hspace*
+                      {
+                        \__examzh_fillin_final_segment_width:n
+                          { \l__examzh_fillin_F_width_dim }
+                      }
+                  }
               }
           }
       }
       {
-        #1 { \hspace* { \l__examzh_fillin_F_width_dim } }
+        #1
+          {
+            \hspace*
+              {
+                \__examzh_fillin_final_segment_width:n
+                  { \l__examzh_fillin_F_width_dim }
+              }
+          }
       }
     #2
   }

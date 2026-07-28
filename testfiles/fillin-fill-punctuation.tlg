@@ -1,0 +1,16 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+fillin-fill-segment-width=90.0pt
+fillin-normal-segment-width=100.0pt
+fillin-auto-final-segment=90.0pt plus 10.0pt
+fillin-paragraph-start-width=80.0pt
+fillin-noindent-width=100.0pt
+fillin-punctuation-reserve=yes
+fillin-punctuation-reserve=yes
+fillin-punctuation-reserve=yes
+fillin-punctuation-reserve=yes
+fillin-punctuation-reserve=no
+fillin-punctuation-captured=yes
+fillin-captured-token=，
+fillin-punctuation-captured=no
+fillin-captured-token=

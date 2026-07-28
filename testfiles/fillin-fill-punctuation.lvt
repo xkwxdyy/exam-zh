@@ -1,0 +1,89 @@
+\documentclass{article}
+
+\input{regression-test}
+
+\usepackage{exam-zh-question}
+
+\begin{document}
+\START
+
+\fillinsetup{show-answer=false,no-answer-type=none}
+
+\ExplSyntaxOn
+\dim_set:Nn \l__examzh_fillin_following_punctuation_width_dim { 10pt }
+\bool_set_true:N \l__examzh_fillin_width_fill_bool
+\TYPE
+  {
+    fillin-fill-segment-width=
+    \dim_eval:n { \__examzh_fillin_full_segment_width:n { 100pt } }
+  }
+\bool_set_false:N \l__examzh_fillin_width_fill_bool
+\TYPE
+  {
+    fillin-normal-segment-width=
+    \dim_eval:n { \__examzh_fillin_full_segment_width:n { 100pt } }
+  }
+\bool_set_true:N \l__examzh_fillin_width_auto_bool
+\skip_set:Nn \l_tmpa_skip
+  { \__examzh_fillin_final_segment_width:n { 100pt } }
+\TYPE
+  {
+    fillin-auto-final-segment=\skip_use:N \l_tmpa_skip
+  }
+\bool_set_false:N \l__examzh_fillin_width_auto_bool
+\parindent=20pt
+\dim_set:Nn \l_tmpa_dim { 100pt }
+\par
+\__examzh_fillin_adjust_paragraph_start_width:N \l_tmpa_dim
+\TYPE { fillin-paragraph-start-width=\dim_use:N \l_tmpa_dim }
+\par\noindent
+\dim_set:Nn \l_tmpa_dim { 100pt }
+\__examzh_fillin_adjust_paragraph_start_width:N \l_tmpa_dim
+\TYPE { fillin-noindent-width=\dim_use:N \l_tmpa_dim }
+\par
+
+\cs_set_eq:NN
+  \__examzh_test_fillin_output_breakable_F:
+  \__examzh_fillin_output_breakable_F:
+\cs_set_protected:Npn \__examzh_fillin_output_breakable_F:
+  {
+    \dim_compare:nNnTF
+      { \l__examzh_fillin_following_punctuation_width_dim } > { 0pt }
+      { \TYPE { fillin-punctuation-reserve=yes } }
+      { \TYPE { fillin-punctuation-reserve=no } }
+  }
+
+\fillin*[width = 1.2\linewidth, width-type = fill][]，题干继续。
+\fillin*[width = 1.2\linewidth, width-type = fill][]。题干继续。
+\fillin*[type = paren, width = 1.2\linewidth, width-type = fill][]，题干继续。
+\fillin*[type = blank, width = 1.2\linewidth, width-type = fill][]。题干继续。
+\fillin*[width = 1.2\linewidth, width-type = fill][]text
+
+\cs_set_eq:NN
+  \__examzh_fillin_output_breakable_F:
+  \__examzh_test_fillin_output_breakable_F:
+\fillinsetup{show-answer=false,no-answer-type=none,width=auto,type=line}
+\cs_set_eq:NN
+  \__examzh_test_fillin_uline_breakable_F:
+  \__examzh_fillin_uline_breakable_F:
+\cs_set_protected:Npn \__examzh_fillin_uline_breakable_F:
+  {
+    \bool_if:NTF \l__examzh_fillin_following_punctuation_captured_bool
+      { \TYPE { fillin-punctuation-captured=yes } }
+      { \TYPE { fillin-punctuation-captured=no } }
+    \TYPE
+      {
+        fillin-captured-token=
+        \tl_to_str:V \l__examzh_fillin_following_punctuation_tl
+      }
+  }
+\fillin[answer]，题干继续。
+\fillin[answer]text
+
+\cs_set_eq:NN
+  \__examzh_fillin_uline_breakable_F:
+  \__examzh_test_fillin_uline_breakable_F:
+\ExplSyntaxOff
+
+\END
+\end{document}

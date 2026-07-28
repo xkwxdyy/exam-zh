@@ -239,6 +239,15 @@
   \fillin[width = 6em][答案]  % 这个填空宽度是 6em
 \end{latexcode}
 
+\textbf{按答案长度自动留空：}
+
+\begin{latexcode}
+  \fillin[width = auto][山重水复疑无路]
+\end{latexcode}
+
+学生版隐藏答案时，|width = auto| 会测量已输入答案的自然宽度；可通过
+|width-extra| 额外留出书写空间。没有输入答案时仍使用默认的 |3em|。
+
 \subsubsection{Q13: 如何修改密封线样式？}
 
 \textbf{完全隐藏密封线：}

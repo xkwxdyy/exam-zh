@@ -1,0 +1,308 @@
+\documentclass{exam-zh}
+
+% Visual test for \fillin.  Every fillinexample shows its source in the upper
+% half and renders that same source once in the lower half.
+
+\examsetup{page/size = a4paper}
+
+\RequirePackage{listings}
+\tcbuselibrary{listings, skins, breakable}
+
+\definecolor{FillinExampleFrame}{HTML}{52606D}
+\definecolor{FillinExampleCode}{HTML}{F3F5F7}
+
+\lstdefinelanguage{fillinlatex}{
+  language = [LaTeX]TeX,
+  alsoletter = {*,-},
+  moretexcs = {
+    fillin, fillinsetup, examsetup, circlednumber, tikzcirclednumber
+  }
+}
+
+\newtcblisting{fillinexample}[1]{
+  enhanced,
+  breakable,
+  listing and text,
+  listing engine = listings,
+  title = {#1\hfill\footnotesize 上：输入源码\quad 下：直出效果},
+  fonttitle = \bfseries,
+  coltitle = white,
+  colframe = FillinExampleFrame,
+  colback = FillinExampleCode,
+  colbacklower = white,
+  boxrule = 0.6pt,
+  arc = 1mm,
+  left = 2mm,
+  right = 2mm,
+  top = 1.5mm,
+  bottom = 1.5mm,
+  before skip = 1em,
+  after skip = 1.2em,
+  segmentation style = {solid, draw = FillinExampleFrame, line width = 0.6pt},
+  before lower = {\par\smallskip\noindent\bfseries 直出效果\par\medskip\normalfont},
+  listing options = {
+    language = fillinlatex,
+    basicstyle = \small\ttfamily,
+    keywordstyle = \color{blue!65!black},
+    commentstyle = \itshape\color{black!55},
+    breaklines = true,
+    columns = fullflexible,
+    keepspaces = true,
+    showstringspaces = false
+  }
+}
+
+\begin{document}
+
+\section*{\texttt{\string\fillin} 综合直出测试}
+
+本文档把每组输入源码和它的实际排版结果放在同一个盒子中。重点测试不手写
+\texttt{width} 时，学生版能否按答案自然宽度留空，以及学生版、教师版的长答案
+能否自动换行；同时保留命令的其他主要参数作为回归对照。
+
+\subsection*{参数写法}
+
+\begin{fillinexample}{无参数、一个可选参数和两个可选参数}
+\fillinsetup{
+  type = line,
+  show-answer = false,
+  no-answer-type = none,
+  width = 3em
+}
+
+无参数：题干 \fillin 题干继续。
+
+空答案：题干 \fillin[] 题干继续。
+
+单个可选参数作为答案：题干 \fillin[答案] 题干继续。
+
+键值和答案：题干 \fillin[width = 6em][答案] 题干继续。
+
+局部更改类型且答案为空：题干 \fillin[type = paren][] 题干继续。
+
+\fillinsetup{show-answer = true}
+
+显示答案：题干 \fillin[答案] 题干继续。
+
+答案含不配对中括号：题干 \fillin[{$[2,3)$}] 题干继续。
+\end{fillinexample}
+
+\subsection*{五种类型与局部样式}
+
+\begin{fillinexample}{显示答案时的类型、颜色和括号样式}
+\fillinsetup{show-answer = true, text-color = black, box-color = black}
+
+下划线：\fillin[type = line][答案]；
+半角括号：\fillin[type = paren, paren-type = banjiao][答案]；
+全角括号：\fillin[type = paren, paren-type = quanjiao][答案]。
+
+圆形：\fillin[type = circle][答案]；
+矩形：\fillin[type = rectangle][答案]；
+无装饰：起点|\fillin[type = blank][答案]|终点。
+
+颜色：\fillin[type = line, text-color = blue][蓝色答案与线]；
+\fillin[type = circle, box-color = red, text-color = blue][彩色圆形]；
+\fillin[type = rectangle, box-color = blue, text-color = red][彩色矩形]。
+\end{fillinexample}
+
+\begin{fillinexample}{隐藏答案时的五种类型}
+\fillinsetup{
+  show-answer = false,
+  no-answer-type = none,
+  width = 5em
+}
+
+下划线：\fillin[type = line][答案]；
+半角括号：\fillin[type = paren, paren-type = banjiao][答案]；
+全角括号：\fillin[type = paren, paren-type = quanjiao][答案]。
+
+圆形：\fillin[type = circle][答案]；
+矩形：\fillin[type = rectangle][答案]；
+无装饰：起点|\fillin[type = blank][答案]|终点。
+\end{fillinexample}
+
+\subsection*{隐藏答案的占位内容}
+
+\begin{fillinexample}{黑三角、计数器和纯空白}
+\fillinsetup{type = line, show-answer = false, width = 4em}
+
+默认黑三角：\fillin[no-answer-type = blacktriangle][原答案]；
+括号中的黑三角：
+\fillin[type = paren, no-answer-type = blacktriangle][原答案]。
+
+\fillinsetup{
+  no-answer-type = counter,
+  no-answer-counter-index = 7,
+  no-answer-counter-label = \arabic*
+}
+阿拉伯数字：\fillin[原答案]、\fillin[原答案]。
+
+\fillinsetup{no-answer-counter-index = 3, no-answer-counter-label = \alph*}
+小写字母：\fillin[原答案]、\fillin[原答案]。
+
+\fillinsetup{
+  no-answer-counter-index = 4,
+  no-answer-counter-label = \circlednumber*
+}
+字体带圈：\fillin[原答案]。
+
+\fillinsetup{
+  no-answer-counter-index = 5,
+  no-answer-counter-label = \tikzcirclednumber*
+}
+TikZ 带圈：\fillin[原答案]。
+
+\fillinsetup{no-answer-type = none, width = 4em}
+纯空白：\fillin[原答案]；带星号的纯空白：\fillin*[原答案]。
+\end{fillinexample}
+
+\noindent\texttt{no-answer-type=hidden} 虽能通过键值解析，但当前没有输出分支，
+直接调用会报错，因此这里只记录该缺口，不把它放入可编译示例。
+
+\section*{不写 \texttt{width}：自然宽度与自动换行}
+
+\begin{fillinexample}{学生版：带星号且不写 width}
+\fillinsetup{
+  type = line,
+  show-answer = false,
+  no-answer-type = none,
+  width-type = normal,
+  text-color = black,
+  depth = 0.4em
+}
+
+短文本：题干末尾 \fillin*[两个实数]，题干继续。
+
+数学答案：题干末尾
+\fillin*[$x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$]，题干继续。
+
+当前位置剩余宽度不足：这是一段自然排版并占用当前行大部分空间的题干，答案为
+\fillin*[答案宽度小于整行，但是大于当前位置的剩余宽度]，题干继续。
+
+答案超过整行：这是一段放在填空前的题干，答案为
+\fillin*[这是一个用于测试隐藏答案自然宽度的长答案，它的自然宽度超过一行，
+因此对应的空白下划线也应该自动换行，并且与教师版答案占用相同的行数]，题干继续。
+\end{fillinexample}
+
+\begin{fillinexample}{学生版：普通命令作为兼容性对照}
+\fillinsetup{
+  type = line,
+  show-answer = false,
+  no-answer-type = none,
+  width-type = normal
+}
+
+短答案：题干 \fillin[两个实数]，题干继续。
+
+长答案：这是一段放在填空前的题干，答案为
+\fillin[这是一个用于测试普通命令路由的长答案，它的自然宽度超过一整行，
+用于对比普通命令与带星号命令的换行行为]，题干继续。
+\end{fillinexample}
+
+\begin{fillinexample}{教师版：与学生版使用相同的带星号命令}
+\fillinsetup{
+  type = line,
+  show-answer = true,
+  no-answer-type = none,
+  width-type = normal,
+  text-color = black,
+  depth = 0.4em
+}
+
+短文本：题干末尾 \fillin*[两个实数]，题干继续。
+
+数学答案：题干末尾
+\fillin*[$x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$]，题干继续。
+
+当前位置剩余宽度不足：这是一段自然排版并占用当前行大部分空间的题干，答案为
+\fillin*[答案宽度小于整行，但是大于当前位置的剩余宽度]，题干继续。
+
+答案超过整行：这是一段放在填空前的题干，答案为
+\fillin*[这是一个用于测试教师版自动换行的长答案，它的自然宽度超过一行，
+因此答案和下划线都应该自动换行，并且与学生版占用相同的行数]，题干继续。
+\end{fillinexample}
+
+\section*{显式宽度、星号与 \texttt{width-type}}
+
+\begin{fillinexample}{显式 width 仍然优先}
+\fillinsetup{
+  type = line,
+  show-answer = false,
+  no-answer-type = none,
+  width-type = normal
+}
+
+普通命令，短宽度：题干 \fillin[width = 3em][答案] 题干继续。
+
+普通命令，半行宽度：题干
+\fillin[width = 0.5\linewidth][答案] 题干继续。
+
+带星号，严格保留末行长度：题干
+\fillin*[width = 1.2\linewidth, width-type = normal][答案]，题干继续。
+
+带星号，末行自动铺满：题干
+\fillin*[width = 1.2\linewidth, width-type = fill][答案]，题干继续。
+
+\par\begingroup\parindent=2em
+\fillin*[width = 1.2\linewidth, width-type = fill][答案]，行首直接开始。
+\par\endgroup
+
+\par\begingroup\parindent=2em\noindent
+\fillin*[width = 1.2\linewidth, width-type = fill][答案]，显式取消首行缩进。
+\par\endgroup
+
+括号可换行占位：题干
+\fillin*[type = paren, width = 1.2\linewidth][答案]，题干继续。
+
+无装饰占位的边界：起点|
+\fillin*[type = blank, width = 1.2\linewidth][答案]|终点。
+\end{fillinexample}
+
+\subsection*{下划线深度与高公式}
+
+\begin{fillinexample}{depth 与高公式}
+\fillinsetup{type = line, show-answer = true, text-color = black}
+
+默认深度与分式：
+\fillin[depth = 0.4em][$\dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$]。
+
+较浅的基础深度：
+\fillin[depth = 0.2em][$\dfrac{1}{x^2} + \dfrac{2}{y^2}$]。
+
+较深的基础深度：
+\fillin[depth = 0.8em][$\dfrac{1}{x^2} + \dfrac{2}{y^2}$]。
+
+带星号的高公式：
+\fillin*[depth = 0.2em][$\dfrac{1}{x^2} + \dfrac{2}{y^2}
+= \dfrac{3}{z^2}$]。
+\end{fillinexample}
+
+\section*{正文、\texttt{question} 与 \texttt{problem} 环境}
+
+\begin{fillinexample}{不同上下文中的显示与隐藏效果}
+\fillinsetup{type = line, show-answer = true, no-answer-type = none}
+
+正文中的填空：\fillin[正文答案]；
+同一行第二个填空：\fillin[第二答案]。
+
+\begin{question}[show-answer = true]
+  question 中显示答案：\fillin[题目答案]；长答案：
+  \fillin*[这是一个放在 question 环境中的教师版长答案，
+  用于检查答案能否在环境内部自动换行]。
+\end{question}
+
+\begin{question}[show-answer = false]
+  question 中隐藏答案：\fillin[width = 6em][题目答案]；
+  带星号且不写宽度：
+  \fillin*[这是一个放在 question 环境中的学生版长答案，
+  用于检查隐藏占位能否在环境内部自动换行]。
+\end{question}
+
+\begin{problem}[show-answer = true]
+  problem 中显示答案：\fillin[解答题答案]；长答案：
+  \fillin*[这是一个放在 problem 环境中的教师版长答案，
+  用于检查答案能否在环境内部自动换行]。
+\end{problem}
+\end{fillinexample}
+
+\end{document}

@@ -2385,12 +2385,34 @@
   控制 \tn{fillin} 答案的显示与否。注意和 \opt{question/show-answer} 的先后顺序可能会影响结果。
 \end{function}
 
-\begin{function}[added = 2022-07-06]{fillin/width}
+\begin{function}[added = 2022-07-06, updated = 2026-07-28]{fillin/width}
   \begin{examzhsyntax}[emph={[1]width}]
-    width = (*<dimension>*)
+    width = (*<dimension>|auto*)
   \end{examzhsyntax}
   控制 \kvopt{fillin/type}{line/paren/blank} 下 \tn{fillin} 不显示答案时的长度，默认为 |3em|。
+  设置为 |auto| 时，模板按已输入答案的自然宽度生成占位，并加上
+  \opt{fillin/width-extra} 的留白；这适合学生版希望保留原文位置和长度的情形。
+  没有输入答案的 |\tn{fillin}| 或 |\tn{fillin}[]| 仍使用 |3em|。
 \end{function}
+
+\begin{function}[added = 2026-07-28]{fillin/width-extra}
+  \begin{examzhsyntax}[emph={[1]width-extra}]
+    width-extra = (*<dimension>*)
+  \end{examzhsyntax}
+  设置 \opt{fillin/width=auto} 在答案自然宽度之外增加的水平留白，默认为 |0pt|。
+\end{function}
+
+\begin{latexexample}{按答案自然宽度留空}
+  \examsetup{fillin = { show-answer = false, no-answer-type = none }}
+
+  默认固定宽度：春眠不觉晓，\fillin[处处闻啼鸟]。
+
+  按答案留空：春眠不觉晓，
+  \fillin[width = auto][处处闻啼鸟]。
+
+  全局设置：\examsetup{fillin/width = auto}
+  夜来风雨声，\fillin[花落知多少]。
+\end{latexexample}
 
 \begin{function}[added = 2022-07-30]{fillin/width-type}
   \begin{examzhsyntax}[emph={[1]width-type}]

@@ -1,0 +1,33 @@
+\documentclass{article}
+
+\input{regression-test}
+
+\usepackage{exam-zh-question}
+
+\begin{document}
+\START
+
+\fillinsetup{
+  show-answer = false,
+  no-answer-type = none,
+  width = auto,
+  width-extra = 5pt
+}
+
+\ExplSyntaxOn
+\cs_set:Npn \__examzh_fillin_print_answer:n #1
+  { \hbox_to_wd:nn { 40pt } { } }
+\cs_set:Npn \__examzh_fillin_output_unbreakable_F:
+  { \TYPE { fillin-width=\dim_use:N \l__examzh_fillin_F_width_dim } }
+\cs_set_eq:NN
+  \__examzh_fillin_output_breakable_F:
+  \__examzh_fillin_output_unbreakable_F:
+\ExplSyntaxOff
+
+\fillin[answer]
+\fillin[width = auto, width-extra = 7pt][answer]
+\fillin[width = 20pt][answer]
+\fillin[]
+
+\END
+\end{document}
