@@ -1,4 +1,5 @@
 build/
+.release-dashboard/
 __pycache__/
 *.py[cod]
 example.pdf

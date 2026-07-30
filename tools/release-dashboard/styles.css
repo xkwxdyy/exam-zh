@@ -118,6 +118,8 @@ h2 { font-size: 22px; line-height: 1.2; font-weight: 600; margin-bottom: 0; }
 .chain-actions { display: grid; gap: 9px; margin-top: 20px; }
 .chain-actions .primary-button, .chain-actions .secondary-button { width: 100%; justify-content: center; min-height: 42px; }
 .chain-actions svg { width: 15px; height: 15px; }
+.pipeline-restart { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 30px; }
+.pipeline-restart[hidden] { display: none; }
 .manual-note { color: var(--muted); max-width: 650px; font-size: 12px; line-height: 1.55; margin: -6px 0 18px; }
 .workbench-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, .72fr); gap: 50px; padding: 43px 4.5% 170px; }
 .app-shell:has(.console-dock.has-output) .workbench-layout { padding-bottom: 275px; }

@@ -4,11 +4,15 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
+import tempfile
 import threading
 import time
 import unittest
 import urllib.error
 import urllib.request
+from pathlib import Path
 from unittest import mock
 
 import workflow_dashboard as dashboard
@@ -77,6 +81,14 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaises(dashboard.DashboardError):
             dashboard.build_steps("release-pipeline", {**VALID_PARAMS, "publishTarget": "gitee"})
 
+    def test_pipeline_resume_identity_includes_version_and_options(self) -> None:
+        params = dashboard.normalized_pipeline_params(VALID_PARAMS)
+        self.assertEqual(params["version"], "1.2.3")
+        self.assertEqual(params["message"], "chore: prepare release")
+        self.assertFalse(params["skipCompile"])
+        changed = dashboard.normalized_pipeline_params({**VALID_PARAMS, "version": "1.2.4"})
+        self.assertNotEqual(params, changed)
+
     def test_unknown_workflow_is_rejected(self) -> None:
         with self.assertRaises(dashboard.DashboardError):
             dashboard.build_steps("arbitrary-shell", VALID_PARAMS)
@@ -112,11 +124,140 @@ class ValidationTests(unittest.TestCase):
         self.assertNotIn("shell", run.call_args.kwargs)
 
 
+class PersistenceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.temporary.name) / "state.json"
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def test_failed_pipeline_checkpoint_survives_restart_and_is_version_bound(self) -> None:
+        params = dashboard.normalized_pipeline_params(VALID_PARAMS)
+        steps = dashboard.build_steps("release-pipeline", params)
+        manager = dashboard.JobManager(self.state_path)
+        job = dashboard.Job(
+            id="saved-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="failed",
+            step="04 · 固化发布说明",
+            step_number=4,
+            step_count=len(steps),
+            completed_steps=3,
+            params=params,
+            plan_signature=dashboard.step_plan_signature(steps),
+            logs=["前三步已通过"],
+        )
+        manager.jobs[job.id] = job
+        manager._persist()
+
+        restored = dashboard.JobManager(self.state_path)
+        snapshot = restored.recent()[0]
+        self.assertEqual(snapshot["completedSteps"], 3)
+        self.assertTrue(snapshot["resumeAvailable"])
+        self.assertEqual(snapshot["params"]["version"], "1.2.3")
+        other = dashboard.normalized_pipeline_params({**VALID_PARAMS, "version": "1.2.4"})
+        self.assertIsNone(restored._resume_checkpoint(other, dashboard.step_plan_signature(steps)))
+
+    def test_running_job_is_restored_as_interrupted(self) -> None:
+        manager = dashboard.JobManager(self.state_path)
+        job = dashboard.Job(
+            id="running-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="running",
+            step_count=4,
+            completed_steps=2,
+        )
+        manager.jobs[job.id] = job
+        manager._persist()
+
+        restored = dashboard.JobManager(self.state_path).get(job.id)
+        self.assertEqual(restored.status, "interrupted")
+        self.assertEqual(restored.completed_steps, 2)
+
+    def test_process_resume_skips_completed_commands(self) -> None:
+        manager = dashboard.JobManager(None)
+        job = dashboard.Job(
+            id="resume-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            step_count=2,
+            completed_steps=1,
+        )
+        steps = [
+            ("01 · 不应重跑", [sys.executable, "-c", "print('FIRST-RAN')"]),
+            ("02 · 继续执行", [sys.executable, "-c", "print('SECOND-RAN')"]),
+        ]
+        manager.jobs[job.id] = job
+        manager.active_id = job.id
+        manager._run_processes(job, steps, 1)
+        self.assertEqual(job.status, "success")
+        self.assertEqual(job.completed_steps, 2)
+        self.assertFalse(any("FIRST-RAN" in line for line in job.logs))
+        self.assertTrue(any("SECOND-RAN" in line for line in job.logs))
+
+    @mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool")
+    @mock.patch("workflow_dashboard.capture")
+    def test_pipeline_rejects_missing_fragments_before_expensive_tests(
+        self,
+        capture: mock.Mock,
+        _which: mock.Mock,
+    ) -> None:
+        root = Path(self.temporary.name) / "repo"
+        (root / ".changes" / "unreleased").mkdir(parents=True)
+        capture.side_effect = lambda command: (
+            "main" if command[:3] == ["git", "branch", "--show-current"]
+            else "https://example.invalid/repo" if command[:3] == ["git", "remote", "get-url"]
+            else ""
+        )
+        with mock.patch.object(dashboard, "ROOT", root), mock.patch.dict(os.environ, {"GITEE_TOKEN": "test"}):
+            with self.assertRaisesRegex(dashboard.DashboardError, "没有未发布的 JSON 变更片段"):
+                dashboard.JobManager(None).start("release-pipeline", VALID_PARAMS)
+
+    @mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool")
+    @mock.patch("workflow_dashboard.capture")
+    def test_pipeline_does_not_start_when_checkpoint_cannot_be_saved(
+        self,
+        capture: mock.Mock,
+        _which: mock.Mock,
+    ) -> None:
+        root = Path(self.temporary.name) / "writable-repo"
+        fragments = root / ".changes" / "unreleased"
+        fragments.mkdir(parents=True)
+        (fragments / "change.json").write_text("{}", encoding="utf-8")
+        capture.side_effect = lambda command: (
+            "main" if command[:3] == ["git", "branch", "--show-current"]
+            else "https://example.invalid/repo" if command[:3] == ["git", "remote", "get-url"]
+            else ""
+        )
+        manager = dashboard.JobManager(None)
+
+        def fail_persistence() -> None:
+            manager.persistence_error = "无法保存任务状态：只读文件系统"
+
+        with (
+            mock.patch.object(dashboard, "ROOT", root),
+            mock.patch.dict(os.environ, {"GITEE_TOKEN": "test"}),
+            mock.patch.object(manager, "_persist_locked", side_effect=fail_persistence),
+        ):
+            with self.assertRaisesRegex(dashboard.DashboardError, "无法保存任务状态"):
+                manager.start("release-pipeline", VALID_PARAMS)
+        self.assertFalse(manager.jobs)
+        self.assertIsNone(manager.active_id)
+
+
 class HttpTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.token = "dashboard-test-token"
-        cls.server = dashboard.DashboardServer(("127.0.0.1", 0), cls.token)
+        cls.temporary = tempfile.TemporaryDirectory()
+        cls.server = dashboard.DashboardServer(
+            ("127.0.0.1", 0),
+            cls.token,
+            Path(cls.temporary.name) / "state.json",
+        )
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_address[1]}"
@@ -126,6 +267,7 @@ class HttpTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
         cls.thread.join(timeout=2)
+        cls.temporary.cleanup()
 
     def request(
         self,

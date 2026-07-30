@@ -1,13 +1,13 @@
 (() => {
   "use strict";
 
-  const apiVersion = 3;
-  const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, cursor: 0, pollTimer: null, backendCompatible: true };
+  const apiVersion = 4;
+  const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false };
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const riskText = { safe: "本地 · 可重复", write: "本地 · 写入文件", interactive: "Claude · 终端确认", mutating: "会改变仓库", external: "外部 · 需确认" };
   const stageText = { changes: "Changes", verify: "Verify", package: "Package", publish: "Publish", observe: "Observe" };
-  const statusText = { queued: "排队中", running: "运行中", success: "完成", failed: "失败", cancelled: "已取消" };
+  const statusText = { queued: "排队中", running: "运行中", success: "完成", failed: "失败", cancelled: "已取消", interrupted: "已中断" };
   const commonChainSteps = [
     ["校验 Changelog", "校验片段、归档、清单与 Markdown"],
     ["发布工具测试", "验证发布脚本与元数据"],
@@ -74,30 +74,70 @@
     };
   }
 
+  function normalizedPipelineParams(params = readParams()) {
+    const version = String(params.version || "").replace(/^v/, "");
+    return {
+      version,
+      date: String(params.date || ""),
+      message: String(params.message || "").trim() || `chore(release): v${version}`,
+      skipCompile: Boolean(params.skipCompile),
+      publishTarget: params.publishTarget || "platforms",
+    };
+  }
+
+  function matchingCheckpoint() {
+    const expected = normalizedPipelineParams();
+    return (state.status?.jobs || []).find((job) => {
+      if (!job.resumeAvailable || job.workflowId !== "release-pipeline") return false;
+      const actual = normalizedPipelineParams(job.params || {});
+      return Object.keys(expected).every((key) => actual[key] === expected[key]);
+    }) || null;
+  }
+
+  function restoreCheckpointInputs(job) {
+    if (!job?.params) return;
+    const params = normalizedPipelineParams(job.params);
+    $("#version-input").value = params.version;
+    $("#date-input").value = params.date;
+    $("#message-input").value = params.message;
+    $("#skip-compile-input").checked = params.skipCompile;
+    const target = $(`input[name="publish-target"][value="${params.publishTarget}"]`);
+    if (target) target.checked = true;
+    $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input")?.checked));
+    $("#version-input").dataset.initialized = "true";
+    $("#date-input").dataset.initialized = "true";
+  }
+
   function renderChain(job = null) {
+    if (job?.workflowId !== "release-pipeline") job = null;
     const target = $("input[name='publish-target']:checked")?.value || "platforms";
     const chainSteps = chainStepsForTarget(target);
     const count = chainSteps.length;
     const current = Number(job?.stepNumber || 0);
+    const completed = Number(job?.completedSteps || 0);
     const running = ["queued", "running"].includes(job?.status);
     const terminal = job?.status === "success";
-    const failed = job?.status === "failed" || job?.status === "cancelled";
+    const failed = ["failed", "cancelled", "interrupted"].includes(job?.status);
     $("#release-chain").innerHTML = chainSteps.slice(0, count).map(([title, description], index) => {
       const number = index + 1;
       let kind = "pending";
-      if (running && number < current) kind = "done";
+      if (number <= completed) kind = "done";
       if (running && number === current) kind = "active";
-      if (failed && number < current) kind = "done";
       if (failed && number === current) kind = "failed";
-      if (terminal) kind = number < count || job.status === "success" ? "done" : "awaiting";
+      if (terminal) kind = "done";
       return `<li class="chain-step ${kind}"><b>${title}</b><small>${description}</small></li>`;
     }).join("");
-    $("#pipeline-state").textContent = job ? `${statusText[job.status] || job.status}${job.step ? ` · ${job.step}` : ""}` : "按编号从上到下执行";
+    $("#pipeline-state").textContent = job ? `${statusText[job.status] || job.status} · ${completed}/${count}${job.step ? ` · ${job.step}` : ""}` : "按编号从上到下执行";
     iconRefresh();
   }
 
   function renderStatus(status) {
     state.status = status;
+    const pipelineJobs = (status.jobs || []).filter((job) => job.workflowId === "release-pipeline");
+    const activePipeline = pipelineJobs.find((job) => job.id === status.activeJobId);
+    const resumable = pipelineJobs.find((job) => job.resumeAvailable);
+    state.pipelineJob = activePipeline || resumable || pipelineJobs[0] || null;
+    if (!$("#version-input").dataset.initialized && resumable) restoreCheckpointInputs(resumable);
     $("#branch-value").textContent = status.branch || "detached";
     $("#head-value").textContent = status.head || "--";
     $("#updated-value").textContent = status.refreshedAt ? status.refreshedAt.slice(11, 16) : "--";
@@ -125,7 +165,11 @@
     $("#tool-checks").innerHTML = checks.map(([label, ready]) => `<span class="tool-check ${ready ? "ready" : ""}"><i></i>${label}</span>`).join("");
     renderArtifacts(status.artifacts || []);
     renderJobs(status.jobs || []);
-    renderChain(state.activeJob);
+    if (status.stateError && !state.stateErrorShown) {
+      state.stateErrorShown = true;
+      toast(status.stateError, "error");
+    }
+    updatePipelineControls();
   }
 
   function renderArtifacts(artifacts) {
@@ -143,7 +187,8 @@
     }
     $("#job-history").innerHTML = jobs.slice(0, 6).map((job) => {
       const time = job.createdAt ? job.createdAt.slice(11, 16) : "--";
-      return `<div class="job-row ${job.status}"><i></i><span><b>${job.title}</b><small>${statusText[job.status] || job.status}</small></span><time>${time}</time></div>`;
+      const progress = job.workflowId === "release-pipeline" && job.stepCount ? ` · ${job.completedSteps || 0}/${job.stepCount}` : "";
+      return `<div class="job-row ${job.status}"><i></i><span><b>${job.title}</b><small>${statusText[job.status] || job.status}${progress}</small></span><time>${time}</time></div>`;
     }).join("");
     $("#last-job-time").textContent = jobs[0].createdAt ? jobs[0].createdAt.replace("T", " ").slice(0, 16) : "--";
   }
@@ -168,13 +213,28 @@
   function updateRunAvailability() {
     const running = Boolean(state.activeJob && ["queued", "running"].includes(state.activeJob.status));
     $$(".run-button").forEach((button) => { button.disabled = running; });
-    $("#pipeline-launch").disabled = running || !state.backendCompatible;
     $("#manual-changelog").disabled = running || !state.backendCompatible;
+    updatePipelineControls();
+  }
+
+  function updatePipelineControls() {
+    const running = Boolean(state.activeJob && ["queued", "running"].includes(state.activeJob.status));
+    const checkpoint = matchingCheckpoint();
+    const launch = $("#pipeline-launch");
+    const restart = $("#pipeline-restart");
+    launch.disabled = running || !state.backendCompatible;
+    restart.disabled = running || !state.backendCompatible;
+    restart.hidden = !checkpoint;
+    launch.innerHTML = checkpoint
+      ? `<i data-lucide="rotate-ccw"></i>从第 ${String((checkpoint.completedSteps || 0) + 1).padStart(2, "0")} 步继续`
+      : `<i data-lucide="play"></i>执行后续自动链`;
+    renderChain(checkpoint || (["queued", "running"].includes(state.pipelineJob?.status) ? state.pipelineJob : null));
+    iconRefresh();
   }
 
   function workflowFor(id) { return state.workflows.find((item) => item.id === id); }
 
-  function requestRun(id) {
+  function requestRun(id, options = {}) {
     const workflow = workflowFor(id);
     if (!workflow) {
       toast(id === "release-pipeline" ? "Dashboard 服务端版本过旧，请重新运行 make dashboard" : "工作流不存在，请刷新页面", "error");
@@ -188,7 +248,7 @@
       return;
     }
     const confirmation = workflow.confirmation;
-    if (!confirmation) return runWorkflow(id, params);
+    if (!confirmation) return runWorkflow(id, params, options);
     const dialog = $("#confirm-dialog");
     $("#dialog-title").textContent = workflow.title;
     $("#dialog-description").textContent = workflow.description;
@@ -200,6 +260,7 @@
     dialog.dataset.targetConfirmation = "false";
     dialog.dataset.workflowId = id;
     dialog.dataset.params = JSON.stringify(params);
+    dialog.dataset.resume = String(Boolean(options.resume));
     if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
     window.setTimeout(() => $("#confirm-input").focus(), 40);
   }
@@ -215,13 +276,14 @@
     const expected = workflow.confirmation === "VERSION" ? String(params.version || "").replace(/^v/, "") : workflow.confirmation;
     if (!targetConfirmation && $("#confirm-input").value.trim() !== expected) { toast(`确认词不匹配，应为 ${expected}`, "error"); return; }
     closeDialog();
-    await runWorkflow(workflow.id, params);
+    await runWorkflow(workflow.id, params, { resume: dialog.dataset.resume === "true" });
   }
 
-  async function runWorkflow(id, params) {
+  async function runWorkflow(id, params, options = {}) {
     try {
-      const job = await api("/api/run", { method: "POST", headers: { "X-Workflow-Token": state.token }, body: JSON.stringify({ workflowId: id, params }) });
+      const job = await api("/api/run", { method: "POST", headers: { "X-Workflow-Token": state.token }, body: JSON.stringify({ workflowId: id, params, resume: Boolean(options.resume) }) });
       state.activeJob = job; state.cursor = 0;
+      if (job.workflowId === "release-pipeline") state.pipelineJob = job;
       $("#console-output").textContent = "";
       setConsole(job, true);
       pollJob(job.id);
@@ -237,7 +299,10 @@
     $("#console-title").textContent = job.title || "任务控制台";
     $("#console-status").textContent = running ? "运行中" : (statusText[job.status] || "等待操作");
     $("#cancel-button").disabled = !running;
-    renderChain(job);
+    if (job.workflowId === "release-pipeline") {
+      state.pipelineJob = job;
+      renderChain(job);
+    }
   }
 
   async function pollJob(id) {
@@ -259,12 +324,15 @@
 
   function bindUI() {
     $$("[data-stage-filter]").forEach((button) => button.addEventListener("click", () => { state.filter = button.dataset.stageFilter; $$("[data-stage-filter]").forEach((item) => item.classList.toggle("active", item === button)); renderWorkflows(); }));
-    $("#pipeline-launch").addEventListener("click", () => requestRun("release-pipeline"));
+    $("#pipeline-launch").addEventListener("click", () => requestRun("release-pipeline", { resume: Boolean(matchingCheckpoint()) }));
+    $("#pipeline-restart").addEventListener("click", () => requestRun("release-pipeline", { resume: false }));
     $("#manual-changelog").addEventListener("click", () => requestRun("ai-changelog"));
     $$(`input[name="publish-target"]`).forEach((input) => input.addEventListener("change", () => {
       $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input") === input && input.checked));
-      renderChain(state.activeJob);
+      updatePipelineControls();
     }));
+    ["#version-input", "#date-input", "#message-input"].forEach((selector) => $(selector).addEventListener("input", updatePipelineControls));
+    $("#skip-compile-input").addEventListener("change", updatePipelineControls);
     $("#refresh-button").addEventListener("click", refreshStatus); $("#status-refresh").addEventListener("click", refreshStatus);
     $("#clear-console").addEventListener("click", () => { $("#console-output").innerHTML = `<span class="console-placeholder">选择上方工作流，执行日志会显示在这里。</span>`; $("#console-dock").classList.remove("has-output"); });
     $("#cancel-button").addEventListener("click", async () => { if (!state.activeJob) return; try { state.activeJob = await api(`/api/jobs/${state.activeJob.id}/cancel`, { method: "POST", headers: { "X-Workflow-Token": state.token }, body: "{}" }); setConsole(state.activeJob, true); pollJob(state.activeJob.id); } catch (error) { toast(error.message, "error"); } });
@@ -281,7 +349,6 @@
       state.token = data.token;
       state.workflows = data.workflows;
       renderStatus(data.status);
-      renderChain(null);
       renderWorkflows();
       if (!state.backendCompatible) toast("前后端版本不一致，请重新运行 make dashboard", "error");
       setConnection("ready", "本地服务已连接");

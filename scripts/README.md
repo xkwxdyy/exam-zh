@@ -104,7 +104,9 @@ make dashboard
 GitHub/Gitee 和创建平台 Release。发布出口有三种：只发 GitHub + Gitee、GitHub + Gitee
 + CTAN、单独发 CTAN。单独发 CTAN 要求目标 Tag 已经存在，主链只做 CTAN 元数据检查并
 触发 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于
-局部重跑。
+局部重跑。主发布链会把任务参数、日志和已完成步骤保存在
+`.release-dashboard/state.json`；版本、日期、发布出口、编译选项和提交信息完全匹配时，
+重新打开控制台会恢复原目标版本并可从失败步骤继续，也可以明确选择从头重跑。
 
 ```bash
 make dashboard-test

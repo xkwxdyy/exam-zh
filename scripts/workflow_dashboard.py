@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import mimetypes
 import os
@@ -32,7 +33,9 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
-DASHBOARD_API_VERSION = 3
+DASHBOARD_API_VERSION = 4
+STATE_SCHEMA_VERSION = 1
+STATE_PATH = ROOT / ".release-dashboard" / "state.json"
 
 
 WORKFLOWS: tuple[dict[str, Any], ...] = (
@@ -325,6 +328,17 @@ def pipeline_params(params: dict[str, Any]) -> tuple[str, str, str, str]:
     return version, release_date, target, message
 
 
+def normalized_pipeline_params(params: dict[str, Any]) -> dict[str, Any]:
+    version, release_date, target, message = pipeline_params(params)
+    return {
+        "version": version,
+        "date": release_date,
+        "publishTarget": target,
+        "message": message,
+        "skipCompile": bool(params.get("skipCompile")),
+    }
+
+
 def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, list[str]]]:
     if workflow_id not in WORKFLOW_BY_ID:
         raise DashboardError("未知工作流")
@@ -537,6 +551,11 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
     raise DashboardError("该工作流必须通过 Claude Code 终端执行")
 
 
+def step_plan_signature(steps: list[tuple[str, list[str]]]) -> str:
+    encoded = json.dumps(steps, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
     if workflow_id == "ai-changelog":
         return (
@@ -601,6 +620,10 @@ class Job:
     step: str = ""
     step_number: int = 0
     step_count: int = 0
+    completed_steps: int = 0
+    resumed_from_step: int | None = None
+    params: dict[str, Any] = field(default_factory=dict)
+    plan_signature: str = ""
     process: subprocess.Popen[str] | None = None
     logs: list[str] = field(default_factory=list)
     log_offset: int = 0
@@ -628,26 +651,152 @@ class Job:
             "step": self.step,
             "stepNumber": self.step_number,
             "stepCount": self.step_count,
+            "completedSteps": self.completed_steps,
+            "resumedFromStep": self.resumed_from_step,
+            "params": self.params,
             "logs": self.logs[relative:],
             "cursor": self.log_offset + len(self.logs),
         }
 
+    def record(self) -> dict[str, Any]:
+        value = self.snapshot()
+        value["planSignature"] = self.plan_signature
+        return value
+
+    @classmethod
+    def restore(cls, value: Any) -> Job:
+        if not isinstance(value, dict):
+            raise ValueError("job record must be an object")
+        required_strings = ("id", "workflowId", "title", "status", "createdAt")
+        if any(not isinstance(value.get(name), str) for name in required_strings):
+            raise ValueError("job record contains invalid strings")
+        if value["status"] not in {"queued", "running", "success", "failed", "cancelled", "interrupted"}:
+            raise ValueError("job record contains an invalid status")
+        logs = value.get("logs", [])
+        params = value.get("params", {})
+        if not isinstance(logs, list) or not all(isinstance(line, str) for line in logs):
+            raise ValueError("job record contains invalid logs")
+        if not isinstance(params, dict):
+            raise ValueError("job record contains invalid params")
+        step_count = max(0, int(value.get("stepCount", 0)))
+        completed_steps = min(step_count, max(0, int(value.get("completedSteps", 0))))
+        resumed_from = value.get("resumedFromStep")
+        return cls(
+            id=value["id"],
+            workflow_id=value["workflowId"],
+            title=value["title"],
+            status=value["status"],
+            created_at=value["createdAt"],
+            started_at=value.get("startedAt") if isinstance(value.get("startedAt"), str) else None,
+            finished_at=value.get("finishedAt") if isinstance(value.get("finishedAt"), str) else None,
+            return_code=value.get("returnCode") if isinstance(value.get("returnCode"), int) else None,
+            step=value.get("step") if isinstance(value.get("step"), str) else "",
+            step_number=max(0, int(value.get("stepNumber", 0))),
+            step_count=step_count,
+            completed_steps=completed_steps,
+            resumed_from_step=int(resumed_from) if isinstance(resumed_from, int) else None,
+            params=dict(params),
+            plan_signature=value.get("planSignature") if isinstance(value.get("planSignature"), str) else "",
+            logs=logs[-MAX_LOG_LINES:],
+            log_offset=max(0, int(value.get("cursor", len(logs))) - min(len(logs), MAX_LOG_LINES)),
+        )
+
 
 class JobManager:
-    def __init__(self) -> None:
+    def __init__(self, state_path: Path | None = STATE_PATH) -> None:
         self.jobs: dict[str, Job] = {}
         self.active_id: str | None = None
         self.lock = threading.RLock()
+        self.state_path = state_path
+        self.persistence_error: str | None = None
+        self._load()
 
-    def start(self, workflow_id: str, params: dict[str, Any]) -> Job:
+    def _load(self) -> None:
+        if self.state_path is None or not self.state_path.is_file():
+            return
+        try:
+            data = json.loads(self.state_path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict) or data.get("schemaVersion") != STATE_SCHEMA_VERSION:
+                raise ValueError("unsupported state schema")
+            records = data.get("jobs")
+            if not isinstance(records, list):
+                raise ValueError("jobs must be an array")
+            restored = [Job.restore(value) for value in records[-12:]]
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            self.persistence_error = f"无法读取已保存的任务状态：{exc}"
+            return
+
+        interrupted = False
+        for job in restored:
+            if job.status in {"queued", "running"}:
+                job.status = "interrupted"
+                job.return_code = None
+                job.finished_at = utc_now()
+                job.append("Dashboard 服务曾中断；可从最近完成的步骤继续。")
+                interrupted = True
+            self.jobs[job.id] = job
+        if interrupted:
+            self._persist_locked()
+
+    def _persist_locked(self) -> None:
+        if self.state_path is None:
+            return
+        try:
+            ordered = sorted(self.jobs.values(), key=lambda item: item.created_at)[-12:]
+            payload = {
+                "schemaVersion": STATE_SCHEMA_VERSION,
+                "updatedAt": utc_now(),
+                "jobs": [job.record() for job in ordered],
+            }
+            self.state_path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = self.state_path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            temporary.replace(self.state_path)
+            self.persistence_error = None
+        except OSError as exc:
+            self.persistence_error = f"无法保存任务状态：{exc}"
+
+    def _persist(self) -> None:
+        with self.lock:
+            self._persist_locked()
+
+    def _resume_checkpoint(
+        self,
+        params: dict[str, Any],
+        plan_signature: str,
+    ) -> Job | None:
+        ordered = sorted(self.jobs.values(), key=lambda item: item.created_at, reverse=True)
+        for job in ordered:
+            if (
+                job.workflow_id == "release-pipeline"
+                and job.status in {"failed", "cancelled", "interrupted"}
+                and 0 < job.completed_steps < job.step_count
+                and job.params == params
+                and job.plan_signature == plan_signature
+            ):
+                return job
+        return None
+
+    def start(self, workflow_id: str, params: dict[str, Any], *, resume: bool = False) -> Job:
         spec = WORKFLOW_BY_ID.get(workflow_id)
         if not spec:
             raise DashboardError("未知工作流")
         steps: list[tuple[str, list[str]]] | None = None
+        job_params: dict[str, Any] = {}
+        plan_signature = ""
+        completed_steps = 0
         if spec["executor"] != "claude":
             steps = build_steps(workflow_id, params)
             if workflow_id == "release-pipeline":
-                version, _, target, _ = pipeline_params(params)
+                job_params = normalized_pipeline_params(params)
+                version = job_params["version"]
+                target = job_params["publishTarget"]
+                plan_signature = step_plan_signature(steps)
+                with self.lock:
+                    checkpoint = self._resume_checkpoint(job_params, plan_signature) if resume else None
+                if resume and checkpoint is None:
+                    raise DashboardError("找不到与当前版本、日期和发布出口匹配的可恢复进度")
+                completed_steps = checkpoint.completed_steps if checkpoint else 0
                 if capture(["git", "branch", "--show-current"]) != "main":
                     raise DashboardError("发布链只能从 main 分支执行")
                 if not capture(["git", "remote", "get-url", "github"]):
@@ -655,12 +804,28 @@ class JobManager:
                 local_tag = capture(["git", "tag", "--list", f"v{version}"])
                 if target == "ctan" and not local_tag:
                     raise DashboardError(f"找不到已测试的 Tag v{version}，请先完成 GitHub + Gitee 发布链")
-                if target != "ctan" and local_tag:
+                tag_step = next(
+                    (index for index, (label, _) in enumerate(steps, 1) if label.endswith("创建 Git Tag")),
+                    len(steps) + 1,
+                )
+                if target != "ctan" and local_tag and completed_steps < tag_step:
                     raise DashboardError(f"Tag v{version} 已存在，发布链已停止")
+                if target != "ctan" and completed_steps >= tag_step and not local_tag:
+                    raise DashboardError(f"已保存进度要求 Tag v{version} 存在，但本地没有找到该 Tag")
                 if target in {"platforms", "all"} and not capture(["git", "remote", "get-url", "gitee"]):
                     raise DashboardError("未配置 gitee 远程仓库")
                 if target in {"platforms", "all"} and not os.environ.get("GITEE_TOKEN"):
                     raise DashboardError("发布 GitHub + Gitee 需要 GITEE_TOKEN")
+                prepare_step = next(
+                    (index for index, (label, _) in enumerate(steps, 1) if label.endswith("固化发布说明")),
+                    len(steps) + 1,
+                )
+                if target != "ctan" and completed_steps < prepare_step and not any(
+                    (ROOT / ".changes" / "unreleased").glob("*.json")
+                ):
+                    raise DashboardError(
+                        "没有未发布的 JSON 变更片段；请先生成 Changelog，再执行发布链"
+                    )
                 tools = ("gh",) if target == "ctan" else ("l3build", "gh")
                 for tool in tools:
                     if not shutil.which(tool):
@@ -675,9 +840,22 @@ class JobManager:
                 workflow_id=workflow_id,
                 title=spec["title"],
                 step_count=len(steps or []),
+                completed_steps=completed_steps,
+                resumed_from_step=completed_steps + 1 if completed_steps else None,
+                params=job_params,
+                plan_signature=plan_signature,
             )
+            if completed_steps:
+                job.step_number = completed_steps + 1
+                job.step = steps[completed_steps][0] if steps else ""
+                job.append(f"从已保存进度继续：跳过前 {completed_steps} 个已完成步骤。")
             self.jobs[job.id] = job
             self.active_id = job.id
+            self._persist_locked()
+            if workflow_id == "release-pipeline" and self.persistence_error:
+                del self.jobs[job.id]
+                self.active_id = None
+                raise DashboardError(self.persistence_error)
 
         if spec["executor"] == "claude":
             thread = threading.Thread(
@@ -687,7 +865,11 @@ class JobManager:
             )
         else:
             assert steps is not None
-            thread = threading.Thread(target=self._run_processes, args=(job, steps), daemon=True)
+            thread = threading.Thread(
+                target=self._run_processes,
+                args=(job, steps, completed_steps),
+                daemon=True,
+            )
         thread.start()
         return job
 
@@ -699,11 +881,14 @@ class JobManager:
             job.process = None
             if self.active_id == job.id:
                 self.active_id = None
+            self._persist_locked()
 
     def _run_claude(self, job: Job, params: dict[str, Any]) -> None:
-        job.status = "running"
-        job.started_at = utc_now()
-        job.step = "启动 Claude Code"
+        with self.lock:
+            job.status = "running"
+            job.started_at = utc_now()
+            job.step = "启动 Claude Code"
+            self._persist_locked()
         try:
             prompt = launch_claude(job.workflow_id, params)
             job.append("Claude Code 已在新的 Terminal 会话中启动。")
@@ -713,13 +898,22 @@ class JobManager:
             job.append(f"ERROR: {exc}")
             self._finish(job, "failed", 1)
 
-    def _run_processes(self, job: Job, steps: list[tuple[str, list[str]]]) -> None:
-        job.status = "running"
-        job.started_at = utc_now()
+    def _run_processes(
+        self,
+        job: Job,
+        steps: list[tuple[str, list[str]]],
+        completed_steps: int = 0,
+    ) -> None:
+        with self.lock:
+            job.status = "running"
+            job.started_at = utc_now()
+            self._persist_locked()
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
         try:
-            for number, (label, command) in enumerate(steps, start=1):
+            for index in range(completed_steps, len(steps)):
+                number = index + 1
+                label, command = steps[index]
                 if job.cancel_requested:
                     self._finish(job, "cancelled", None)
                     return
@@ -727,6 +921,7 @@ class JobManager:
                 job.step_number = number
                 job.append(f"\n[{label}]")
                 job.append(f"$ {shlex.join(command)}")
+                self._persist()
                 process = subprocess.Popen(
                     command,
                     cwd=ROOT,
@@ -751,6 +946,8 @@ class JobManager:
                     job.append(f"命令失败，退出码 {return_code}。")
                     self._finish(job, "failed", return_code)
                     return
+                job.completed_steps = number
+                self._persist()
             self._finish(job, "success", 0)
         except (OSError, subprocess.SubprocessError) as exc:
             job.append(f"ERROR: {exc}")
@@ -765,6 +962,7 @@ class JobManager:
                 return job
             job.cancel_requested = True
             process = job.process
+            self._persist_locked()
         if process and process.poll() is None:
             try:
                 os.killpg(process.pid, signal.SIGTERM)
@@ -782,7 +980,19 @@ class JobManager:
     def recent(self) -> list[dict[str, Any]]:
         with self.lock:
             ordered = sorted(self.jobs.values(), key=lambda item: item.created_at, reverse=True)
-            return [item.snapshot() for item in ordered[:12]]
+            snapshots: list[dict[str, Any]] = []
+            for item in ordered[:12]:
+                snapshot = item.snapshot()
+                resumable = False
+                if item.workflow_id == "release-pipeline" and item.params:
+                    try:
+                        current_plan = step_plan_signature(build_steps(item.workflow_id, item.params))
+                        resumable = self._resume_checkpoint(item.params, current_plan) is item
+                    except DashboardError:
+                        pass
+                snapshot["resumeAvailable"] = resumable
+                snapshots.append(snapshot)
+            return snapshots
 
 
 def capture(command: list[str], timeout: float = 4.0) -> str:
@@ -866,6 +1076,8 @@ def repository_status(manager: JobManager) -> dict[str, Any]:
         ],
         "jobs": manager.recent(),
         "activeJobId": manager.active_id,
+        "statePath": str(manager.state_path) if manager.state_path else None,
+        "stateError": manager.persistence_error,
         "refreshedAt": datetime.now().isoformat(timespec="seconds"),
     }
 
@@ -874,10 +1086,15 @@ class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, address: tuple[str, int], token: str) -> None:
+    def __init__(
+        self,
+        address: tuple[str, int],
+        token: str,
+        state_path: Path | None = STATE_PATH,
+    ) -> None:
         super().__init__(address, DashboardHandler)
         self.token = token
-        self.jobs = JobManager()
+        self.jobs = JobManager(state_path)
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
@@ -982,7 +1199,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 params = data.get("params", {})
                 if not isinstance(params, dict):
                     raise DashboardError("params 必须是对象")
-                job = self.server.jobs.start(workflow_id, params)
+                resume = data.get("resume", False)
+                if not isinstance(resume, bool):
+                    raise DashboardError("resume 必须是布尔值")
+                job = self.server.jobs.start(workflow_id, params, resume=resume)
                 self.send_json(job.snapshot(), HTTPStatus.ACCEPTED)
                 return
             match = re.fullmatch(r"/api/jobs/([a-f0-9]+)/cancel", parsed.path)
