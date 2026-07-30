@@ -65,6 +65,18 @@
   { 100pt }
   { 210pt }
 
+\group_begin:
+  \dim_set:Nn \linewidth { 150pt }
+  \__examzh_test_textfigure_width:nnn
+    {
+      fig-pos=right-top,
+      auto-text-width=true,
+      column-gap=10pt
+    }
+    { 20mm }
+    { \linewidth - 20mm - 10pt }
+\group_end:
+
 \ExplSyntaxOff
 
 \begin{problem}
@@ -79,6 +91,22 @@
     {\rule{3cm}{2cm}}
 \end{problem}
 \TYPE{textfigure-auto-width-rendered}
+
+\textfigure
+  [fig-pos=right-top,auto-text-width=true,column-gap=1em]
+  {
+    Prompt with subquestions.
+    \begin{enumerate}
+      \item First item.
+      \item Second item.
+    \end{enumerate}
+  }
+  {\rule{3cm}{2cm}}
+\ExplSyntaxOn
+\mode_if_vertical:TF
+  { \TYPE{textfigure-block-output=true} }
+  { \TYPE{textfigure-block-output=false} }
+\ExplSyntaxOff
 
 \END
 \end{document}

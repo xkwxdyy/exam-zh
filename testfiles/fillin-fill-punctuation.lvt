@@ -4,6 +4,11 @@
 
 \usepackage{exam-zh-question}
 
+\ExplSyntaxOn
+\dim_if_exist:cF { l__list_leftmargin_i_dim }
+  { \dim_new:c { l__list_leftmargin_i_dim } }
+\ExplSyntaxOff
+
 \begin{document}
 \START
 
@@ -41,6 +46,35 @@
 \__examzh_fillin_adjust_paragraph_start_width:N \l_tmpa_dim
 \TYPE { fillin-noindent-width=\dim_use:N \l_tmpa_dim }
 \par
+
+\cs_set_eq:NN \__examzh_test_linegoal: \linegoal
+\dim_set:Nn \columnwidth { 300pt }
+\dim_set:Nn \columnsep { 20pt }
+\dim_set:Nn \linewidth { 250pt }
+\bool_set_false:N \l__examzh_fillin_width_auto_bool
+\legacy_if_set_true:n { @twocolumn }
+\cs_set:Npn \linegoal { -100pt }
+\__examzh_fillin_set_remaining_width:N \l_tmpa_dim
+\TYPE { fillin-right-column-width=\dim_use:N \l_tmpa_dim }
+\cs_set:Npn \linegoal { 70pt }
+\__examzh_fillin_set_remaining_width:N \l_tmpa_dim
+\TYPE { fillin-left-column-width=\dim_use:N \l_tmpa_dim }
+\bool_set_true:N \l__if_list_bool
+\int_set:Nn \l__list_depth_int { 1 }
+\dim_set:cn { l__list_leftmargin_i_dim } { 50pt }
+\cs_set:Npn \linegoal { -120pt }
+\__examzh_fillin_set_remaining_width:N \l_tmpa_dim
+\TYPE { fillin-right-list-width=\dim_use:N \l_tmpa_dim }
+\cs_set:Npn \linegoal { -30pt }
+\__examzh_fillin_set_remaining_width:N \l_tmpa_dim
+\TYPE { fillin-left-list-width=\dim_use:N \l_tmpa_dim }
+\bool_set_false:N \l__if_list_bool
+\int_zero:N \l__list_depth_int
+\legacy_if_set_false:n { @twocolumn }
+\cs_set:Npn \linegoal { -5pt }
+\__examzh_fillin_set_remaining_width:N \l_tmpa_dim
+\TYPE { fillin-negative-width-clamped=\dim_use:N \l_tmpa_dim }
+\cs_set_eq:NN \linegoal \__examzh_test_linegoal:
 
 \cs_set_eq:NN
   \__examzh_test_fillin_output_breakable_F:

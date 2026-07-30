@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "version": "0.3.2",
+  "date": "2026-07-30",
+  "source_fragments": [
+    "20260730T000000Z-fillin-auto-column-width.json",
+    "20260730T000001Z-structured-release-notes.json",
+    "20260730T000002Z-release-workflow-dashboard.json",
+    "20260730T000003Z-textfigure-multifigures-fix.json"
+  ],
+  "changes": [
+    {
+      "id": "fillin-auto-column-width",
+      "type": "fixed",
+      "zh": "修复 `fillin/width=auto` 在 A3 双栏右栏中误用负的 `linegoal` 剩余宽度，导致隐藏答案时下划线异常跨行或超出栏宽的问题（GitHub #50）",
+      "announce": true,
+      "en": "Fixed `fillin/width=auto` in the right column of A3 two-column layouts, where a negative remaining `linegoal` width caused hidden-answer underlines to wrap incorrectly or overflow the column."
+    },
+    {
+      "id": "multifigures-item-width",
+      "type": "fixed",
+      "zh": "修复 `multifigures` 各列项宽使用 `\\hsize` 而非按列数与列间距计算所得宽度的问题，以及表格总宽使用 `\\textwidth` 而非 `\\linewidth` 导致在题目等窄宽环境中溢出的问题；列数超出实际图片数量时现自动收缩",
+      "announce": true,
+      "en": "Fixed `multifigures` item width using `\\hsize` instead of the computed per-column width, and tblr table width using `\\textwidth` instead of `\\linewidth` (causing overflow inside narrow environments such as `problem`). Column count is now automatically clamped to the actual number of items."
+    },
+    {
+      "id": "textfigure-block-output",
+      "type": "fixed",
+      "zh": "修复 `textfigure` 末尾缺少 `\\par` 导致后续内容不另起新段、直接行内续排的问题",
+      "announce": true,
+      "en": "Fixed `textfigure` missing a trailing `\\par`, which caused following content to continue inline instead of starting a new paragraph."
+    },
+    {
+      "id": "textfigure-min-text-width-deferred",
+      "type": "fixed",
+      "zh": "修复 `textfigure` 的 `min-text-width` 键不接受相对长度表达式（如 `\\linewidth - 3cm`）的问题，现改为在排版时延迟求值",
+      "announce": true,
+      "en": "Fixed `textfigure`'s `min-text-width` key not accepting relative length expressions such as `\\linewidth - 3cm`; the value is now evaluated at typeset time."
+    }
+  ]
+}

@@ -8,7 +8,7 @@
 
 \RequirePackage{expl3}
 
-\ProvidesExplPackage {exam-zh-textfigure} {2026-07-28} {v0.3.1}
+\ProvidesExplPackage {exam-zh-textfigure} {2026-07-30} {v0.3.2}
   {exam-zh text with figure module}
 
 
@@ -40,6 +40,7 @@
 \str_new:N \l__examzh_multifigures_coffin_align_str
 % 图片网格列间距（透传为 tabularray 的 colsep）
 \dim_new:N \l__examzh_multifigures_column_gap_dim
+\dim_new:N \l__examzh_multifigures_item_width_dim
 
 
 \keys_define:nn { exam-zh / multifigures }
@@ -92,7 +93,7 @@
 % 最终放在 tblr 里的内容
 \tl_new:N \l__examzh_multifigures_tblr_content_tl
 
-\NewDocumentEnvironment { multifigures } { O{ } +O{ } }
+\NewDocumentEnvironment { multifigures } { O{ } +O{ } +b }
   {
     \group_begin:
       \RenewDocumentCommand \item { O{ } }
@@ -101,6 +102,27 @@
       \seq_clear:N \l__examzh_multifigures_store_seq
       \tl_clear:N \l__examzh_multifigures_tblr_content_tl
       \keys_set:nn { exam-zh / multifigures } {#1}
+      \seq_set_split:Nnn \l_tmpa_seq { \item } {#3}
+      \int_set:Nn \l__examzh_multifigures_column_int
+        {
+          \int_min:nn
+            { \l__examzh_multifigures_column_int }
+            { \seq_count:N \l_tmpa_seq - 1 }
+        }
+      \dim_set:Nn \l_tmpa_dim
+        {
+          \int_eval:n
+            { 2 * ( \l__examzh_multifigures_column_int - 1 ) }
+          \l__examzh_multifigures_column_gap_dim
+        }
+      \dim_set:Nn \l__examzh_multifigures_item_width_dim
+        { \linewidth - \l_tmpa_dim }
+      \dim_set:Nn \l__examzh_multifigures_item_width_dim
+        {
+          \l__examzh_multifigures_item_width_dim
+          / \l__examzh_multifigures_column_int
+        }
+      #3
   }
   {
       % 结束收集
@@ -244,7 +266,7 @@
     \begin{tblr}
       [ expand = \l__examzh_multifigures_tblr_content_tl ]
       {
-        width = \textwidth,
+        width = \linewidth,
         cells = {c},
         colsep = \l__examzh_multifigures_column_gap_dim,
         column{1} = {leftsep = 0pt},
@@ -294,7 +316,7 @@
       }
     % 收集
     \hcoffin_set:cw { l__examzh_multifigures_figure_ \int_to_roman:n { \l__examzh_multifigures_item_index_int } _coffin }
-      \begin{varwidth}{\hsize}
+      \begin{varwidth}{\l__examzh_multifigures_item_width_dim}
         \ignorespaces
   }
 
@@ -325,6 +347,7 @@
 \dim_new:N \l__examzh_textfigure_text_coffin_width_dim     % 文本c offin 的宽度
 \dim_new:N \l__examzh_textfigure_figure_width_dim      % 图片的 varwidth 环境的宽度
 \dim_new:N \l__examzh_textfigure_min_text_width_dim    % 自动分栏时文本的最小宽度
+\tl_new:N \l__examzh_textfigure_min_text_width_tl      % 保留相对当前行宽的宽度表达式
 \dim_new:N \l__examzh_textfigure_column_gap_dim        % 左右图文之间的距离
 \bool_new:N \l__examzh_textfigure_auto_text_width_bool % 是否按图片实宽计算文本宽度
 
@@ -383,7 +406,8 @@
     text-width .dim_set:N = \l__examzh_textfigure_text_width_dim,
     % 自动按图片实际宽度分配左右布局的文本宽度
     auto-text-width .bool_set:N = \l__examzh_textfigure_auto_text_width_bool,
-    min-text-width .dim_set:N = \l__examzh_textfigure_min_text_width_dim,
+    min-text-width .code:n =
+      { \tl_set:Nn \l__examzh_textfigure_min_text_width_tl {#1} },
     column-gap .dim_set:N = \l__examzh_textfigure_column_gap_dim,
     % figure-width：手动设置 figure 的 varwidth 环境的宽度
     figure-width .dim_set:N = \l__examzh_textfigure_figure_width_dim,
@@ -435,6 +459,7 @@
       \noindent
       \__examzh_textfigure_output:nnn {#1} {#2} {#3}
       \vspace*{ \l__examzh_textfigure_bottom_sep_skip }
+      \par
     \group_end:
   }
 
@@ -504,6 +529,8 @@
   }
 \cs_new_protected:Npn \__examzh_textfigure_auto_text_width_dim_set:
   {
+    \dim_set:Nn \l__examzh_textfigure_min_text_width_dim
+      { \l__examzh_textfigure_min_text_width_tl }
     \dim_set:Nn \l__examzh_textfigure_text_width_dim
       {
         \linewidth

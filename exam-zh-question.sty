@@ -10,7 +10,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 
-\ProvidesExplPackage {exam-zh-question} {2026-07-28} {v0.3.1}
+\ProvidesExplPackage {exam-zh-question} {2026-07-30} {v0.3.2}
   {exam-zh question module}
 
 
@@ -1802,45 +1802,50 @@
       { \dim_sub:Nn #1 { \parindent } }
   }
 
+\cs_new_protected:Npn \__examzh_fillin_set_remaining_width:N #1
+  {
+    \dim_set_eq:NN #1 \linegoal
+    % linegoal 以左栏右边界为基准；根据当前位置越过栏间距中点来识别右栏。
+    \legacy_if:nT { @twocolumn }
+      {
+        \dim_compare:nNnT
+          {#1} < { \linewidth - \columnwidth - 0.5\columnsep }
+          { \dim_add:Nn #1 { \columnwidth + \columnsep } }
+      }
+    % linegoal 在 list 中少计各层 leftmargin，统一在比较和输出前补回。
+    \bool_if:NT \l__if_list_bool
+      {
+        \int_step_inline:nn { \l__list_depth_int }
+          {
+            \dim_add:Nn #1
+              {
+                \dim_use:c
+                  { l__list_leftmargin_ \int_to_roman:n { ##1 } _dim }
+              }
+          }
+      }
+    % 段首调用时，linegoal 尚未计入随后由 TeX 插入的首行缩进。
+    \bool_if:NT \l__examzh_fillin_width_auto_bool
+      { \__examzh_fillin_adjust_paragraph_start_width:N #1 }
+    \dim_set:Nn #1 { \dim_max:nn { 0pt } {#1} }
+  }
+
 \cs_new:Npn \__examzh_fillin_breakable_hspace:NN #1#2
   % #1: CJKunderline / use:n
   % #2: command to run after the fillin
   {
-    \dim_set_eq:NN \l_tmpb_dim \linegoal
-    % 段首调用时，linegoal 尚未计入随后由 TeX 插入的首行缩进。
-    \bool_if:NT \l__examzh_fillin_width_auto_bool
-      { \__examzh_fillin_adjust_paragraph_start_width:N \l_tmpb_dim }
+    \__examzh_fillin_set_remaining_width:N \l_tmpb_dim
     % 比较 \l__examzh_fillin_F_width_dim 和 linegoal
     \dim_compare:nNnTF { \l__examzh_fillin_F_width_dim } > { \l_tmpb_dim }
       {
         % 超过 linegoal 就排一段 linegoal，然后 \l__examzh_fillin_F_width_dim 减去 linegoal 长度
-        % \dim_set:NV \l_tmpa_dim \linegoal
-        \dim_set:NV \l_tmpa_dim \l_tmpb_dim
-        % 是否处于 list 环境中
-        \bool_if:NTF \l__if_list_bool
+        #1
           {
-            % 加上 1 到 当前层级的 leftmargin 才能让 list 中的 linegoal 正常
-            \int_step_inline:nn { \l__list_depth_int }
-              {
-                \dim_add:Nn \l_tmpa_dim { \dim_use:c { l__list_leftmargin_ \int_to_roman:n { ##1 } _dim } }
-              }
-            #1
-              {
-                \hspace
-                  { \__examzh_fillin_full_segment_width:n { \l_tmpa_dim } }
-              }
-            \__examzh_fillin_full_segment_reserve:
+            \hspace
+              { \__examzh_fillin_full_segment_width:n { \l_tmpb_dim } }
           }
-          {
-            % 正文中
-            #1
-              {
-                \hspace
-                  { \__examzh_fillin_full_segment_width:n { \l_tmpb_dim } }
-              }
-            \__examzh_fillin_full_segment_reserve:
-          }
-        \dim_sub:NV \l__examzh_fillin_F_width_dim \l_tmpa_dim
+        \__examzh_fillin_full_segment_reserve:
+        \dim_sub:NV \l__examzh_fillin_F_width_dim \l_tmpb_dim
         \dim_while_do:nNnn { \l__examzh_fillin_F_width_dim } > { \linewidth }
           {
             % 循环：\l__examzh_fillin_F_width_dim 和 \linewidth 比较，大的话就排一个，然后减掉 linewidth

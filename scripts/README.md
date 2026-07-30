@@ -15,6 +15,8 @@
 | `gitee-release.sh` | **Gitee Release 创建** | 使用 Gitee API 自动发布 |
 | `test-build.sh` | 测试构建流程 | 验证构建脚本 |
 | `build-common.sh` | 公共函数库 | 被其他脚本引用 |
+| `release_notes.py` | 结构化变更记录 | 生成 changelog 与英文 CTAN 公告 |
+| `workflow_dashboard.py` | 本地发布控制台 | 可视化运行固定脚本与 Claude Code skill |
 
 ### 使用方法
 
@@ -24,16 +26,17 @@
 
 ```bash
 # 交互式模式（会提示确认版本号）
-python scripts/build.py 0.2.7
+python3 scripts/build.py 0.2.7
 
 # 非交互模式（CI 环境）
-python scripts/build.py --non-interactive 0.2.7
+python3 scripts/build.py --non-interactive 0.2.7
 
 # 跳过编译（假设文档已编译）
-python scripts/build.py --skip-compile 0.2.7
+python3 scripts/build.py --skip-compile 0.2.7
 ```
 
 **功能：**
+- ✅ 汇总或校验 `.changes` 中的版本发布记录
 - ✅ 更新所有文件的版本号和日期
 - ✅ 编译示例文件和文档
 - ✅ 创建 CTAN 和 Release 两个发布包
@@ -67,7 +70,41 @@ bash scripts/build-ctan.sh 0.2.7
 CTAN 当前的 `l3build upload` 表单接口不使用 API Token，因此无需创建
 `CTAN_UPLOAD_TOKEN` Secret。工作流通过 `L3BUILD_CTAN_UPLOAD=true` 只在审批后的
 上传步骤关闭交互确认；本地运行 `l3build upload` 仍会询问确认。发布公告从对应
-版本的 `CHANGELOG.md` 小节自动生成。
+版本的 `.changes/releases/<version>.json` 清单生成，只包含 `announce: true` 的
+已审阅英文条目；完整中文记录仍写入 `CHANGELOG.md`。
+
+#### 变更记录与发布说明
+
+每个主题提交在 `.changes/unreleased/` 中保存一个 JSON 片段。维护者不直接修改
+`CHANGELOG.md` 的 `[Unreleased]` 小节，而是运行：
+
+```bash
+# 根据片段更新或校验 [Unreleased]
+make changelog
+make check-changelog
+
+# 发布前生成版本清单、归档片段并写入正式版本小节
+make prepare-release VERSION=0.3.2 DATE=2026-08-01
+```
+
+`scripts/build.py` 在完整发布时也会执行同样的准备步骤；若版本清单已经存在，
+则校验其版本、日期和 changelog 内容。详细字段说明与创建示例见
+`.changes/README.md`。
+
+#### 本地发布控制台
+
+```bash
+make dashboard
+```
+
+控制台只监听 `127.0.0.1:8765`。本地测试、文档与打包动作直接以参数数组执行；
+changelog、Git 提交以及 GitHub/Gitee Release 等需要判断或外部写入的动作，会在
+新的 Terminal 会话中打开 Claude Code，并调用项目内的 `/examzh-release` 或
+`/git-update` skill。服务端不提供任意命令接口，高风险动作还要求二次确认。
+
+```bash
+make dashboard-test
+```
 
 #### 3. 单独创建 Release 包
 
@@ -198,7 +235,7 @@ exam-zh/
 
 ### 必需依赖
 - `bash` >= 4.0
-- `python` >= 3.6
+- `python3` >= 3.10
 - `latexmk`
 - `xelatex`
 - `zip`
@@ -218,8 +255,10 @@ pip install pyperclip send2trash
 
 ```makefile
 # 使用 Python 完整构建
+PYTHON ?= python3
+
 release:
-	python scripts/build.py $(VERSION)
+	$(PYTHON) scripts/build.py $(VERSION)
 
 # 单独创建 CTAN 包
 ctan:
@@ -236,7 +275,7 @@ git-update:
 # GitHub Actions 示例
 - name: Build release packages
   run: |
-    python scripts/build.py --non-interactive ${{ github.ref_name }}
+    python3 scripts/build.py --non-interactive ${{ github.ref_name }}
 ```
 
 ## 常见问题

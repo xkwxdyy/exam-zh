@@ -2,9 +2,10 @@
 """
 exam-zh 项目完整构建脚本
 功能：
-1. 更新版本号和日期
-2. 编译文档和示例
-3. 创建 CTAN 和 Release 发布包
+1. 准备结构化发布说明
+2. 更新版本号和日期
+3. 编译文档和示例
+4. 创建 CTAN 和 Release 发布包
 """
 
 import argparse
@@ -16,6 +17,8 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List, Optional
+
+import release_notes
 
 # 可选依赖
 try:
@@ -269,6 +272,42 @@ def update_all_versions(version: str, date: str) -> None:
     update_doc_version(DOC_BASIC_DIR / "exam-zh-doc-basic.tex", version, date)
 
 
+def prepare_release_notes(version: str, release_date: str) -> bool:
+    """Finalize fragments, or validate an already prepared release manifest."""
+    manifest_path = PROJECT_ROOT / ".changes" / "releases" / f"{version}.json"
+    try:
+        if manifest_path.exists():
+            manifest = release_notes.load_json(manifest_path)
+            changes = release_notes.validate_manifest(manifest, str(manifest_path))
+            if manifest["version"] != version or manifest["date"] != release_date:
+                raise release_notes.NotesError(
+                    f"{manifest_path} does not match requested release {version} {release_date}"
+                )
+            changelog = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+            actual = release_notes.extract_section(changelog, version)
+            expected = release_notes.render_release_section(manifest, changes)
+            if actual != expected:
+                raise release_notes.NotesError(
+                    f"CHANGELOG.md section {version} does not match {manifest_path}"
+                )
+            log_info(f"Release notes already prepared: {manifest_path.relative_to(PROJECT_ROOT)}")
+            return True
+
+        release_notes.prepare_release(
+            PROJECT_ROOT / ".changes" / "unreleased",
+            PROJECT_ROOT / ".changes" / "releases",
+            PROJECT_ROOT / ".changes" / "archive",
+            PROJECT_ROOT / "CHANGELOG.md",
+            version,
+            release_date,
+        )
+        log_info(f"Prepared release notes: {manifest_path.relative_to(PROJECT_ROOT)}")
+        return True
+    except (OSError, release_notes.NotesError) as exc:
+        log_error(f"Failed to prepare release notes: {exc}")
+        return False
+
+
 # ==================== 编译 ====================
 def compile_latex(tex_file: Path, work_dir: Path) -> bool:
     """编译单个 LaTeX 文件"""
@@ -432,14 +471,26 @@ Examples:
     initial_version = args.version or get_version_from_build_lua()
     version = prompt_version(args.non_interactive, initial_version)
 
-    # 生成日期（ISO 格式）
-    now = datetime.datetime.now()
-    date = now.strftime("%Y-%m-%d")
+    # 已准备的版本清单固定发布日期，重跑构建时不应改成当天。
+    manifest_path = PROJECT_ROOT / ".changes" / "releases" / f"{version}.json"
+    if manifest_path.exists():
+        try:
+            manifest = release_notes.load_json(manifest_path)
+            release_notes.validate_manifest(manifest, str(manifest_path))
+            date = manifest["date"]
+        except release_notes.NotesError as exc:
+            log_error(f"Invalid release manifest: {exc}")
+            return 1
+    else:
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
 
     log_info(f"Build version: v{version}")
     log_info(f"Build date: {date}")
 
     try:
+        if not prepare_release_notes(version, date):
+            return 1
+
         # 步骤 1: 更新版本
         update_all_versions(version, date)
 

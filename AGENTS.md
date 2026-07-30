@@ -10,13 +10,18 @@
 - `l3build check`: run the XeTeX regression suite in `testfiles/`.
 - `l3build save <test-name>` or `make save`: update expected `.tlg` files after an intentional output change.
 - `bash scripts/test-build.sh`: validate all build scripts (version extraction, path safety, file existence).
+- `make changelog`: regenerate the `[Unreleased]` section from `.changes/unreleased/*.json`.
+- `make check-changelog`: verify fragments, release manifests, and `CHANGELOG.md` are synchronized.
+- `make dashboard`: open the local release workflow dashboard at `127.0.0.1:8765`.
+- `make dashboard-test`: test dashboard validation, allowlisted commands, and HTTP token protection.
 - `l3build doc`: compile the configured example documents through `latexmk`.
 - `latexmk -xelatex example-single.tex`: compile one example during focused debugging.
 - `make examples`: compile root examples; `make examples-basic`: compile basic examples.
 - `make doc`: compile full documentation; `make doc-basic`: compile beginner documentation.
 
 ### Release & Packaging
-- `python scripts/build.py [version]`: **complete release workflow** — updates versions, compiles all docs/examples, creates CTAN and Release packages. Supports `--non-interactive` (CI/CD) and `--skip-compile` flags.
+- `python3 scripts/build.py [version]`: **complete release workflow** — updates versions, compiles all docs/examples, creates CTAN and Release packages. Supports `--non-interactive` (CI/CD) and `--skip-compile` flags.
+- `make prepare-release VERSION=0.3.2 DATE=2026-08-01`: assemble unreleased fragments, archive them, and insert the versioned changelog section before tagging.
 - `bash scripts/build-ctan.sh [version]`: build CTAN package only (`CTAN/exam-zh.zip`).
 - `bash scripts/build-release.sh [version]`: build GitHub Release package only (`release/exam-zh-v*.zip`).
 - `l3build ctan`: alternative CTAN build (l3build's built-in method).
@@ -50,16 +55,18 @@ Recent history uses short imperative or descriptive messages, often in Chinese, 
 
 Update version metadata consistently in `build.lua`, package/class `\ProvidesExpl...` lines, manuals, and `CHANGELOG.md`. Prefer `l3build tag` for CTAN metadata updates, and use `scripts/build.py` only for the full custom release flow.
 
+Record each topic commit in `.changes/unreleased/*.json`. The Chinese `zh` field is the complete changelog text; set `announce: true` and provide reviewed English `en` only for important user-visible CTAN announcement items. Do not edit the generated `[Unreleased]` section directly.
+
 ### Build Script Usage Examples
 ```bash
 # Interactive release (prompts for confirmation)
-python scripts/build.py 0.2.7
+python3 scripts/build.py 0.2.7
 
 # Non-interactive (CI/CD environments)
-python scripts/build.py --non-interactive 0.2.7
+python3 scripts/build.py --non-interactive 0.2.7
 
 # Skip compilation (assumes docs already compiled)
-python scripts/build.py --skip-compile 0.2.7
+python3 scripts/build.py --skip-compile 0.2.7
 
 # Test build scripts without executing
 bash scripts/test-build.sh

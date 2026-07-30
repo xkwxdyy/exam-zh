@@ -1,0 +1,47 @@
+name: Check changelog
+
+on:
+  pull_request:
+    paths:
+      - ".changes/**"
+      - "CHANGELOG.md"
+      - "Makefile"
+      - "scripts/release_notes.py"
+      - "scripts/test_release_notes.py"
+      - ".github/workflows/check-changelog.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".changes/**"
+      - "CHANGELOG.md"
+      - "Makefile"
+      - "scripts/release_notes.py"
+      - "scripts/test_release_notes.py"
+      - ".github/workflows/check-changelog.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Run release-note regression tests
+        run: python3 scripts/test_release_notes.py
+
+      - name: Check generated changelog
+        run: make check-changelog

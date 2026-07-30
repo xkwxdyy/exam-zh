@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0c1118">
+    <title>exam-zh / Release Control</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="exam-zh Release Control">
+          <span class="brand-mark">ez</span>
+          <span>
+            <strong>exam-zh</strong>
+            <small>Release Control</small>
+          </span>
+        </a>
+        <div class="topbar-actions">
+          <span class="connection" id="connection-state"><span class="status-dot"></span>正在连接</span>
+          <button class="icon-button" id="refresh-button" type="button" title="刷新仓库状态" aria-label="刷新仓库状态">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+          <a class="icon-button" href="https://github.com/xkwxdyy/exam-zh" target="_blank" rel="noreferrer" title="打开 GitHub 仓库" aria-label="打开 GitHub 仓库">
+            <i data-lucide="github"></i>
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section class="overview-band">
+          <div class="overview-copy">
+            <p class="eyebrow"><span class="eyebrow-line"></span>LOCAL RELEASE WORKBENCH</p>
+            <h1>发布控制台</h1>
+            <p class="lede">把当前工作树的变更，送到正确的验证、打包与发布出口。</p>
+            <div class="repo-line">
+              <span><i data-lucide="git-branch"></i><b id="branch-value">读取中</b></span>
+              <span><i data-lucide="git-commit-horizontal"></i><b id="head-value">读取中</b></span>
+              <span><i data-lucide="clock-3"></i><b id="updated-value">--</b></span>
+            </div>
+          </div>
+          <div class="release-mark" aria-label="Release overview">
+            <div class="release-mark-inner">
+              <span class="release-mark-label">CURRENT PACKAGE</span>
+              <strong id="version-value">v--</strong>
+              <span id="date-value">--</span>
+            </div>
+            <div class="release-ring ring-one"></div>
+            <div class="release-ring ring-two"></div>
+          </div>
+        </section>
+
+        <section class="context-section" aria-labelledby="context-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">RELEASE CONTEXT</p>
+              <h2 id="context-title">这次发布的参数</h2>
+            </div>
+            <span class="muted-label">只会传给已允许的工作流</span>
+          </div>
+          <div class="context-grid">
+            <label class="field">
+              <span>目标版本</span>
+              <div class="field-control"><span class="field-prefix">v</span><input id="version-input" name="version" inputmode="decimal" autocomplete="off" placeholder="0.3.2"></div>
+              <small>用于归档、Tag 与 Release 包</small>
+            </label>
+            <label class="field">
+              <span>发布日期</span>
+              <input id="date-input" name="date" type="date">
+              <small>固化 changelog 时写入</small>
+            </label>
+            <label class="field field-wide">
+              <span>提交信息</span>
+              <input id="message-input" name="message" maxlength="200" autocomplete="off" placeholder="例如：fix: refine fillin auto width">
+              <small>留空时自动使用 chore(release): v版本号</small>
+            </label>
+            <fieldset class="field field-wide target-field">
+              <legend>发布出口</legend>
+              <div class="target-options">
+                <label class="target-option selected"><input type="radio" name="publish-target" value="github" checked><span><b>只发 GitHub Release</b><small>Tag 推送后，CTAN 工作流保留为未审批状态</small></span></label>
+                <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>GitHub Release + CTAN</b><small>完成链后打开 GitHub Actions，人工批准 CTAN 环境</small></span></label>
+              </div>
+            </fieldset>
+            <label class="switch-field">
+              <input id="skip-compile-input" type="checkbox">
+              <span class="switch" aria-hidden="true"><span></span></span>
+              <span><b>跳过完整编译</b><small>仅适用于已有 PDF 的重跑</small></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="pipeline-section" aria-labelledby="pipeline-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">RELEASE PIPELINE</p>
+              <h2 id="pipeline-title">自动发布链</h2>
+            </div>
+            <span class="muted-label" id="pipeline-state">按编号从上到下执行</span>
+          </div>
+          <div class="chain-shell">
+            <ol class="release-chain" id="release-chain" aria-label="自动发布步骤"></ol>
+            <div class="chain-launch">
+              <div class="chain-launch-copy"><span class="eyebrow">ONE ACTION</span><strong>准备好后从第 01 步开始</strong><small>AI 会先整理 Changelog；Git 提交、Tag 和 GitHub Release 都在链中明确显示。</small></div>
+              <button class="primary-button pipeline-launch" id="pipeline-launch" type="button"><i data-lucide="play"></i>执行自动发布链</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="workbench-layout">
+          <div class="actions-column">
+            <div class="section-heading actions-heading">
+              <div>
+                <p class="eyebrow">MANUAL TOOLS</p>
+                <h2>单步工具</h2>
+              </div>
+              <span class="action-count" id="action-count">-- 项</span>
+            </div>
+            <p class="manual-note">主发布链负责顺序执行；这里保留单独重跑检查、打包和辅助动作。</p>
+            <div class="action-list" id="action-list" aria-live="polite">
+              <div class="loading-block"><span class="spinner"></span>读取工作流清单</div>
+            </div>
+          </div>
+
+          <aside class="status-column">
+            <section class="status-panel panel">
+              <div class="panel-title"><span><i data-lucide="activity"></i>仓库状态</span><button class="text-button" id="status-refresh" type="button">刷新</button></div>
+              <div class="status-grid">
+                <div class="status-stat"><span>工作树</span><strong id="dirty-value">--</strong><small id="dirty-detail">--</small></div>
+                <div class="status-stat"><span>Fragments</span><strong id="fragment-value">--</strong><small>未归档片段</small></div>
+                <div class="status-stat"><span>Changelog</span><strong id="changelog-value">--</strong><small id="changelog-detail">--</small></div>
+                <div class="status-stat"><span>最新 Tag</span><strong id="tag-value">--</strong><small>Git history</small></div>
+              </div>
+              <div class="tool-checks" id="tool-checks"></div>
+            </section>
+
+            <section class="artifacts-panel panel">
+              <div class="panel-title"><span><i data-lucide="folder-archive"></i>产物</span><span class="muted-label">按状态刷新</span></div>
+              <div class="artifact-list" id="artifact-list"></div>
+            </section>
+
+            <section class="jobs-panel panel">
+              <div class="panel-title"><span><i data-lucide="history"></i>最近任务</span><span class="muted-label" id="last-job-time">--</span></div>
+              <div class="job-history" id="job-history"><span class="empty-state">还没有运行记录</span></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+
+      <section class="console-dock" id="console-dock" aria-label="任务控制台">
+        <div class="console-head">
+          <div class="console-title"><span class="console-pulse"></span><span id="console-title">任务控制台</span><small id="console-status">等待操作</small></div>
+          <div class="console-actions"><button class="icon-button small" id="clear-console" type="button" title="清空控制台" aria-label="清空控制台"><i data-lucide="eraser"></i></button><button class="cancel-button" id="cancel-button" type="button" disabled><i data-lucide="square"></i>取消任务</button></div>
+        </div>
+        <pre class="console-output" id="console-output"><span class="console-placeholder">选择上方工作流，执行日志会显示在这里。</span></pre>
+      </section>
+    </div>
+
+    <dialog class="confirm-dialog" id="confirm-dialog">
+      <div class="dialog-kicker"><i data-lucide="shield-alert"></i>确认工作流</div>
+      <h2 id="dialog-title">准备执行</h2>
+      <p id="dialog-description">该动作会改变当前仓库状态。</p>
+      <div class="dialog-command" id="dialog-command"></div>
+      <label class="confirm-input" id="confirm-input-wrap"><span id="confirm-prompt">请输入确认词</span><input id="confirm-input" autocomplete="off"></label>
+      <div class="dialog-actions"><button class="secondary-button" id="dialog-cancel" type="button">返回</button><button class="primary-button" id="dialog-confirm" type="button"><i data-lucide="play"></i>继续执行</button></div>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite"></div>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

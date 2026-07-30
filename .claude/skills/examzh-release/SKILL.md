@@ -1,7 +1,7 @@
 ---
 name: examzh-release
 description: Prepare and publish a formal exam-zh release: version metadata, CHANGELOG, l3build checks, build.py packages, release commit, tag, GitHub/Gitee push, GitHub Release assets, and Gitee Release assets. Use for 发版, 发布新版本, release, tag, or version bump requests.
-allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git tag *) Bash(git fetch *) Bash(git branch *) Bash(git remote *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(python3 scripts/build.py *) Bash(bash scripts/test-build.sh) Bash(l3build check) Bash(gh auth status) Bash(gh auth status *) Bash(gh release view *) Bash(gh release create *) Bash(gh release upload *) Bash(gh release edit *) Bash(bash scripts/gitee-release.sh *) Bash(date *) Bash(test *) Bash(ls *) Bash(mktemp *) Bash(sed *) Bash(awk *) Bash(head *) Bash(curl *) Bash(jq *) Read Edit Write
+allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git tag *) Bash(git fetch *) Bash(git branch *) Bash(git remote *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(python3 scripts/build.py *) Bash(python3 scripts/release_notes.py *) Bash(make changelog) Bash(make check-changelog) Bash(make prepare-release *) Bash(bash scripts/test-build.sh) Bash(l3build check) Bash(gh auth status) Bash(gh auth status *) Bash(gh release view *) Bash(gh release create *) Bash(gh release upload *) Bash(gh release edit *) Bash(bash scripts/gitee-release.sh *) Bash(date *) Bash(test *) Bash(ls *) Bash(mktemp *) Bash(unzip -tq *) Bash(sed *) Bash(awk *) Bash(head *) Bash(curl *) Bash(jq *) Read Edit Write
 disable-model-invocation: true
 ---
 
@@ -10,6 +10,24 @@ disable-model-invocation: true
 Project-level Claude Code skill for formal `exam-zh` releases.
 
 Use this skill for release, version, and tag workflows. For ordinary staging, committing, amending, or pushing current worktree changes, use `git-update`.
+
+## Invocation Modes
+
+The first argument may restrict the workflow. Stop at the stated boundary.
+
+- `changelog`: inspect current changes, create or update structured fragments,
+  run `make changelog` and `make check-changelog`, then stop. Do not commit,
+  build, tag, push, or publish.
+- `package [version]`: prepare notes, test, and build local archives only. Do
+  not commit, tag, push, or create platform releases.
+- `github <version>`: verify an existing tag and local release archive, then
+  create or refresh only the GitHub Release.
+- `gitee <version>`: verify an existing tag and local release archive, then
+  create or refresh only the Gitee Release.
+- `full [version]` or no mode: run the complete formal release workflow.
+
+When the dashboard supplies a mode, do not broaden it even when another step
+would normally follow in a complete release.
 
 ## Scope
 
@@ -46,6 +64,7 @@ git remote -v
 git tag --sort=-v:refname | head -n 10
 gh auth status
 bash scripts/test-build.sh
+make check-changelog
 ```
 
 Rules:
@@ -76,37 +95,42 @@ git tag --sort=-v:refname | head -n 1
 
 Strip the leading `v`, increment the patch number, and use the resulting `X.Y.Z`. Ask for an explicit version when the newest tag is missing or not semantic.
 
-## CHANGELOG
+## CHANGELOG And Release Fragments
 
-Draft the release entry from commits since the previous tag:
+The source of truth is `.changes/unreleased/*.json`; the `[Unreleased]`
+section in `CHANGELOG.md` is generated. Never edit that section directly.
+
+Review commits and the complete working-tree diff:
 
 ```bash
 git log --oneline PREVIOUS_TAG..HEAD
+git diff HEAD
 ```
 
-Add a new section near the top of `CHANGELOG.md`:
+For each topic, create or update one JSON fragment using the schema documented
+in `.changes/README.md`. Every change has Chinese `zh` text. Use
+`changelog: false, announce: false` for internal-only work. Important
+user-visible release items use `changelog: true, announce: true` and require
+reviewed English `en` text.
 
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
+Regenerate and verify:
 
-### Added
-
-- ...
-
-### Changed
-
-- ...
-
-### Fixed
-
-- ...
-
-### Documentation
-
-- ...
+```bash
+make changelog
+make check-changelog
 ```
 
-Include categories that have real entries. When commit history is ambiguous, draft the entry and ask for confirmation before continuing.
+For `changelog` mode, stop here. For a formal release, finalize the reviewed
+fragments before tagging:
+
+```bash
+make prepare-release VERSION=X.Y.Z DATE=YYYY-MM-DD
+make check-changelog
+```
+
+`scripts/build.py` performs the same preparation when the version manifest is
+not present. When commit history or announcement visibility is ambiguous,
+draft the fragment and ask for confirmation before continuing.
 
 ## Build And Test
 
@@ -153,7 +177,7 @@ git diff -- CHANGELOG.md build.lua exam-zh.cls '*.sty' doc/exam-zh-doc.tex doc-b
 Commit the release metadata and intentional release-tooling changes:
 
 ```bash
-git add CHANGELOG.md build.lua exam-zh.cls exam-zh-*.sty doc/exam-zh-doc.tex doc-basic/exam-zh-doc-basic.tex scripts .claude/skills
+git add .changes CHANGELOG.md build.lua exam-zh.cls exam-zh-*.sty doc/exam-zh-doc.tex doc-basic/exam-zh-doc-basic.tex scripts .claude/skills
 git commit -m "chore(release): vX.Y.Z"
 ```
 
@@ -176,7 +200,13 @@ git push gitee main --tags
 
 ## GitHub Release
 
-Extract the `CHANGELOG.md` section for `X.Y.Z` into a temporary notes file.
+Render the version manifest into a temporary Chinese release-notes file:
+
+```bash
+python3 scripts/release_notes.py render \
+  .changes/releases/X.Y.Z.json \
+  --changelog-output NOTES_FILE
+```
 
 Create the GitHub Release when it is missing:
 

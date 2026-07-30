@@ -8,6 +8,15 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-30
+
+### Fixed
+
+- 修复 `fillin/width=auto` 在 A3 双栏右栏中误用负的 `linegoal` 剩余宽度，导致隐藏答案时下划线异常跨行或超出栏宽的问题（GitHub #50）
+- 修复 `multifigures` 各列项宽使用 `\hsize` 而非按列数与列间距计算所得宽度的问题，以及表格总宽使用 `\textwidth` 而非 `\linewidth` 导致在题目等窄宽环境中溢出的问题；列数超出实际图片数量时现自动收缩
+- 修复 `textfigure` 末尾缺少 `\par` 导致后续内容不另起新段、直接行内续排的问题
+- 修复 `textfigure` 的 `min-text-width` 键不接受相对长度表达式（如 `\linewidth - 3cm`）的问题，现改为在排版时延迟求值
+
 ## [0.3.1] - 2026-07-28
 
 ### Added
@@ -15,13 +24,13 @@
 - 为 `fillin` 新增 `width=auto` 值：隐藏答案时按已录入答案的自然宽度生成占位空间，`width-extra` 键可在自然宽度基础上额外留出书写余量；没有录入答案的 `\fillin` 仍沿用 3em 默认宽度
 - `width=auto` 时自动吸附紧跟其后的右标点，将填空与标点作为不可分割单元排版，避免行末下划线与行首标点分离
 
-### Fixed
-
-- 修复 `doc-basic` 第 5 章遗留的孤立代码片段导致手册第 6/7 章及附录从未出现在编译输出中的问题（自 2025-11-12 起）
-
 ### Changed
 
 - 新增 GitHub Actions CTAN 上传工作流（`.github/workflows/ctan-upload.yml`）及 CTAN 包内容核查脚本（`scripts/check-ctan-release.py`），完善自动化发布流程
+
+### Fixed
+
+- 修复 `doc-basic` 第 5 章遗留的孤立代码片段导致手册第 6/7 章及附录从未出现在编译输出中的问题（自 2025-11-12 起）
 
 ## [0.3.0] - 2026-07-12
 

@@ -26,6 +26,9 @@ jobs:
         with:
           package_file: .github/tl_packages
 
+      - name: Check generated changelog
+        run: make check-changelog
+
       - name: Check release metadata
         run: >-
           python3 scripts/check-ctan-release.py

@@ -350,3 +350,6 @@ requirements.txt
 issues/
 
 *.zip
+
+# Local build artifacts and scratch files
+tmp/

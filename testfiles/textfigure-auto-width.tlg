@@ -4,5 +4,7 @@ width-ok=240pt
 width-ok=\linewidth -112pt
 width-ok=90pt
 width-ok=210pt
+width-ok=\linewidth -20mm-10pt
 \l__list_leftmargin_i_dim=\dimen...
 textfigure-auto-width-rendered
+textfigure-block-output=true

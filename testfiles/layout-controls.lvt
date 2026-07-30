@@ -37,6 +37,14 @@
 \keys_set:nn { exam-zh / multifigures } { column-gap = 12pt }
 \TYPE{multifigures-column-gap=\dim_use:N \l__examzh_multifigures_column_gap_dim}
 
+\cs_new_protected:Npn \examzhtestmultifigureswidth #1#2
+  {
+    \dim_compare:nNnTF
+      { \l__examzh_multifigures_item_width_dim } = {#1}
+      { \TYPE{#2=true} }
+      { \TYPE{#2=false} }
+  }
+
 \ExplSyntaxOff
 
 \ExplSyntaxOn
@@ -44,9 +52,19 @@
 \ExplSyntaxOff
 \par Text before a dotted answer leader.\paren
 
-\begin{multifigures}[columns=2,column-gap=12pt][hlines,vlines,colspec={*{2}{X[c]}}]
-  \item \rule{2cm}{1cm}
-  \item \rule{1cm}{2cm}
+\begin{multifigures}[columns=2,column-gap=12pt][colspec={*{2}{X[c]}}]
+  \examzhtestmultifigureswidth
+    { ( \linewidth - 24pt ) / 2 }
+    {multifigures-item-width}
+  \item \rule{\linewidth}{1cm}
+  \item \rule{\linewidth}{2cm}
+\end{multifigures}
+
+\begin{multifigures}[columns=3,column-gap=12pt][colspec={X[c]}]
+  \examzhtestmultifigureswidth
+    { \linewidth }
+    {multifigures-single-item-width}
+  \item A single item uses the resolved one-column width.
 \end{multifigures}
 \TYPE{layout-controls-rendered}
 

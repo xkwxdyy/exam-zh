@@ -9,6 +9,8 @@ import sys
 import zipfile
 from pathlib import Path, PurePosixPath
 
+import release_notes
+
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION_RE = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+")
@@ -68,21 +70,30 @@ def release_metadata(tag: str) -> tuple[str, str, str]:
         if f"\\newcommand{{\\DocVersion}}{{{version}}}" not in content:
             raise ReleaseError(f"{relative} does not contain DocVersion {version}")
 
-    changelog = read(ROOT / "CHANGELOG.md")
     bare_version = version.removeprefix("v")
-    heading = rf"^## \[{re.escape(bare_version)}\] - {re.escape(date)}\s*$"
-    start = re.search(heading, changelog, re.MULTILINE)
-    if not start:
-        raise ReleaseError(f"CHANGELOG.md has no release section for {bare_version} - {date}")
-    following = re.search(r"^## \[", changelog[start.end() :], re.MULTILINE)
-    end = start.end() + following.start() if following else len(changelog)
-    announcement = changelog[start.end() : end].strip()
-    if not announcement:
-        raise ReleaseError("the release changelog section is empty")
-    if len(announcement.encode("utf-8")) > 8192:
-        raise ReleaseError("the CTAN announcement exceeds l3build's 8192-byte limit")
+    manifest_path = ROOT / ".changes" / "releases" / f"{bare_version}.json"
+    try:
+        manifest = release_notes.load_json(manifest_path)
+        changes = release_notes.validate_manifest(manifest, str(manifest_path.relative_to(ROOT)))
+        if manifest["version"] != bare_version or manifest["date"] != date:
+            raise ReleaseError(
+                f"{manifest_path.relative_to(ROOT)} does not match build.lua "
+                f"version/date {bare_version} {date}"
+            )
 
-    return version, date, announcement + "\n"
+        changelog = read(ROOT / "CHANGELOG.md")
+        actual_section = release_notes.extract_section(changelog, bare_version)
+        expected_section = release_notes.render_release_section(manifest, changes)
+        if actual_section != expected_section:
+            raise ReleaseError(
+                f"CHANGELOG.md section {bare_version} is not generated from "
+                f"{manifest_path.relative_to(ROOT)}"
+            )
+        announcement = release_notes.render_announcement(changes)
+    except release_notes.NotesError as exc:
+        raise ReleaseError(str(exc)) from exc
+
+    return version, date, announcement
 
 
 def validate_archive(path: Path) -> None:
