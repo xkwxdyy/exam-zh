@@ -178,6 +178,10 @@ test_release_notes() {
   make -C "$PROJECT_ROOT" check-changelog || return 1
 }
 
+test_ctan_archive_validation() {
+  python3 "$PROJECT_ROOT/scripts/test_check_ctan_release.py" || return 1
+}
+
 test_workflow_dashboard() {
   python3 "$PROJECT_ROOT/scripts/test_workflow_dashboard.py" || return 1
 }
@@ -189,7 +193,7 @@ test_ctan_release_metadata() {
   python3 "$PROJECT_ROOT/scripts/check-ctan-release.py" \
     --tag "v$version" \
     --announcement-output "$announcement" || return 1
-  [[ -s "$announcement" ]] || return 1
+  [[ -f "$announcement" ]] || return 1
 }
 
 # ==================== 主函数 ====================
@@ -216,6 +220,7 @@ main() {
   run_test "Gitee release script syntax" test_dry_run_gitee_release
   run_test "Python script syntax" test_python_script_syntax
   run_test "Structured release notes" test_release_notes
+  run_test "CTAN archive validation" test_ctan_archive_validation
   run_test "Release workflow dashboard" test_workflow_dashboard
   run_test "CTAN release metadata" test_ctan_release_metadata
 

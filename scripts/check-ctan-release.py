@@ -23,6 +23,22 @@ FORBIDDEN_SUFFIXES = (
     ".log",
     ".synctex.gz",
 )
+ARCHIVE_LAYOUTS = {
+    "l3build": {
+        "exam-zh/README.md",
+        "exam-zh/LICENSE",
+        "exam-zh/exam-zh.cls",
+        "exam-zh/exam-zh-doc.pdf",
+        "exam-zh/exam-zh-doc-basic.pdf",
+    },
+    "tds": {
+        "exam-zh/README.md",
+        "exam-zh/LICENSE",
+        "exam-zh/tex/exam-zh.cls",
+        "exam-zh/doc/exam-zh-doc.pdf",
+        "exam-zh/doc/basic/exam-zh-doc-basic.pdf",
+    },
+}
 
 
 class ReleaseError(RuntimeError):
@@ -100,22 +116,21 @@ def validate_archive(path: Path) -> None:
     if not path.is_file() or path.stat().st_size == 0:
         raise ReleaseError(f"archive is missing or empty: {path}")
 
-    required = {
-        "exam-zh/README.md",
-        "exam-zh/LICENSE",
-        "exam-zh/exam-zh.cls",
-        "exam-zh/exam-zh-doc.pdf",
-        "exam-zh/exam-zh-doc-basic.pdf",
-    }
     with zipfile.ZipFile(path) as archive:
         corrupt = archive.testzip()
         if corrupt:
             raise ReleaseError(f"archive contains a corrupt member: {corrupt}")
         names = set(archive.namelist())
 
-    missing = sorted(required - names)
-    if missing:
-        raise ReleaseError("archive is missing required files: " + ", ".join(missing))
+    if not any(required <= names for required in ARCHIVE_LAYOUTS.values()):
+        missing_by_layout = [
+            f"{layout}: {', '.join(sorted(required - names))}"
+            for layout, required in ARCHIVE_LAYOUTS.items()
+        ]
+        raise ReleaseError(
+            "archive does not match a supported layout; missing "
+            + "; ".join(missing_by_layout)
+        )
 
     bad: list[str] = []
     for name in sorted(names):

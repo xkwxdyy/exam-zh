@@ -12,7 +12,7 @@
 --]==========================================]--
 
 module           = "exam-zh"
-version          = "v0.3.2"
+version          = "v0.3.3"
 date             = "2026-07-30"
 maintainer       = "Kangwei Xia"
 uploader         = maintainer

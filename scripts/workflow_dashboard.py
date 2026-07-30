@@ -32,6 +32,7 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
+DASHBOARD_API_VERSION = 3
 
 
 WORKFLOWS: tuple[dict[str, Any], ...] = (
@@ -39,11 +40,11 @@ WORKFLOWS: tuple[dict[str, Any], ...] = (
         "id": "release-pipeline",
         "stage": "pipeline",
         "title": "执行完整发布链",
-        "description": "按固定顺序生成 Changelog、验证、编译、提交并发布 GitHub Release",
+        "description": "从 Changelog 校验开始，按所选出口自动完成后续发布步骤",
         "icon": "workflow",
         "risk": "external",
         "executor": "pipeline",
-        "command": "AI Changelog → 测试 → 编译打包 → Git 提交 → Tag → GitHub Release",
+        "command": "Changelog 校验 → 测试 → 编译打包 → Git 提交 → Tag → 发布出口",
         "requires": ["version", "date", "publishTarget"],
     },
     {
@@ -308,9 +309,9 @@ def require_message(params: dict[str, Any]) -> str:
 
 
 def require_publish_target(params: dict[str, Any]) -> str:
-    value = str(params.get("publishTarget", "github")).strip().lower()
-    if value not in {"github", "ctan"}:
-        raise DashboardError("发布出口只能选择 GitHub Release 或 GitHub + CTAN")
+    value = str(params.get("publishTarget", "platforms")).strip().lower()
+    if value not in {"platforms", "all", "ctan"}:
+        raise DashboardError("发布出口只能选择 GitHub + Gitee、全部发布或单独 CTAN")
     return value
 
 
@@ -359,25 +360,35 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
     }
     if workflow_id == "release-pipeline":
         version, release_date, target, message = pipeline_params(params)
-        changelog_prompt = claude_prompt("pipeline-changelog", params)
-        steps: list[tuple[str, list[str]]] = [
+        if target == "ctan":
+            ctan_steps = [
+                (
+                    "检查 CTAN 发布条件",
+                    ["python3", "scripts/check-ctan-release.py", "--tag", f"v{version}"],
+                ),
+                (
+                    "触发 CTAN 发布",
+                    [
+                        "gh",
+                        "workflow",
+                        "run",
+                        "ctan-upload.yml",
+                        "--repo",
+                        "xkwxdyy/exam-zh",
+                        "--ref",
+                        "main",
+                        "-f",
+                        f"tag=v{version}",
+                    ],
+                ),
+            ]
+            return [(f"{index:02d} · {label}", command) for index, (label, command) in enumerate(ctan_steps, 1)]
+        raw_steps: list[tuple[str, list[str]]] = [
+            ("校验 Changelog", ["make", "check-changelog"]),
+            ("发布工具测试", ["bash", "scripts/test-build.sh"]),
+            ("XeTeX 回归测试", ["l3build", "check"]),
             (
-                "01 · AI 生成 Changelog",
-                [
-                    "claude",
-                    "--print",
-                    "--permission-mode",
-                    "acceptEdits",
-                    "--allowed-tools",
-                    "Read,Edit,Write,Bash(git status *),Bash(git diff *),Bash(git log *),Bash(make changelog),Bash(make check-changelog)",
-                    changelog_prompt,
-                ],
-            ),
-            ("02 · 校验 Changelog", ["make", "check-changelog"]),
-            ("03 · 发布工具测试", ["bash", "scripts/test-build.sh"]),
-            ("04 · XeTeX 回归测试", ["l3build", "check"]),
-            (
-                "05 · 固化发布说明",
+                "固化发布说明",
                 ["make", "prepare-release", f"VERSION={version}", f"DATE={release_date}"],
             ),
         ]
@@ -385,12 +396,12 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
         if bool(params.get("skipCompile")):
             build_command.append("--skip-compile")
         build_command.append(version)
-        steps.extend(
+        raw_steps.extend(
             [
-                ("06 · 编译并构建归档", build_command),
-                ("07 · 检查 CTAN ZIP", ["unzip", "-tq", "CTAN/exam-zh.zip"]),
+                ("编译并构建归档", build_command),
+                ("检查 CTAN ZIP", ["unzip", "-tq", "CTAN/exam-zh.zip"]),
                 (
-                    "08 · 校验 CTAN 元数据",
+                    "校验 CTAN 元数据",
                     [
                         "python3",
                         "scripts/check-ctan-release.py",
@@ -401,14 +412,25 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                     ],
                 ),
                 (
-                    "09 · Git 提交",
+                    "Git 提交",
                     ["bash", "scripts/git-update.sh", "--force", "--no-push", message],
                 ),
-                ("10 · 创建 Git Tag", ["git", "tag", "-a", f"v{version}", "-m", f"Release v{version}"]),
-                ("11 · 推送 main", ["git", "push", "github", "main"]),
-                ("12 · 推送 Tag", ["git", "push", "github", f"v{version}"]),
+                ("创建 Git Tag", ["git", "tag", "-a", f"v{version}", "-m", f"Release v{version}"]),
+                ("推送 GitHub main", ["git", "push", "github", "main"]),
+                ("推送 GitHub Tag", ["git", "push", "github", f"v{version}"]),
+            ]
+        )
+        if target in {"platforms", "all"}:
+            raw_steps.extend(
+                [
+                    ("推送 Gitee main", ["git", "push", "gitee", "main"]),
+                    ("推送 Gitee Tag", ["git", "push", "gitee", f"v{version}"]),
+                ]
+            )
+        raw_steps.extend(
+            [
                 (
-                    "13 · 生成 Release 说明",
+                    "生成 Release 说明",
                     [
                         "python3",
                         "scripts/release_notes.py",
@@ -419,7 +441,7 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                     ],
                 ),
                 (
-                    "14 · 发布 GitHub Release",
+                    "发布 GitHub Release",
                     [
                         "gh",
                         "release",
@@ -436,19 +458,30 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                 ),
             ]
         )
-        # This is a local notification only. The protected GitHub environment
-        # remains the final CTAN approval boundary after the tag is pushed.
-        if target == "ctan":
-            steps.append(
+        raw_steps.append(
+            (
+                "发布 Gitee Release",
+                [
+                    "bash",
+                    "scripts/gitee-release.sh",
+                    f"v{version}",
+                    f"v{version}",
+                    f"build/release-notes-v{version}.md",
+                    f"release/exam-zh-v{version}.zip",
+                ],
+            )
+        )
+        if target == "all":
+            raw_steps.append(
                 (
-                    "15 · 等待 CTAN 人工审批",
+                    "触发 CTAN 发布",
                     [
-                        "open",
-                        "https://github.com/xkwxdyy/exam-zh/actions/workflows/ctan-upload.yml",
-                    ],
+                        "gh", "workflow", "run", "ctan-upload.yml", "--repo", "xkwxdyy/exam-zh",
+                        "--ref", "main", "-f", f"tag=v{version}",
+                    ]
                 )
             )
-        return steps
+        return [(f"{index:02d} · {label}", command) for index, (label, command) in enumerate(raw_steps, 1)]
     if workflow_id in simple:
         return simple[workflow_id]
 
@@ -505,13 +538,6 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
 
 
 def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
-    if workflow_id == "pipeline-changelog":
-        return (
-            "/examzh-release changelog：只处理当前工作树的结构化变更片段，"
-            "根据真实 diff 创建或更新 .changes/unreleased/*.json，运行 make changelog "
-            "和 make check-changelog 后停止。不要提交、编译、打 Tag、推送或发布；"
-            "如果已有片段，只修正与当前 diff 不一致的内容。"
-        )
     if workflow_id == "ai-changelog":
         return (
             "/examzh-release changelog 只整理当前工作树的结构化变更片段，"
@@ -575,7 +601,6 @@ class Job:
     step: str = ""
     step_number: int = 0
     step_count: int = 0
-    awaiting_approval: bool = False
     process: subprocess.Popen[str] | None = None
     logs: list[str] = field(default_factory=list)
     log_offset: int = 0
@@ -603,7 +628,6 @@ class Job:
             "step": self.step,
             "stepNumber": self.step_number,
             "stepCount": self.step_count,
-            "awaitingApproval": self.awaiting_approval,
             "logs": self.logs[relative:],
             "cursor": self.log_offset + len(self.logs),
         }
@@ -623,14 +647,22 @@ class JobManager:
         if spec["executor"] != "claude":
             steps = build_steps(workflow_id, params)
             if workflow_id == "release-pipeline":
-                version, _, _, _ = pipeline_params(params)
+                version, _, target, _ = pipeline_params(params)
                 if capture(["git", "branch", "--show-current"]) != "main":
                     raise DashboardError("发布链只能从 main 分支执行")
-                if capture(["git", "tag", "--list", f"v{version}"]):
-                    raise DashboardError(f"Tag v{version} 已存在，发布链已停止")
                 if not capture(["git", "remote", "get-url", "github"]):
                     raise DashboardError("未配置 github 远程仓库")
-                for tool in ("claude", "l3build", "gh"):
+                local_tag = capture(["git", "tag", "--list", f"v{version}"])
+                if target == "ctan" and not local_tag:
+                    raise DashboardError(f"找不到已测试的 Tag v{version}，请先完成 GitHub + Gitee 发布链")
+                if target != "ctan" and local_tag:
+                    raise DashboardError(f"Tag v{version} 已存在，发布链已停止")
+                if target in {"platforms", "all"} and not capture(["git", "remote", "get-url", "gitee"]):
+                    raise DashboardError("未配置 gitee 远程仓库")
+                if target in {"platforms", "all"} and not os.environ.get("GITEE_TOKEN"):
+                    raise DashboardError("发布 GitHub + Gitee 需要 GITEE_TOKEN")
+                tools = ("gh",) if target == "ctan" else ("l3build", "gh")
+                for tool in tools:
                     if not shutil.which(tool):
                         raise DashboardError(f"未找到发布链依赖：{tool}")
         with self.lock:
@@ -643,8 +675,6 @@ class JobManager:
                 workflow_id=workflow_id,
                 title=spec["title"],
                 step_count=len(steps or []),
-                awaiting_approval=workflow_id == "release-pipeline"
-                and require_publish_target(params) == "ctan",
             )
             self.jobs[job.id] = job
             self.active_id = job.id
@@ -721,11 +751,7 @@ class JobManager:
                     job.append(f"命令失败，退出码 {return_code}。")
                     self._finish(job, "failed", return_code)
                     return
-            if job.awaiting_approval:
-                job.append("GitHub Actions 已启动，CTAN 上传仍需在受保护环境中人工审批。")
-                self._finish(job, "awaiting_approval", 0)
-            else:
-                self._finish(job, "success", 0)
+            self._finish(job, "success", 0)
         except (OSError, subprocess.SubprocessError) as exc:
             job.append(f"ERROR: {exc}")
             self._finish(job, "failed", 1)
@@ -924,6 +950,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/bootstrap":
             self.send_json(
                 {
+                    "apiVersion": DASHBOARD_API_VERSION,
                     "workflows": WORKFLOWS,
                     "status": repository_status(self.server.jobs),
                     "token": self.server.token,
@@ -971,8 +998,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def serve_static(self, path: str) -> None:
         if path in {"", "/"}:
             target = DASHBOARD_DIR / "index.html"
-        elif path == "/assets/gitee-release.png":
-            target = ROOT / "doc" / "figures" / "gitee-release.png"
         else:
             target = DASHBOARD_DIR / path.lstrip("/")
         try:
@@ -980,14 +1005,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
         except OSError:
             self.send_error_json("文件不存在", HTTPStatus.NOT_FOUND)
             return
-        allowed_roots = (DASHBOARD_DIR.resolve(), (ROOT / "doc" / "figures").resolve())
+        allowed_roots = (DASHBOARD_DIR.resolve(),)
         if not any(resolved.is_relative_to(base) for base in allowed_roots):
             self.send_error_json("禁止访问该路径", HTTPStatus.FORBIDDEN)
             return
         content_type = mimetypes.guess_type(resolved.name)[0] or "application/octet-stream"
         if content_type.startswith("text/") or content_type in {"application/javascript", "application/json"}:
             content_type += "; charset=utf-8"
-        self.send_bytes(resolved.read_bytes(), content_type, cache=resolved.suffix in {".png", ".css", ".js"})
+        self.send_bytes(resolved.read_bytes(), content_type, cache=resolved.suffix == ".png")
 
 
 def parse_args() -> argparse.Namespace:

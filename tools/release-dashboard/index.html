@@ -78,8 +78,9 @@
             <fieldset class="field field-wide target-field">
               <legend>发布出口</legend>
               <div class="target-options">
-                <label class="target-option selected"><input type="radio" name="publish-target" value="github" checked><span><b>只发 GitHub Release</b><small>Tag 推送后，CTAN 工作流保留为未审批状态</small></span></label>
-                <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>GitHub Release + CTAN</b><small>完成链后打开 GitHub Actions，人工批准 CTAN 环境</small></span></label>
+                <label class="target-option selected"><input type="radio" name="publish-target" value="platforms" checked><span><b>只发 GitHub + Gitee</b><small>用于平台测试，不触发 CTAN 发布</small></span></label>
+                <label class="target-option"><input type="radio" name="publish-target" value="all"><span><b>GitHub + Gitee + CTAN</b><small>完整发布链，最后触发 CTAN 工作流</small></span></label>
+                <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>单独发 CTAN</b><small>使用已经存在并测试通过的 Tag</small></span></label>
               </div>
             </fieldset>
             <label class="switch-field">
@@ -101,8 +102,11 @@
           <div class="chain-shell">
             <ol class="release-chain" id="release-chain" aria-label="自动发布步骤"></ol>
             <div class="chain-launch">
-              <div class="chain-launch-copy"><span class="eyebrow">ONE ACTION</span><strong>准备好后从第 01 步开始</strong><small>AI 会先整理 Changelog；Git 提交、Tag 和 GitHub Release 都在链中明确显示。</small></div>
-              <button class="primary-button pipeline-launch" id="pipeline-launch" type="button"><i data-lucide="play"></i>执行自动发布链</button>
+              <div class="chain-launch-copy"><span class="eyebrow">AUTOMATION</span><strong>Changelog 准备好后执行后续链</strong><small>AI 整理改为手动；自动链从校验现有 Changelog 开始。</small></div>
+              <div class="chain-actions">
+                <button class="secondary-button" id="manual-changelog" type="button"><i data-lucide="sparkles"></i>手动生成 Changelog</button>
+                <button class="primary-button pipeline-launch" id="pipeline-launch" type="button"><i data-lucide="play"></i>执行后续自动链</button>
+              </div>
             </div>
           </div>
         </section>

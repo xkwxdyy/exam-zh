@@ -51,6 +51,32 @@ class ValidationTests(unittest.TestCase):
                     self.assertTrue(all(isinstance(arg, str) for arg in command))
                     self.assertNotIn(command[0], {"sh", "zsh", "/bin/sh", "/bin/zsh"})
 
+    def test_release_pipeline_starts_after_manual_ai_changelog(self) -> None:
+        github_steps = dashboard.build_steps("release-pipeline", VALID_PARAMS)
+        labels = [label for label, _ in github_steps]
+        commands = [command for _, command in github_steps]
+        self.assertEqual(labels[0], "01 · 校验 Changelog")
+        self.assertTrue(any(label.endswith("Git 提交") for label in labels))
+        self.assertTrue(any(label.endswith("创建 Git Tag") for label in labels))
+        self.assertTrue(any(label.endswith("发布 GitHub Release") for label in labels))
+        self.assertTrue(any(label.endswith("发布 Gitee Release") for label in labels))
+        self.assertNotIn("触发 CTAN 发布", labels)
+        self.assertFalse(any(command[0] == "claude" for command in commands))
+        self.assertTrue(any(command[:3] == ["git", "push", "github"] for command in commands))
+        self.assertTrue(any(command[:3] == ["gh", "release", "create"] for command in commands))
+
+        all_steps = dashboard.build_steps("release-pipeline", {**VALID_PARAMS, "publishTarget": "all"})
+        self.assertTrue(any(label.endswith("触发 CTAN 发布") for label, _ in all_steps))
+
+        ctan_steps = dashboard.build_steps(
+            "release-pipeline", {**VALID_PARAMS, "publishTarget": "ctan"}
+        )
+        self.assertEqual(ctan_steps[-1][0], "02 · 触发 CTAN 发布")
+
+    def test_release_pipeline_rejects_unknown_publish_target(self) -> None:
+        with self.assertRaises(dashboard.DashboardError):
+            dashboard.build_steps("release-pipeline", {**VALID_PARAMS, "publishTarget": "gitee"})
+
     def test_unknown_workflow_is_rejected(self) -> None:
         with self.assertRaises(dashboard.DashboardError):
             dashboard.build_steps("arbitrary-shell", VALID_PARAMS)
@@ -129,6 +155,7 @@ class HttpTests(unittest.TestCase):
     def test_bootstrap_exposes_allowlist_and_token(self) -> None:
         status, payload = self.request("/api/bootstrap")
         self.assertEqual(status, 200)
+        self.assertEqual(payload["apiVersion"], dashboard.DASHBOARD_API_VERSION)
         self.assertEqual(payload["token"], self.token)
         ids = {item["id"] for item in payload["workflows"]}
         self.assertIn("changelog-check", ids)
@@ -143,6 +170,10 @@ class HttpTests(unittest.TestCase):
         )
         self.assertEqual(status, 403)
         self.assertIn("令牌", payload["error"])
+
+    def test_artifact_preview_asset_is_not_served(self) -> None:
+        status, _ = self.request("/assets/gitee-release.png")
+        self.assertEqual(status, 404)
 
     def test_harmless_job_can_run_and_stream_logs(self) -> None:
         status, payload = self.request(

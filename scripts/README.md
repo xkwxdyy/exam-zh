@@ -53,23 +53,25 @@ bash scripts/build-ctan.sh 0.2.7
 
 **输出：** `CTAN/exam-zh.zip`
 
-#### CTAN Tag 自动发布
+#### CTAN 发布工作流
 
-推送形如 `v0.3.0` 的 Tag 后，`.github/workflows/ctan-upload.yml` 会自动：
+在发布控制台选择“GitHub + Gitee + CTAN”或“单独发 CTAN”时，系统会用已经存在的
+Tag 手动触发 `.github/workflows/ctan-upload.yml`。只选择 GitHub + Gitee 不会触发
+CTAN。工作流会：
 
 1. 校验 Tag、`build.lua`、类/宏包、手册与 `CHANGELOG.md` 的版本和日期一致性；
 2. 运行构建脚本测试、`l3build` 回归测试并生成 `exam-zh.zip`；
 3. 检查压缩包结构、必需文件和临时文件，再调用 CTAN Validate 接口；
-4. 保存已校验的压缩包，并等待 `ctan` GitHub Environment 审批后正式上传。
+4. 保存已校验的压缩包，在 `CTAN_UPLOAD_ENABLED=true` 时自动正式上传。
 
 首次启用时，在 GitHub 的 **Settings → Environments** 中创建 `ctan`：
 
-- 配置 Required reviewers，保留正式上传前的人工批准；
+- 不配置 Required reviewers；发布出口的选择已经决定是否进入 CTAN；
 - 添加 Environment variable `CTAN_UPLOAD_ENABLED=true`，作为显式启用开关。
 
 CTAN 当前的 `l3build upload` 表单接口不使用 API Token，因此无需创建
-`CTAN_UPLOAD_TOKEN` Secret。工作流通过 `L3BUILD_CTAN_UPLOAD=true` 只在审批后的
-上传步骤关闭交互确认；本地运行 `l3build upload` 仍会询问确认。发布公告从对应
+`CTAN_UPLOAD_TOKEN` Secret。工作流通过 `L3BUILD_CTAN_UPLOAD=true` 在自动上传步骤
+关闭交互确认；本地运行 `l3build upload` 仍会询问确认。发布公告从对应
 版本的 `.changes/releases/<version>.json` 清单生成，只包含 `announce: true` 的
 已审阅英文条目；完整中文记录仍写入 `CHANGELOG.md`。
 
@@ -97,10 +99,12 @@ make prepare-release VERSION=0.3.2 DATE=2026-08-01
 make dashboard
 ```
 
-控制台只监听 `127.0.0.1:8765`。本地测试、文档与打包动作直接以参数数组执行；
-changelog、Git 提交以及 GitHub/Gitee Release 等需要判断或外部写入的动作，会在
-新的 Terminal 会话中打开 Claude Code，并调用项目内的 `/examzh-release` 或
-`/git-update` skill。服务端不提供任意命令接口，高风险动作还要求二次确认。
+控制台只监听 `127.0.0.1:8765`。AI 整理 changelog 是独立的手动动作；主发布链从校验
+现有 changelog 开始，依次执行发布工具测试、XeTeX 回归、固化版本、编译打包、归档检查、Git 提交、创建 Tag、推送
+GitHub/Gitee 和创建平台 Release。发布出口有三种：只发 GitHub + Gitee、GitHub + Gitee
++ CTAN、单独发 CTAN。单独发 CTAN 要求目标 Tag 已经存在，主链只做 CTAN 元数据检查并
+触发 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于
+局部重跑。
 
 ```bash
 make dashboard-test

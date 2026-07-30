@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "version": "0.3.3",
+  "date": "2026-07-30",
+  "source_fragments": [
+    "20260730T065834Z-release-dashboard-pipeline.json"
+  ],
+  "changes": [
+    {
+      "id": "release-dashboard-pipeline",
+      "type": "changed",
+      "zh": "重构发布控制台：Changelog 改为手动生成，后续步骤按纵向发布链自动执行，并支持 GitHub/Gitee、全部发布与单独 CTAN 三种出口。",
+      "announce": false
+    }
+  ]
+}
