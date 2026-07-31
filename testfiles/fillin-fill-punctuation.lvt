@@ -117,6 +117,34 @@
 \cs_set_eq:NN
   \__examzh_fillin_uline_breakable_F:
   \__examzh_test_fillin_uline_breakable_F:
+
+\cs_set_eq:NN \__examzh_test_linegoal: \linegoal
+\cs_set_eq:NN \__examzh_test_newline: \newline
+\bool_set_false:N \l_tmpa_bool
+\cs_set_protected:Npn \newline
+  { \bool_set_true:N \l_tmpa_bool }
+\bool_set_true:N \l__examzh_fillin_following_punctuation_captured_bool
+\dim_set:Nn \l__examzh_fillin_F_width_dim { 20pt }
+\dim_set:Nn \l__examzh_fillin_following_punctuation_width_dim { 10pt }
+\hbox_set:Nn \l__examzh_fillin_following_punctuation_box
+  { \hspace* { 10pt } }
+\tl_set:Nn \l__examzh_fillin_following_punctuation_tl { 。 }
+\cs_set:Npn \linegoal { 100pt }
+\__examzh_fillin_break_before_captured_unit:
+\TYPE
+  {
+    fillin-captured-break-when-fit=
+    \bool_if:NTF \l_tmpa_bool { yes } { no }
+  }
+\cs_set:Npn \linegoal { 10pt }
+\__examzh_fillin_uline_breakable_F:
+\TYPE
+  {
+    fillin-captured-break-before=
+    \bool_if:NTF \l_tmpa_bool { yes } { no }
+  }
+\cs_set_eq:NN \linegoal \__examzh_test_linegoal:
+\cs_set_eq:NN \newline \__examzh_test_newline:
 \ExplSyntaxOff
 
 \END

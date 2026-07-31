@@ -10,7 +10,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 
-\ProvidesExplPackage {exam-zh-question} {2026-07-30} {v0.3.4}
+\ProvidesExplPackage {exam-zh-question} {2026-07-31} {v0.3.5}
   {exam-zh question module}
 
 
@@ -30,6 +30,34 @@
     \cs_set_eq:NN \globdimen \newdimen
   }
 \RequirePackage { linegoal }
+
+% linegoal 2.9 会把 XeTeX 的 1sp 级横坐标波动原样写入辅助文件。
+% 将测量值舍入到 64sp，并避免保存未被其宽度计算使用的原始 posx，
+% 防止依赖 linegoal 的换行在 latexmk 多轮编译时无法收敛。
+\cs_new:Npn \__examzh_linegoal_round_position:n #1
+  { \int_eval:n { 64 * \int_div_round:nn {#1} { 64 } } }
+\cs_gset:cpn { Z@C@linegoal }
+  {
+    \dimexpr
+      \linewidth
+      - \__examzh_linegoal_round_position:n { \tex_lastxpos:D } sp
+      + \ifodd
+          \zref@extractdefault
+            { linegoal/posx.\the\LNGL@unique } { page } \c@page
+          \oddsidemargin
+        \else
+          \evensidemargin
+        \fi
+      + 1in + \hoffset
+    \relax
+  }
+\msg_new:nnn { exam-zh } { linegoal-patch-failed }
+  { Unable~to~patch~linegoal;~check~the~installed~package~version. }
+\patchcmd \LNGL@set
+  { \zref@labelbyprops { linegoal/posx.\the\LNGL@unique } { page,posx } }
+  { \zref@labelbyprops { linegoal/posx.\the\LNGL@unique } { page } }
+  { }
+  { \msg_error:nn { exam-zh } { linegoal-patch-failed } }
 
 
 \ExplSyntaxOff
@@ -1509,8 +1537,10 @@
     % \uline { \hspace* { \l__examzh_fillin_F_width_dim } }
     \bool_if:NTF \l__examzh_fillin_following_punctuation_captured_bool
       {
-        % 将短填空和紧随其后的右标点作为一个不可分割的行内单元，
-        % 使其无法被拆成“行末下划线 + 行首标点”。
+        % 将短填空和紧随其后的右标点作为一个不可分割的行内单元。
+        % 若当前行放不下整个单元，则明确换行，避免 TeX 因 badness
+        % 过高而拒绝普通断点并产生越界。
+        \__examzh_fillin_break_before_captured_unit:
         \hbox
           {
             \CJKunderline { \hspace* { \l__examzh_fillin_F_width_dim } }
@@ -1828,6 +1858,17 @@
     \bool_if:NT \l__examzh_fillin_width_auto_bool
       { \__examzh_fillin_adjust_paragraph_start_width:N #1 }
     \dim_set:Nn #1 { \dim_max:nn { 0pt } {#1} }
+  }
+
+\cs_new_protected:Npn \__examzh_fillin_break_before_captured_unit:
+  {
+    \__examzh_fillin_set_remaining_width:N \l_tmpb_dim
+    \dim_compare:nNnT
+      {
+        \l__examzh_fillin_F_width_dim
+        + \box_wd:N \l__examzh_fillin_following_punctuation_box
+      } > { \l_tmpb_dim }
+      { \newline }
   }
 
 \cs_new:Npn \__examzh_fillin_breakable_hspace:NN #1#2

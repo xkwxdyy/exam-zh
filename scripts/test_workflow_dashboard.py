@@ -124,6 +124,95 @@ class ValidationTests(unittest.TestCase):
         self.assertNotIn("shell", run.call_args.kwargs)
 
 
+class ReleaseContextTests(unittest.TestCase):
+    def test_new_release_uses_next_patch_today_and_matching_commit_message(self) -> None:
+        context = dashboard.suggested_release_context("0.3.4", "2026-07-31", [])
+
+        self.assertEqual(
+            context,
+            {
+                "version": "0.3.5",
+                "date": "2026-07-31",
+                "publishTarget": "platforms",
+                "message": "chore(release): v0.3.5",
+                "skipCompile": False,
+            },
+        )
+
+    def test_incomplete_release_keeps_its_version_date_and_message(self) -> None:
+        failed = dashboard.Job(
+            id="failed-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="failed",
+            created_at="2026-07-30T10:00:00+00:00",
+            step_count=16,
+            completed_steps=3,
+            params={
+                "version": "0.3.5",
+                "date": "2026-08-02",
+                "publishTarget": "all",
+                "message": "release: publish v0.3.5",
+                "skipCompile": True,
+            },
+        )
+
+        context = dashboard.suggested_release_context("0.3.4", "2026-07-31", [failed])
+
+        self.assertEqual(context, dashboard.normalized_pipeline_params(failed.params))
+
+    def test_completed_release_advances_instead_of_restoring_old_inputs(self) -> None:
+        completed = dashboard.Job(
+            id="completed-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="success",
+            created_at="2026-07-30T11:00:00+00:00",
+            step_count=16,
+            completed_steps=16,
+            params={
+                "version": "0.3.4",
+                "date": "2026-07-30",
+                "publishTarget": "platforms",
+                "message": "chore(release): v0.3.4",
+            },
+        )
+
+        context = dashboard.suggested_release_context("0.3.4", "2026-07-31", [completed])
+
+        self.assertEqual(context["version"], "0.3.5")
+        self.assertEqual(context["date"], "2026-07-31")
+        self.assertEqual(context["message"], "chore(release): v0.3.5")
+
+    def test_latest_success_supersedes_an_older_failed_attempt(self) -> None:
+        params = dashboard.normalized_pipeline_params(VALID_PARAMS)
+        failed = dashboard.Job(
+            id="failed-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="failed",
+            created_at="2026-08-01T01:00:00+00:00",
+            step_count=16,
+            completed_steps=3,
+            params=params,
+        )
+        success = dashboard.Job(
+            id="successful-retry",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="success",
+            created_at="2026-08-01T02:00:00+00:00",
+            step_count=16,
+            completed_steps=16,
+            params=params,
+        )
+
+        context = dashboard.suggested_release_context("1.2.3", "2026-08-02", [failed, success])
+
+        self.assertEqual(context["version"], "1.2.4")
+        self.assertEqual(context["message"], "chore(release): v1.2.4")
+
+
 class PersistenceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -176,6 +265,42 @@ class PersistenceTests(unittest.TestCase):
         restored = dashboard.JobManager(self.state_path).get(job.id)
         self.assertEqual(restored.status, "interrupted")
         self.assertEqual(restored.completed_steps, 2)
+
+    def test_successful_retry_invalidates_older_failed_checkpoint(self) -> None:
+        params = dashboard.normalized_pipeline_params(VALID_PARAMS)
+        steps = dashboard.build_steps("release-pipeline", params)
+        signature = dashboard.step_plan_signature(steps)
+        manager = dashboard.JobManager(None)
+        failed = dashboard.Job(
+            id="failed-job",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="failed",
+            created_at="2026-08-01T01:00:00+00:00",
+            step_number=4,
+            step_count=len(steps),
+            completed_steps=3,
+            params=params,
+            plan_signature=signature,
+        )
+        success = dashboard.Job(
+            id="successful-retry",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="success",
+            created_at="2026-08-01T02:00:00+00:00",
+            step_number=len(steps),
+            step_count=len(steps),
+            completed_steps=len(steps),
+            params=params,
+            plan_signature=signature,
+        )
+        manager.jobs = {failed.id: failed, success.id: success}
+
+        self.assertIsNone(manager._resume_checkpoint(params, signature))
+        snapshots = manager.recent()
+        self.assertEqual(snapshots[0]["id"], success.id)
+        self.assertFalse(any(job["resumeAvailable"] for job in snapshots))
 
     def test_process_resume_skips_completed_commands(self) -> None:
         manager = dashboard.JobManager(None)
@@ -302,6 +427,12 @@ class HttpTests(unittest.TestCase):
         ids = {item["id"] for item in payload["workflows"]}
         self.assertIn("changelog-check", ids)
         self.assertNotIn("shell", ids)
+        expected_version = dashboard.next_patch_version(payload["status"]["version"])
+        self.assertEqual(payload["status"]["releaseContext"]["version"], expected_version)
+        self.assertEqual(
+            payload["status"]["releaseContext"]["message"],
+            f"chore(release): v{expected_version}",
+        )
 
     def test_post_requires_session_token(self) -> None:
         status, payload = self.request(

@@ -1,0 +1,20 @@
+\documentclass{article}
+
+\input{regression-test}
+
+\usepackage{exam-zh-choices}
+
+\begin{document}
+\START
+
+\begin{choices}[columns=2,show-answer=true]
+  \item \verb|Alpha|
+  \item* \verb+# $ & _ { }+
+  \item \verb-Beta-
+  \item Plain text
+\end{choices}
+
+\TYPE{choices-verbatim=passed}
+
+\END
+\end{document}

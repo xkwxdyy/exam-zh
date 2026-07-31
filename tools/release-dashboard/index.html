@@ -75,6 +75,11 @@
               <input id="message-input" name="message" maxlength="200" autocomplete="off" placeholder="例如：fix: refine fillin auto width">
               <small>留空时自动使用 chore(release): v版本号</small>
             </label>
+            <label class="switch-field">
+              <input id="skip-compile-input" type="checkbox">
+              <span class="switch" aria-hidden="true"><span></span></span>
+              <span><b>跳过完整编译</b><small>仅适用于已有 PDF 的重跑</small></span>
+            </label>
             <fieldset class="field field-wide target-field">
               <legend>发布出口</legend>
               <div class="target-options">
@@ -83,11 +88,6 @@
                 <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>单独发 CTAN</b><small>使用已经存在并测试通过的 Tag</small></span></label>
               </div>
             </fieldset>
-            <label class="switch-field">
-              <input id="skip-compile-input" type="checkbox">
-              <span class="switch" aria-hidden="true"><span></span></span>
-              <span><b>跳过完整编译</b><small>仅适用于已有 PDF 的重跑</small></span>
-            </label>
           </div>
         </section>
 

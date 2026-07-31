@@ -1,0 +1,122 @@
+\documentclass{exam-zh}
+
+\examsetup{
+  page = {
+    size = a4paper,
+    margin = 22mm,
+  },
+  choices = {
+    margin = 8mm,
+    columns = 2,
+    column-sep = 2em,
+    linesep = 0.8em,
+  },
+}
+
+\definecolor{IssueRed}{HTML}{A63A32}
+\definecolor{IssueRedBackground}{HTML}{FFF4F2}
+\definecolor{IssueGreen}{HTML}{24734B}
+\definecolor{IssueGreenBackground}{HTML}{F1F8F4}
+\definecolor{IssueInk}{HTML}{202428}
+\definecolor{IssueMuted}{HTML}{5E6872}
+\definecolor{IssueRule}{HTML}{AEB7BF}
+
+\newtcolorbox{issuepanel}[3]{
+  enhanced,
+  breakable=false,
+  colback=#2,
+  colframe=#1,
+  boxrule=0.7pt,
+  arc=1mm,
+  left=5mm,
+  right=5mm,
+  top=4mm,
+  bottom=4mm,
+  before skip=4mm,
+  after skip=5mm,
+  title={#3},
+  coltitle=white,
+  fonttitle=\bfseries,
+  colbacktitle=#1,
+  boxed title style={arc=0.6mm},
+}
+
+\ExplSyntaxOn
+\int_new:N \g__examzh_issue_forty_seven_row_int
+\cs_new_eq:NN
+  \__examzh_issue_forty_seven_apply_indent:
+  \__examzh_choices_apply_left_indent:
+
+\NewDocumentCommand \UseIssueFortySevenOldBehavior { }
+  {
+    \int_gzero:N \g__examzh_issue_forty_seven_row_int
+    \cs_set_protected:Npn \__examzh_choices_apply_left_indent:
+      {
+        \int_gincr:N \g__examzh_issue_forty_seven_row_int
+        \int_compare:nNnT
+          { \g__examzh_issue_forty_seven_row_int } = { 1 }
+          { \__examzh_issue_forty_seven_apply_indent: }
+      }
+  }
+\ExplSyntaxOff
+
+\newcommand\samechoicesexample{%
+  \noindent\textbf{测试多行选项缩进：}
+  \begin{choices}
+    \item 第一行左侧选项
+    \item 第一行右侧选项
+    \item 第二行左侧选项
+    \item 第二行右侧选项
+  \end{choices}%
+}
+
+\begin{document}
+\color{IssueInk}
+
+\begin{center}
+  {\LARGE\bfseries GitHub Issue \#47：修复前后对照}\par
+  \vspace{1mm}
+  {\large \texttt{choices/margin} 在多行选项中的缩进一致性}
+\end{center}
+
+\vspace{3mm}
+
+\noindent
+\textbf{问题描述。}
+当 \texttt{choices} 使用两列、两行布局并设置
+\texttt{margin=8mm} 时，旧实现只在环境开始处应用一次左缩进。
+因此第一行 A/B 正常向右缩进，换行生成的第二行 C/D 却回到内容区左边界，
+同一列的选项无法上下对齐。预期行为是每一行都使用相同的左右边距。
+
+\begingroup
+  \UseIssueFortySevenOldBehavior
+  \begin{issuepanel}{IssueRed}{IssueRedBackground}
+    {修复前：局部模拟 v0.3.4 的旧行为}
+    \samechoicesexample
+    \par\smallskip
+    \noindent\color{IssueRed}\bfseries
+    可见问题：C 比 A 更靠左，D 比 B 更靠左。
+  \end{issuepanel}
+\endgroup
+
+\begin{issuepanel}{IssueGreen}{IssueGreenBackground}
+  {修复后：当前工作区实现}
+  \samechoicesexample
+  \par\smallskip
+  \noindent\color{IssueGreen}\bfseries
+  修复结果：A/C 左边界一致，B/D 左边界一致。
+\end{issuepanel}
+
+\noindent
+\textcolor{IssueMuted}{\textbf{测试条件：}}
+\textcolor{IssueMuted}{XeLaTeX；\texttt{columns=2}；
+\texttt{margin=8mm}；上下两部分使用完全相同的选项内容。}
+
+\vfill
+\noindent\textcolor{IssueRule}{\rule{\linewidth}{0.4pt}}
+\par\smallskip
+\noindent\footnotesize\color{IssueMuted}
+上半部分只在局部分组中关闭后续行的缩进调用，用于复现问题；
+下半部分未做模拟，直接使用当前 \texttt{exam-zh-choices.sty}。
+
+\end{document}

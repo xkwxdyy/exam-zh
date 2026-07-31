@@ -1,0 +1,27 @@
+\input regression-test.tex
+\documentclass{article}
+\usepackage{exam-zh-question}
+
+\begin{document}
+\START
+
+\ExplSyntaxOn
+\TYPE
+  {
+    linegoal-rounded-base=
+    \__examzh_linegoal_round_position:n { 1000000 }
+  }
+\TYPE
+  {
+    linegoal-rounded-one-sp-jitter=
+    \__examzh_linegoal_round_position:n { 1000001 }
+  }
+\TYPE
+  {
+    linegoal-rounded-next-grid-point=
+    \__examzh_linegoal_round_position:n { 1000063 }
+  }
+\ExplSyntaxOff
+
+\END
+\end{document}

@@ -4,6 +4,10 @@
 \usepackage{enumitem}
 \usepackage{exam-zh-choices}
 
+\ExplSyntaxOn
+\int_new:N \g__examzh_test_choices_row_indent_int
+\ExplSyntaxOff
+
 \begin{document}
 \START
 
@@ -23,6 +27,33 @@
   \TYPE{choices-margin-left=\dim_use:N\l__examzh_choices_left_indent_dim}
   \TYPE{choices-margin-right=\dim_use:N\l__examzh_choices_right_indent_dim}
 \group_end:
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_new_eq:NN
+  \__examzh_test_choices_apply_left_indent:
+  \__examzh_choices_apply_left_indent:
+\cs_set_protected:Npn \__examzh_choices_apply_left_indent:
+  {
+    \int_gincr:N \g__examzh_test_choices_row_indent_int
+    \__examzh_test_choices_apply_left_indent:
+  }
+\ExplSyntaxOff
+\begin{choices}[columns=2,margin=12pt]
+  \item First row, left.
+  \item First row, right.
+  \item Second row, left.
+  \item Second row, right.
+\end{choices}
+\ExplSyntaxOn
+\TYPE
+  {
+    choices-row-indent-applications=
+    \int_use:N \g__examzh_test_choices_row_indent_int
+  }
+\cs_set_eq:NN
+  \__examzh_choices_apply_left_indent:
+  \__examzh_test_choices_apply_left_indent:
 \ExplSyntaxOff
 
 \begin{enumerate}[leftmargin=4em]

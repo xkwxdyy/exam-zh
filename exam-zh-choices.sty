@@ -11,7 +11,7 @@
 \RequirePackage{xparse}
 \RequirePackage { xcolor }
 
-\ProvidesExplPackage {exam-zh-choices} {2026-07-30} {v0.3.4}
+\ProvidesExplPackage {exam-zh-choices} {2026-07-31} {v0.3.5}
   {exam-zh choices module}
 
 \RequirePackage { exam-zh-counter }
@@ -117,6 +117,12 @@
       }
   }
 
+\cs_new_protected:Npn \__examzh_choices_apply_left_indent:
+  {
+    \dim_compare:nNnF { \l__examzh_choices_left_indent_dim } = { 0pt }
+      { \hspace* { \l__examzh_choices_left_indent_dim } }
+  }
+
 \NewDocumentEnvironment { choices } { O { } +b }
   {
     \keys_set:nn { exam-zh / choices } {#1}
@@ -128,8 +134,7 @@
     \int_set:Nn \interlinepenalty { 301 }
     \vspace* { \l__examzh_choices_top_sep_skip }
     \noindent
-    \dim_compare:nNnF { \l__examzh_choices_left_indent_dim } = { 0pt }
-      { \skip_horizontal:N \l__examzh_choices_left_indent_dim }
+    \__examzh_choices_apply_left_indent:
     \__examzh_choices_set_total_width:
     \int_zero:N \l__examzh_choices_columns_int
     \dim_zero:N \l__examzh_choices_label_width_dim
@@ -255,6 +260,13 @@
 \dim_new:N \l__examzh_choices_item_width_dim
 \dim_new:N \l__examzh_choices_item_min_height_dim
 
+\cs_new_protected:Npn \__examzh_choices_typeset_item:n #1
+  {
+    \tl_if_in:nnTF {#1} { \verb }
+      { \tl_retokenize:n {#1} }
+      {#1}
+  }
+
 % 计算标签和选项内容的最大宽度，
 % 分别保存到 \l__examzh_choices_label_width_dim 和 \l__examzh_choices_item_width_dim
 % #1: \l__examzh_choices_seq
@@ -281,7 +293,8 @@
           { \dim_set_eq:NN \l__examzh_choices_label_width_dim \l_tmpa_dim }
         % -- 选项内容 --
         % 把内容放进 \l_tmpa_box 中
-        \hbox_set:Nn \l_tmpa_box {##2}
+        \hbox_set:Nn \l_tmpa_box
+          { \__examzh_choices_typeset_item:n {##2} }
         % 测量宽度
         \dim_set:Nn \l_tmpa_dim { \box_wd:N \l_tmpa_box }
         % 与当前最大值比较，最后效果是 \l__examzh_choices_item_width_dim 储存了所有选项内容中宽度最大的内容的宽度值
@@ -414,6 +427,7 @@
           {
             % \par \noindent
             \\[ \l__examzh_choices_line_sep_skip ]
+            \__examzh_choices_apply_left_indent:
             % \newline
             % \skip_vertical:N \l__examzh_choices_line_sep_skip
             \int_set:Nn \l__examzh_choices_current_col_int {1}
@@ -582,7 +596,10 @@
         % 优先尝试使用 hbox，这是因为在 \vbox_set 外部能保留原来的 \linewidth 和
         % \textwidth，方便用户在 \includegraphics 中使用
         \hbox_set:Nn \l_tmpa_box
-          { \__examzh_choices_format_answer:nn {#1} {#2} }
+          {
+            \__examzh_choices_format_answer:nn {#1}
+              { \__examzh_choices_typeset_item:n {#2} }
+          }
         % 若盒子的自然高度大于 2 行，且深度为 0pt，设置为插图模式
         \bool_lazy_and:nnT
           {
@@ -612,7 +629,10 @@
               { \centering }
             \dim_compare:nNnTF
               { \box_wd:N \l_tmpa_box } > { \l__examzh_choices_item_width_dim }
-              { \__examzh_choices_format_answer:nn {#1} {#2} }
+              {
+                \__examzh_choices_format_answer:nn {#1}
+                  { \__examzh_choices_typeset_item:n {#2} }
+              }
               { \box_use_drop:N \l_tmpa_box }
             % 使用 \strut 将行距撑开，防止跟下一行选项的间距过小
             \mode_if_horizontal:T { \strut }

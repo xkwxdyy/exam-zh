@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const apiVersion = 4;
+  const apiVersion = 6;
   const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false };
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -74,38 +74,59 @@
     };
   }
 
+  function defaultReleaseMessage(version) {
+    const value = String(version || "").replace(/^v/, "");
+    return value ? `chore(release): v${value}` : "";
+  }
+
   function normalizedPipelineParams(params = readParams()) {
     const version = String(params.version || "").replace(/^v/, "");
     return {
       version,
       date: String(params.date || ""),
-      message: String(params.message || "").trim() || `chore(release): v${version}`,
+      message: String(params.message || "").trim() || defaultReleaseMessage(version),
       skipCompile: Boolean(params.skipCompile),
       publishTarget: params.publishTarget || "platforms",
     };
   }
 
-  function matchingCheckpoint() {
+  function matchingPipelineJob() {
     const expected = normalizedPipelineParams();
-    return (state.status?.jobs || []).find((job) => {
-      if (!job.resumeAvailable || job.workflowId !== "release-pipeline") return false;
+    const jobs = [state.activeJob, ...(state.status?.jobs || [])].filter(
+      (job, index, items) => job && items.findIndex((item) => item?.id === job.id) === index,
+    );
+    return jobs.find((job) => {
+      if (job.workflowId !== "release-pipeline") return false;
       const actual = normalizedPipelineParams(job.params || {});
       return Object.keys(expected).every((key) => actual[key] === expected[key]);
     }) || null;
   }
 
-  function restoreCheckpointInputs(job) {
-    if (!job?.params) return;
-    const params = normalizedPipelineParams(job.params);
+  function matchingCheckpoint() {
+    const job = matchingPipelineJob();
+    return job?.resumeAvailable ? job : null;
+  }
+
+  function applyReleaseContext(context) {
+    const params = normalizedPipelineParams(context || {});
     $("#version-input").value = params.version;
     $("#date-input").value = params.date;
     $("#message-input").value = params.message;
+    $("#message-input").dataset.auto = String(params.message === defaultReleaseMessage(params.version));
     $("#skip-compile-input").checked = params.skipCompile;
     const target = $(`input[name="publish-target"][value="${params.publishTarget}"]`);
     if (target) target.checked = true;
     $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input")?.checked));
     $("#version-input").dataset.initialized = "true";
     $("#date-input").dataset.initialized = "true";
+  }
+
+  function fallbackReleaseContext(status) {
+    const parts = String(status.version || "").split(".").map(Number);
+    const version = parts.length === 3 && parts.every(Number.isInteger)
+      ? `${parts[0]}.${parts[1]}.${parts[2] + 1}`
+      : String(status.version || "");
+    return { version, date: status.today || "", message: defaultReleaseMessage(version) };
   }
 
   function renderChain(job = null) {
@@ -135,23 +156,15 @@
     state.status = status;
     const pipelineJobs = (status.jobs || []).filter((job) => job.workflowId === "release-pipeline");
     const activePipeline = pipelineJobs.find((job) => job.id === status.activeJobId);
-    const resumable = pipelineJobs.find((job) => job.resumeAvailable);
-    state.pipelineJob = activePipeline || resumable || pipelineJobs[0] || null;
-    if (!$("#version-input").dataset.initialized && resumable) restoreCheckpointInputs(resumable);
+    state.pipelineJob = activePipeline || pipelineJobs[0] || null;
+    if (!$("#version-input").dataset.initialized) {
+      applyReleaseContext(status.releaseContext || fallbackReleaseContext(status));
+    }
     $("#branch-value").textContent = status.branch || "detached";
     $("#head-value").textContent = status.head || "--";
     $("#updated-value").textContent = status.refreshedAt ? status.refreshedAt.slice(11, 16) : "--";
     $("#version-value").textContent = status.version ? `v${status.version}` : "v--";
     $("#date-value").textContent = status.releaseDate || "未设置日期";
-    if (!$("#version-input").dataset.initialized && status.version) {
-      const parts = status.version.split(".").map(Number);
-      $("#version-input").value = parts.length === 3 && parts.every(Number.isInteger) ? `${parts[0]}.${parts[1]}.${parts[2] + 1}` : status.version;
-      $("#version-input").dataset.initialized = "true";
-    }
-    if (!$("#date-input").dataset.initialized) {
-      $("#date-input").value = status.today || "";
-      $("#date-input").dataset.initialized = "true";
-    }
     $("#dirty-value").textContent = status.dirtyCount ? `${status.dirtyCount} 项` : "干净";
     $("#dirty-detail").textContent = status.dirtyFiles?.[0]?.replace(/^..\s/, "") || "无未提交文件";
     $("#fragment-value").textContent = String(status.fragmentCount ?? "--");
@@ -219,16 +232,20 @@
 
   function updatePipelineControls() {
     const running = Boolean(state.activeJob && ["queued", "running"].includes(state.activeJob.status));
-    const checkpoint = matchingCheckpoint();
+    const pipelineJob = matchingPipelineJob();
+    const checkpoint = pipelineJob?.resumeAvailable ? pipelineJob : null;
+    const completed = pipelineJob?.status === "success" && pipelineJob.completedSteps === pipelineJob.stepCount;
     const launch = $("#pipeline-launch");
     const restart = $("#pipeline-restart");
-    launch.disabled = running || !state.backendCompatible;
+    launch.disabled = running || completed || !state.backendCompatible;
     restart.disabled = running || !state.backendCompatible;
     restart.hidden = !checkpoint;
     launch.innerHTML = checkpoint
       ? `<i data-lucide="rotate-ccw"></i>从第 ${String((checkpoint.completedSteps || 0) + 1).padStart(2, "0")} 步继续`
-      : `<i data-lucide="play"></i>执行后续自动链`;
-    renderChain(checkpoint || (["queued", "running"].includes(state.pipelineJob?.status) ? state.pipelineJob : null));
+      : completed
+        ? `<i data-lucide="check"></i>发布链已完成`
+        : `<i data-lucide="play"></i>执行后续自动链`;
+    renderChain(pipelineJob);
     iconRefresh();
   }
 
@@ -331,7 +348,20 @@
       $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input") === input && input.checked));
       updatePipelineControls();
     }));
-    ["#version-input", "#date-input", "#message-input"].forEach((selector) => $(selector).addEventListener("input", updatePipelineControls));
+    $("#version-input").addEventListener("input", () => {
+      const message = $("#message-input");
+      if (message.dataset.auto === "true" || !message.value.trim()) {
+        message.value = defaultReleaseMessage($("#version-input").value);
+        message.dataset.auto = "true";
+      }
+      updatePipelineControls();
+    });
+    $("#date-input").addEventListener("input", updatePipelineControls);
+    $("#message-input").addEventListener("input", () => {
+      const message = $("#message-input");
+      message.dataset.auto = String(!message.value.trim() || message.value.trim() === defaultReleaseMessage($("#version-input").value));
+      updatePipelineControls();
+    });
     $("#skip-compile-input").addEventListener("change", updatePipelineControls);
     $("#refresh-button").addEventListener("click", refreshStatus); $("#status-refresh").addEventListener("click", refreshStatus);
     $("#clear-console").addEventListener("click", () => { $("#console-output").innerHTML = `<span class="console-placeholder">选择上方工作流，执行日志会显示在这里。</span>`; $("#console-dock").classList.remove("has-output"); });

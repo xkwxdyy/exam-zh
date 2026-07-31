@@ -1,0 +1,42 @@
+\documentclass{exam-zh}
+
+\begin{document}
+\chapter*{Issue \#30 验证文档}
+
+\section*{问题与验证范围}
+
+旧实现会先捕获整个 \texttt{choices} 环境，再把每个选项直接放入盒子测宽。
+因此原始复现中的 \verb|\verb| 会在 \verb|\end{choices}| 处触发编译错误。
+当前实现只对含 \verb|\verb| 的选项重新扫描，然后继续使用原来的自动测宽、
+多列排版和正确答案标记逻辑。
+
+\section*{修复结果}
+
+\begin{question}
+  以下程序的运行结果为 \paren。
+
+  \begin{verbatim}
+#include <iostream>
+int main() {
+  std::cout << "Hello, world!" << std::endl;
+}
+  \end{verbatim}
+
+  \begin{choices}[columns=2,show-answer=true]
+    \item \verb+Alpha+
+    \item* \verb-Beta-
+    \item \verb,Gamma,
+    \item \verb|Delta|
+  \end{choices}
+\end{question}
+
+上面的四个选项能够正常编译并保持两列布局；正确选项 \verb|Beta| 仍按原有规则着色。
+
+\section*{当前边界}
+
+\verb|question| 和 \verb|problem| 可直接放置 \verb|verbatim|；
+\verb|choices| 现已支持本例中的内联 \verb|\verb|。
+直接嵌入 \verb|lstlisting| 仍受整段正文捕获和换行 catcode 限制，
+多行代码选项应继续使用 \verb|\lstinputlisting| 从外部文件读取。
+
+\end{document}

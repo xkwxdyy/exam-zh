@@ -1,0 +1,153 @@
+\documentclass{exam-zh}
+
+% Visual regression test for GitHub issues #50, #51, and #52.
+% Compile twice from testfiles/ with the workspace package taking precedence:
+%   TEXINPUTS=..: latexmk -xelatex -interaction=nonstopmode \
+%     -file-line-error -synctex=1 fillin-auto-wrap-regression.tex
+% The second invocation should report "Nothing to do".
+
+\examsetup{
+  page = {
+    size = a3paper,
+    show-columnline = true,
+  },
+  fillin = {
+    width = auto,
+    width-extra = 1em,
+    no-answer-type = none,
+    show-answer = false,
+    type = line,
+  },
+}
+
+\AtEndPreamble{\geometry{showframe}}
+
+\definecolor{RegressionGreen}{HTML}{176B45}
+\definecolor{RegressionGray}{HTML}{F1F3F5}
+
+\newcommand\regressionnote[1]{%
+  \par\smallskip
+  \noindent
+  \colorbox{RegressionGray}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{#1}%
+  }%
+  \par\smallskip
+}
+
+\newcommand\oldbehavior[1]{%
+  \par\noindent\textbf{原错误现象：}#1\par
+}
+
+\newcommand\fixedbehavior[1]{%
+  \par\noindent\textcolor{RegressionGreen}{\textbf{修复后：}}#1\par
+}
+
+\begin{document}
+\raggedbottom
+
+\section*{\texttt{\string\fillin} 自动宽度与换行回归测试}
+
+本文档同时覆盖 GitHub Issue \#50、\#51 和 \#52。页面边框与中间分栏线是验收基准：
+所有下划线和标点均应位于所属栏的边框内。本文只运行当前修复后的实现；旧效果
+用文字说明，避免为了截图而重新引入有缺陷的代码。
+
+\subsection*{1. 短填空与后续标点作为整体换行（Issue \#52）}
+
+\oldbehavior{短填空与紧随的句号虽然被放入同一个不可拆分盒子，但当行末剩余
+空间不足时，TeX 可能因为普通断点的 badness 过高而拒绝换行，导致“下划线
+加句号”整个单元越出右侧版心。}
+
+\fixedbehavior{排版前先比较“下划线宽度 + 标点宽度”和当前行剩余宽度；放得下
+就保持行内，放不下就让整个单元移到下一行，且不会把标点单独留在行首。}
+
+\regressionnote{下面两行是实际输出，不是示意图。第一行预留约 \texttt{9em}，
+应当容纳完整单元；第二行只预留约 \texttt{7em}，完整单元应当一起移到下一行。}
+
+\noindent
+\makebox[\dimexpr\linewidth-9em\relax][l]
+  {情形 A（仍能放下）：当前行末保留足够宽度}%
+\fillin*[生物化学反应]。
+
+\medskip
+
+\noindent
+\makebox[\dimexpr\linewidth-7em\relax][l]
+  {情形 B（已经放不下）：当前行末剩余宽度不足}%
+\fillin*[生物化学反应]。
+
+\regressionnote{修复后的预期效果：情形 A 的下划线和句号留在第一行；情形 B
+的下划线和句号同时出现在下一行。两种情形都不越过右侧边框。}
+
+\subsection*{2. 常规自然宽度与标点吸附}
+
+\oldbehavior{早期实现使用固定宽度，或在换行时把逗号、句号留到下一行开头；
+段首缩进还可能被重复计入可用宽度。}
+
+\fixedbehavior{\texttt{width=auto} 按隐藏答案的自然宽度留空，另加
+\texttt{width-extra}；常见右标点与短填空保持在一起，段首和显式
+\texttt{\string\noindent} 分别按各自的真实剩余宽度计算。}
+
+\begin{question}
+  组成细胞的化学元素和无机自然界中的化学元素相比，种类
+  \fillin*[大体相同]，含量\fillin*[差异很大]。
+\end{question}
+
+\begin{question}
+  水在细胞中以\fillin*[自由水和结合水]两种形式存在。
+\end{question}
+
+\regressionnote{修复后的预期效果：两个填空长度随原答案长度变化；逗号、句号
+和短填空保持相邻，没有孤立在下一行开头。}
+
+% In A3 mode, \newpage ends the left column and starts the right column.
+\newpage
+
+\section*{右栏：A3 双栏剩余宽度（Issue \#50）}
+
+本节被有意放在 A3 页面的右栏，以运行 Issue \#50 的真实失败路径。
+
+\oldbehavior{\texttt{linegoal} 以左栏边界为基准返回位置；旧计算没有正确补偿
+右栏偏移，因而会得到负数或错误的剩余宽度，使自动宽度填空过早换行、长度异常，
+甚至越出右栏。}
+
+\fixedbehavior{仅在 A3 双栏的右栏补回栏宽与栏间距；A4 单栏和 A3 左栏的计算
+保持不变。下面四题直接采用原问题中的题目。}
+
+\begin{question}
+  组成细胞的化学元素和无机自然界中的化学元素相比，种类
+  \fillin*[大体相同]，含量\fillin*[差异很大]。
+\end{question}
+
+\begin{question}
+  组成细胞的大量元素有
+  \fillin*[C、H、O、N、P、S、K、Ca、Mg]等，微量元素有
+  \fillin*[Fe、Mn、B、Zn、Mo、Cu]等。
+\end{question}
+
+\begin{question}
+  人体细胞鲜重含量最多的元素是\fillin*[O]，干重含量最多的元素是
+  \fillin*[C]。
+\end{question}
+
+\begin{question}
+  组成细胞元素大多以\fillin*[化合物]的形式存在，组成细胞的无机盐大多以
+  \fillin*[离子]的形式存在。
+\end{question}
+
+\regressionnote{修复后的预期效果：所有下划线都按答案自然宽度排版；需要换行时
+只在右栏内部换行，标点不会落在下一行开头，也不会越过右侧页面边框。}
+
+\subsection*{3. 多轮编译收敛（Issue \#51）}
+
+\oldbehavior{XeTeX 保存的位置有时会在相邻编译轮次间变化 \texttt{1sp}，
+\texttt{linegoal} 将这个差异写入辅助文件后，\texttt{latexmk} 可能持续提示
+标签变化并反复编译。}
+
+\fixedbehavior{用于剩余宽度计算的位置统一舍入到 \texttt{64sp}，且辅助文件不再
+保存未参与宽度计算的原始横坐标。第一次编译完成交叉定位后，第二次执行
+\texttt{latexmk} 应报告 \texttt{Nothing to do}。}
+
+\regressionnote{最终验收：日志中没有 \texttt{Overfull \string\hbox}、
+没有 \texttt{Package linegoal Warning}；再次执行相同编译命令时无需重编译。}
+
+\end{document}

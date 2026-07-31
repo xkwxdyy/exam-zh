@@ -33,7 +33,7 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
-DASHBOARD_API_VERSION = 4
+DASHBOARD_API_VERSION = 6
 STATE_SCHEMA_VERSION = 1
 STATE_PATH = ROOT / ".release-dashboard" / "state.json"
 
@@ -336,6 +336,52 @@ def normalized_pipeline_params(params: dict[str, Any]) -> dict[str, Any]:
         "publishTarget": target,
         "message": message,
         "skipCompile": bool(params.get("skipCompile")),
+    }
+
+
+def next_patch_version(version: str) -> str:
+    value = require_version({"version": version})
+    major, minor, patch = (int(part) for part in value.split("."))
+    return f"{major}.{minor}.{patch + 1}"
+
+
+def suggested_release_context(
+    current_version: str,
+    release_date: str,
+    jobs: list[Job],
+) -> dict[str, Any]:
+    pipeline_jobs = sorted(
+        (job for job in jobs if job.workflow_id == "release-pipeline"),
+        key=lambda item: item.created_at,
+        reverse=True,
+    )
+    latest = pipeline_jobs[0] if pipeline_jobs else None
+    completed = bool(
+        latest
+        and latest.status == "success"
+        and latest.step_count > 0
+        and latest.completed_steps == latest.step_count
+    )
+    if latest and not completed:
+        try:
+            return normalized_pipeline_params(latest.params)
+        except DashboardError:
+            pass
+
+    candidates: list[str] = []
+    for value in (current_version, latest.params.get("version", "") if completed else ""):
+        try:
+            candidates.append(require_version({"version": value}))
+        except DashboardError:
+            pass
+    base_version = max(candidates, key=lambda value: tuple(map(int, value.split("."))), default="")
+    version = next_patch_version(base_version) if base_version else ""
+    return {
+        "version": version,
+        "date": release_date,
+        "publishTarget": "platforms",
+        "message": f"chore(release): v{version}" if version else "",
+        "skipCompile": False,
     }
 
 
@@ -768,12 +814,14 @@ class JobManager:
         ordered = sorted(self.jobs.values(), key=lambda item: item.created_at, reverse=True)
         for job in ordered:
             if (
-                job.workflow_id == "release-pipeline"
-                and job.status in {"failed", "cancelled", "interrupted"}
-                and 0 < job.completed_steps < job.step_count
-                and job.params == params
-                and job.plan_signature == plan_signature
+                job.workflow_id != "release-pipeline"
+                or job.params != params
+                or job.plan_signature != plan_signature
             ):
+                continue
+            if job.status == "success" and job.step_count > 0 and job.completed_steps == job.step_count:
+                return None
+            if job.status in {"failed", "cancelled", "interrupted"} and 0 < job.completed_steps < job.step_count:
                 return job
         return None
 
@@ -1026,6 +1074,10 @@ def repository_status(manager: JobManager) -> dict[str, Any]:
     build_lua = (ROOT / "build.lua").read_text(encoding="utf-8")
     version_match = re.search(r'^version\s*=\s*"v([^"]+)"', build_lua, re.MULTILINE)
     date_match = re.search(r'^date\s*=\s*"([^"]+)"', build_lua, re.MULTILINE)
+    current_version = version_match.group(1) if version_match else ""
+    today = date.today().isoformat()
+    with manager.lock:
+        release_context = suggested_release_context(current_version, today, list(manager.jobs.values()))
     porcelain = capture(["git", "status", "--porcelain=v1"])
     dirty_files = [line for line in porcelain.splitlines() if line]
     fragments = sorted((ROOT / ".changes" / "unreleased").glob("*.json"))
@@ -1047,9 +1099,10 @@ def repository_status(manager: JobManager) -> dict[str, Any]:
         "branch": capture(["git", "branch", "--show-current"]),
         "head": capture(["git", "rev-parse", "--short", "HEAD"]),
         "latestTag": capture(["git", "describe", "--tags", "--abbrev=0"]),
-        "version": version_match.group(1) if version_match else "",
+        "version": current_version,
         "releaseDate": date_match.group(1) if date_match else "",
-        "today": date.today().isoformat(),
+        "today": today,
+        "releaseContext": release_context,
         "dirtyCount": len(dirty_files),
         "dirtyFiles": dirty_files[:16],
         "fragmentCount": len(fragments),
@@ -1070,7 +1123,7 @@ def repository_status(manager: JobManager) -> dict[str, Any]:
         "artifacts": [
             artifact(ROOT / "exam-zh.zip"),
             artifact(ROOT / "CTAN" / "exam-zh.zip"),
-            artifact(ROOT / "release" / f"exam-zh-v{version_match.group(1) if version_match else ''}.zip"),
+            artifact(ROOT / "release" / f"exam-zh-v{current_version}.zip"),
             artifact(ROOT / "doc" / "exam-zh-doc.pdf"),
             artifact(ROOT / "doc-basic" / "exam-zh-doc-basic.pdf"),
         ],
