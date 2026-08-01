@@ -19,5 +19,5 @@ fillin-punctuation-captured=yes
 fillin-captured-token=，
 fillin-punctuation-captured=no
 fillin-captured-token=
-fillin-captured-break-when-fit=no
-fillin-captured-break-before=yes
+fillin-hidden-answer=answer
+fillin-hidden-punctuation=。

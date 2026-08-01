@@ -166,6 +166,7 @@ TikZ 带圈：\fillin[原答案]。
   type = line,
   show-answer = false,
   no-answer-type = none,
+  width = auto,
   width-type = normal,
   text-color = black,
   depth = 0.4em
@@ -189,6 +190,7 @@ TikZ 带圈：\fillin[原答案]。
   type = line,
   show-answer = false,
   no-answer-type = none,
+  width = auto,
   width-type = normal
 }
 
@@ -204,6 +206,7 @@ TikZ 带圈：\fillin[原答案]。
   type = line,
   show-answer = true,
   no-answer-type = none,
+  width = auto,
   width-type = normal,
   text-color = black,
   depth = 0.4em
@@ -261,7 +264,7 @@ TikZ 带圈：\fillin[原答案]。
 \subsection*{下划线深度与高公式}
 
 \begin{fillinexample}{depth 与高公式}
-\fillinsetup{type = line, show-answer = true, text-color = black}
+\fillinsetup{type = line, show-answer = true, width = auto, text-color = black}
 
 默认深度与分式：
 \fillin[depth = 0.4em][$\dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$]。
@@ -280,7 +283,12 @@ TikZ 带圈：\fillin[原答案]。
 \section*{正文、\texttt{question} 与 \texttt{problem} 环境}
 
 \begin{fillinexample}{不同上下文中的显示与隐藏效果}
-\fillinsetup{type = line, show-answer = true, no-answer-type = none}
+\fillinsetup{
+  type = line,
+  show-answer = true,
+  no-answer-type = none,
+  width = auto
+}
 
 正文中的填空：\fillin[正文答案]；
 同一行第二个填空：\fillin[第二答案]。

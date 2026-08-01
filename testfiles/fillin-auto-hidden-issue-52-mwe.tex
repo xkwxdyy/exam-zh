@@ -1,0 +1,46 @@
+\documentclass{exam-zh}
+
+% Exact reproducer from GitHub Issue #52.  The default build is the student
+% version.  Define \ExamZhTeacherVersion before input to build the teacher
+% comparison without changing this source.
+\examsetup{
+  page = {size = a3paper},
+  fillin = {
+    width = auto,
+    width-extra = 1em,
+    no-answer-type = none,
+    type = line,
+  },
+}
+\ifdefined\ExamZhTeacherVersion
+  \examsetup{fillin = {show-answer = true, text-color = red}}
+\fi
+
+\AtEndPreamble{\geometry{showframe}}
+\usepackage{lipsum}
+
+\begin{document}
+
+\lipsum[1-7]
+
+% 1
+\begin{question}
+  水在细胞中的存在形式为\fillin*[自由水]和\fillin*[结合水]。自由水的作用：\fillin*[细胞内良好的溶剂]；参与许多\fillin*[生物化学反应]；为细胞提供\fillin*[液体]环境；运送\fillin*[营养物质和代谢废物]。结合水的作用：\fillin*[细胞结构]的重要组成成分。
+\end{question}
+
+% 2
+\begin{question}
+  组成细胞的大量元素有\fillin*[C、H、O、N、P、S、K、Ca、Mg]等，微量元素有\fillin*[Fe、Mn、B、Zn、Mo、Cu]等。
+\end{question}
+
+% 3
+\begin{question}
+  人体细胞鲜重含量最多的元素是\fillin*[O]，干重含量最多的元素是\fillin*[C]。
+\end{question}
+
+% 4
+\begin{question}
+  组成细胞元素大多以\fillin*[化合物]的形式存在，组成细胞的无机盐大多以\fillin*[离子]的形式存在。
+\end{question}
+
+\end{document}

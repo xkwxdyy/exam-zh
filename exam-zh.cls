@@ -7,7 +7,7 @@
 
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]
 \RequirePackage{expl3}
-\ProvidesExplClass {exam-zh} {2026-07-31} {v0.3.5} {LaTeX template for Chinese exam}
+\ProvidesExplClass {exam-zh} {2026-08-01} {v0.3.6} {LaTeX template for Chinese exam}
 
 % 检查 LaTeX2e kernel 版本
 \msg_new:nnn { exam-zh } { latex-too-old }

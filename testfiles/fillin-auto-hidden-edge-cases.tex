@@ -1,0 +1,119 @@
+\documentclass{exam-zh}
+
+% Visual regression test for GitHub Issue #52.
+% Compile from testfiles/ with the workspace package taking precedence:
+%   TEXINPUTS=..: latexmk -xelatex -interaction=nonstopmode \
+%     -file-line-error -synctex=1 fillin-auto-hidden-edge-cases.tex
+% The second invocation should report "Nothing to do".
+
+\examsetup{
+  page = {size = a4paper},
+  fillin = {
+    width = auto,
+    width-extra = 1em,
+    no-answer-type = none,
+    type = line,
+  },
+}
+
+\AtEndPreamble{\geometry{showframe}}
+
+\newcommand\shortcases{%
+  \begin{question}
+    中文短答案：水在细胞中以\fillin*[自由水]和\fillin*[结合水]两种形式存在。
+  \end{question}
+  \begin{question}
+    行末至少两字：\makebox[\dimexpr\linewidth-11em\relax][l]{第一行只剩一个字宽}%
+    \fillin*[生物化学反应]。
+  \end{question}
+  \begin{question}
+    中英文与分组：遗传物质包括\fillin*[\textbf{DNA} 与 {RNA}]；继续作答。
+  \end{question}
+  \begin{question}
+    普通命令兼容：人体细胞鲜重含量最多的元素是\fillin[O]，
+    干重含量最多的元素是\fillin[C]。
+  \end{question}
+}
+
+\newcommand\mathcases{%
+  \begin{question}
+    行内公式：二次方程的求根公式为
+    \fillin*[$x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$]，继续作答。
+  \end{question}
+  \begin{question}
+    高公式：恒等式
+    \fillin*[depth = 0.2em]
+      [$\dfrac{1}{x^2}+\dfrac{2}{y^2}=\dfrac{3}{z^2}$]成立。
+  \end{question}
+}
+
+\newcommand\longcases{%
+  \begin{question}
+    长中文答案：这是占用当前行大部分空间的题干，答案为
+    \fillin*[这是一个用于验证隐藏答案自然断点的长答案，它的自然宽度超过一整行，
+    因而学生版下划线应与教师版答案使用相同的换行位置和行数]，继续作答。
+  \end{question}
+  \begin{problem}
+    环境内长答案：\fillin*[这是一个放在 problem 环境中的长答案，
+    用于验证列表缩进后的可用宽度、自然断点与后续句号。]
+  \end{problem}
+}
+
+\newcommand\boundarycases{%
+  \noindent
+  \makebox[\dimexpr\linewidth-10em\relax][l]{仍可容纳完整填空与句号：}%
+  \fillin*[生物化学反应]。
+
+  \medskip
+  \noindent
+  \makebox[\dimexpr\linewidth-7em\relax][l]{行末仅够答案，额外留白应收缩：}%
+  \fillin*[生物化学反应]。
+
+  \medskip
+  \noindent
+  \makebox[\dimexpr\linewidth-4em\relax][l]{行末连答案也放不下，应自然断行：}%
+  \fillin*[生物化学反应]。
+
+  \begin{question}
+    连续右标点：\fillin*[逗号]，\fillin*[句号]。
+    \fillin*[分号]；\fillin*[问号]？\fillin*[右括号]）。
+  \end{question}
+}
+
+\newcommand\emptyandspacingcases{%
+  \begin{question}
+    空答案回退：\fillin*[]，普通命令空答案：\fillin[]。
+  \end{question}
+  \begin{question}
+    局部间距：零扩展\fillin*[width-extra = 0pt][两个字]；
+    两字宽扩展\fillin*[width-extra = 2em][两个字]。
+  \end{question}
+  \par\begingroup\parindent=2em
+  段首缩进：\fillin*[段首答案]，继续作答。
+  \par\endgroup
+  \par\begingroup\parindent=2em\noindent
+  显式取消段首缩进：\fillin*[无缩进答案]，继续作答。
+  \par\endgroup
+}
+
+\begin{document}
+\raggedbottom
+
+\section*{学生版：隐藏答案}
+\fillinsetup{show-answer = false, text-color = black}
+\shortcases
+\mathcases
+\longcases
+\boundarycases
+\emptyandspacingcases
+
+\clearpage
+\section*{教师版：显示答案}
+\fillinsetup{show-answer = true, text-color = red}
+\shortcases
+\mathcases
+\longcases
+\boundarycases
+\emptyandspacingcases
+
+\end{document}

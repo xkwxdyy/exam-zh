@@ -1,0 +1,9 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+hidden-answer=中文答案;punctuation=。;extra=5.0pt
+hidden-answer=$x^2+y^2$;punctuation=，;extra=7.0pt
+hidden-answer=\textbf {DNA} 与 {RNA};punctuation=；;extra=5.0pt
+fallback-answer=blank;punctuation=。;width=30.0pt
+fallback-answer=blank;punctuation=，;width=30.0pt
+hidden-answer=ordinary;punctuation=！;extra=5.0pt
+hidden-forced-newline=no

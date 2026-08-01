@@ -99,8 +99,10 @@ make prepare-release VERSION=0.3.2 DATE=2026-08-01
 make dashboard
 ```
 
-控制台只监听 `127.0.0.1:8765`。AI 整理 changelog 是独立的手动动作；主发布链从校验
-现有 changelog 开始，依次执行发布工具测试、XeTeX 回归、固化版本、编译打包、归档检查、Git 提交、创建 Tag、推送
+控制台只监听 `127.0.0.1:8765`。AI 整理发布内容是独立的手动动作：它会先整理
+changelog 片段，把新增测试按项目约定归档为正式回归或必要的最小复现，并按用户可见
+改动的需要同步完整手册和入门手册。主发布链从校验现有 changelog 开始，依次执行发布
+工具测试、XeTeX 回归、固化版本、编译打包、归档检查、Git 提交、创建 Tag、推送
 GitHub/Gitee 和创建平台 Release。发布出口有三种：只发 GitHub + Gitee、GitHub + Gitee
 + CTAN、单独发 CTAN。单独发 CTAN 要求目标 Tag 已经存在，主链只做 CTAN 元数据检查并
 触发 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于

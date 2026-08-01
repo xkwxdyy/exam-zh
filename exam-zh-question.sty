@@ -10,7 +10,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 
-\ProvidesExplPackage {exam-zh-question} {2026-07-31} {v0.3.5}
+\ProvidesExplPackage {exam-zh-question} {2026-08-01} {v0.3.6}
   {exam-zh question module}
 
 
@@ -1075,6 +1075,7 @@
 \tl_new:N \l__examzh_fillin_star_tl
 \tl_new:N \l__examzh_fillin_keys_tl
 \tl_new:N \l__examzh_fillin_answer_tl
+\tl_new:N \l__examzh_fillin_resolved_answer_tl
 
 \cs_new_protected:Npn \__examzh_fillin_reserve_following_punctuation:N #1
   {
@@ -1244,10 +1245,12 @@
   {
     \IfNoValueTF {#3}
       {
+        \tl_set:Nn \l__examzh_fillin_resolved_answer_tl {#2}
         \__examzh_fillin_set_auto_width:n {#2}
       }
       {
         \keys_set:nn { exam-zh / fillin } {#2}
+        \tl_set:Nn \l__examzh_fillin_resolved_answer_tl {#3}
         \__examzh_fillin_set_auto_width:n {#3}
       }
     \__examzh_fillin_set_following_punctuation_width:
@@ -1535,23 +1538,38 @@
 \cs_new:Npn \__examzh_fillin_uline_breakable_F:
   {
     % \uline { \hspace* { \l__examzh_fillin_F_width_dim } }
-    \bool_if:NTF \l__examzh_fillin_following_punctuation_captured_bool
+    \bool_if:NTF \l__examzh_fillin_width_auto_bool
       {
-        % 将短填空和紧随其后的右标点作为一个不可分割的行内单元。
-        % 若当前行放不下整个单元，则明确换行，避免 TeX 因 badness
-        % 过高而拒绝普通断点并产生越界。
-        \__examzh_fillin_break_before_captured_unit:
-        \hbox
+        \tl_if_blank:VTF \l__examzh_fillin_resolved_answer_tl
+          { \__examzh_fillin_breakable_hspace:NN \CJKunderline \prg_do_nothing: }
+          { \__examzh_fillin_uline_hidden_answer_F: }
+      }
+      { \__examzh_fillin_breakable_hspace:NN \CJKunderline \allowbreak }
+  }
+
+\cs_new:Npn \__examzh_fillin_uline_hidden_answer_F:
+  {
+    % 保留答案本身的 CJK/数学断点，避免把自然宽度先压成一段刚性空白后
+    % 再依赖 linegoal 猜测断行位置。hidden 只隐藏文字，宽度和下划线不变。
+    \__examzh_fillin_break_before_single_character:
+    \CJKunderline*[hidden=true]
+      {
+        \hspace*
           {
-            \CJKunderline { \hspace* { \l__examzh_fillin_F_width_dim } }
-            \tl_use:N \l__examzh_fillin_following_punctuation_tl
+            0.5\l__examzh_fillin_width_extra_dim
+            plus 0.5\l__examzh_fillin_width_extra_dim
+            minus 0.5\l__examzh_fillin_width_extra_dim
+          }
+        \tl_use:N \l__examzh_fillin_resolved_answer_tl
+        \hspace*
+          {
+            0.5\l__examzh_fillin_width_extra_dim
+            plus 0.5\l__examzh_fillin_width_extra_dim
+            minus 0.5\l__examzh_fillin_width_extra_dim
           }
       }
-      {
-        \bool_if:NTF \l__examzh_fillin_width_auto_bool
-          { \__examzh_fillin_breakable_hspace:NN \CJKunderline \prg_do_nothing: }
-          { \__examzh_fillin_breakable_hspace:NN \CJKunderline \allowbreak }
-      }
+    \bool_if:NT \l__examzh_fillin_following_punctuation_captured_bool
+      { \tl_use:N \l__examzh_fillin_following_punctuation_tl }
   }
 \cs_new:Npn \__examzh_fillin_uline_unbreakable_F:
   {
@@ -1590,6 +1608,7 @@
   % }
 \cs_new:Npn \__examzh_fillin_uline_breakline_T:
   {
+    \__examzh_fillin_break_before_single_character:
     \CJKunderline*
       [ depth = \l__examzh_fillin_effective_line_depth_dim ]
     % \uline
@@ -1860,15 +1879,21 @@
     \dim_set:Nn #1 { \dim_max:nn { 0pt } {#1} }
   }
 
-\cs_new_protected:Npn \__examzh_fillin_break_before_captured_unit:
+\cs_new_protected:Npn \__examzh_fillin_break_before_single_character:
   {
-    \__examzh_fillin_set_remaining_width:N \l_tmpb_dim
-    \dim_compare:nNnT
+    \bool_if:NT \l__examzh_fillin_width_auto_bool
       {
-        \l__examzh_fillin_F_width_dim
-        + \box_wd:N \l__examzh_fillin_following_punctuation_box
-      } > { \l_tmpb_dim }
-      { \newline }
+        \dim_compare:nNnT
+          { \l__examzh_fillin_F_width_dim } > { 2em }
+          {
+            \__examzh_fillin_set_remaining_width:N \l_tmpb_dim
+            \dim_compare:nNnT { \l_tmpb_dim } < { 2em }
+              {
+                \dim_compare:nNnT { \l_tmpb_dim } > { 0pt }
+                  { \newline }
+              }
+          }
+      }
   }
 
 \cs_new:Npn \__examzh_fillin_breakable_hspace:NN #1#2

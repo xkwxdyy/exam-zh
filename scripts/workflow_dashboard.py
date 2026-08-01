@@ -33,7 +33,7 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
-DASHBOARD_API_VERSION = 6
+DASHBOARD_API_VERSION = 7
 STATE_SCHEMA_VERSION = 1
 STATE_PATH = ROOT / ".release-dashboard" / "state.json"
 
@@ -75,12 +75,12 @@ WORKFLOWS: tuple[dict[str, Any], ...] = (
     {
         "id": "ai-changelog",
         "stage": "changes",
-        "title": "AI 整理 Changelog",
-        "description": "在终端启动 /examzh-release changelog",
+        "title": "AI 整理发布内容",
+        "description": "整理 Changelog、测试文件和相关手册",
         "icon": "sparkles",
         "risk": "interactive",
         "executor": "claude",
-        "command": "claude '/examzh-release changelog'",
+        "command": "claude '/examzh-release prepare'",
         "requires": [],
     },
     {
@@ -605,9 +605,11 @@ def step_plan_signature(steps: list[tuple[str, list[str]]]) -> str:
 def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
     if workflow_id == "ai-changelog":
         return (
-            "/examzh-release changelog 只整理当前工作树的结构化变更片段，"
-            "运行 make changelog 和 make check-changelog 后停止；"
-            "不要提交、构建、打 Tag、推送或发布。"
+            "/examzh-release prepare 审阅当前工作树：整理结构化变更片段，"
+            "把新增测试文件按项目约定归档为可维护的回归测试或必要的最小复现，"
+            "排除测试生成物，并按用户可见改动的实际需要优化完整手册和入门手册；"
+            "运行相关聚焦检查、make changelog 和 make check-changelog 后停止；"
+            "不要执行完整发布构建，也不要提交、打 Tag、推送或发布。"
         )
     if workflow_id == "ai-git-update":
         message = str(params.get("message", "")).strip()

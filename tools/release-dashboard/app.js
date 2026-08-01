@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const apiVersion = 6;
+  const apiVersion = 7;
   const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false };
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];

@@ -1,0 +1,102 @@
+\documentclass{article}
+
+\input{regression-test}
+
+\usepackage{exam-zh-question}
+
+\begin{document}
+\START
+
+\fillinsetup{
+  type = line,
+  show-answer = false,
+  no-answer-type = none,
+  width = auto,
+  width-extra = 5pt
+}
+
+\ExplSyntaxOn
+\cs_set_eq:NN
+  \__examzh_test_fillin_uline_hidden_answer_F:
+  \__examzh_fillin_uline_hidden_answer_F:
+\cs_set_eq:NN
+  \__examzh_test_fillin_breakable_hspace:NN
+  \__examzh_fillin_breakable_hspace:NN
+\cs_set_eq:NN
+  \__examzh_test_linegoal:
+  \linegoal
+\cs_set_protected:Npn \__examzh_fillin_uline_hidden_answer_F:
+  {
+    \TYPE
+      {
+        hidden-answer=\tl_to_str:V \l__examzh_fillin_resolved_answer_tl;
+        punctuation=\tl_to_str:V \l__examzh_fillin_following_punctuation_tl;
+        extra=\dim_use:N \l__examzh_fillin_width_extra_dim
+      }
+  }
+\cs_set_protected:Npn \__examzh_fillin_breakable_hspace:NN #1#2
+  {
+    \TYPE
+      {
+        fallback-answer=\tl_if_blank:VTF
+          \l__examzh_fillin_resolved_answer_tl { blank } { nonblank };
+        punctuation=\tl_to_str:V \l__examzh_fillin_following_punctuation_tl;
+        width=\dim_use:N \l__examzh_fillin_F_width_dim
+      }
+  }
+\ExplSyntaxOff
+
+% One optional argument: it is the answer, not a key list.
+\fillin*[中文答案]。
+
+% Two optional arguments: local keys and math tokens must both survive.
+\fillin*[width-extra = 7pt][$x^2+y^2$]，
+
+% Formatting commands and grouped content must not be expanded away.
+\fillin*[\textbf{DNA} 与 {RNA}]；
+
+% Empty answers cannot provide natural breakpoints and use the 3em fallback.
+\fillin*[]。
+\fillin*[width-extra = 9pt][]，
+
+% The ordinary command shares the automatic hidden-answer route.
+\fillin[ordinary]！
+
+\ExplSyntaxOn
+\cs_set_eq:NN
+  \__examzh_fillin_uline_hidden_answer_F:
+  \__examzh_test_fillin_uline_hidden_answer_F:
+\cs_set_eq:NN
+  \__examzh_fillin_breakable_hspace:NN
+  \__examzh_test_fillin_breakable_hspace:NN
+\cs_set:Npn \linegoal { 15pt }
+\ExplSyntaxOff
+
+% The answer fits in the remaining space after width-extra glue shrinks.  The
+% hidden route must not insert a forced newline that the shown route lacks.
+\ExplSyntaxOn
+\bool_set_false:N \l_tmpa_bool
+\cs_set_eq:NN \__examzh_test_newline: \newline
+\cs_set_protected:Npn \newline
+  { \bool_set_true:N \l_tmpa_bool }
+\ExplSyntaxOff
+\par\begingroup
+\setlength\hsize{100pt}
+\setlength\linewidth{100pt}
+\noindent\makebox[55pt][l]{prefix}\fillin*[answer].\par
+\endgroup
+\ExplSyntaxOn
+\TYPE
+  {
+    hidden-forced-newline=
+    \bool_if:NTF \l_tmpa_bool { yes } { no }
+  }
+\cs_set_eq:NN \newline \__examzh_test_newline:
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\cs_set_eq:NN \linegoal \__examzh_test_linegoal:
+\ExplSyntaxOff
+
+\END
+\end{document}

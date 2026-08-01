@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "version": "0.3.6",
+  "date": "2026-08-01",
+  "source_fragments": [
+    "20260731T111804Z-release-content-preparation.json",
+    "20260801T124500Z-fillin-auto-hidden-natural-breaks.json"
+  ],
+  "changes": [
+    {
+      "id": "release-content-preparation",
+      "type": "fixed",
+      "zh": "扩展 Dashboard 的 AI 发布前准备步骤，在整理 changelog 的同时归档新增测试文件、排除测试生成物，并按用户可见改动的需要同步完整手册和入门手册。",
+      "announce": false
+    },
+    {
+      "id": "fillin-auto-hidden-natural-breaks",
+      "type": "fixed",
+      "zh": "修复隐藏答案时 `fillin/width=auto` 将自然宽度填空压成刚性空白，导致 `\\fillin*` 的换行位置与显示答案时不一致的问题；现保留答案内容自身的 CJK 与数学断点，同时隐藏文字并保留下划线，并使以中文开头的可换行答案在行末至少保留两个汉字。",
+      "announce": false
+    }
+  ]
+}

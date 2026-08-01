@@ -1,7 +1,7 @@
 ---
 name: examzh-release
 description: Prepare and publish a formal exam-zh release: version metadata, CHANGELOG, l3build checks, build.py packages, release commit, tag, GitHub/Gitee push, GitHub Release assets, and Gitee Release assets. Use for 发版, 发布新版本, release, tag, or version bump requests.
-allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git tag *) Bash(git fetch *) Bash(git branch *) Bash(git remote *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(python3 scripts/build.py *) Bash(python3 scripts/release_notes.py *) Bash(make changelog) Bash(make check-changelog) Bash(make prepare-release *) Bash(bash scripts/test-build.sh) Bash(l3build check) Bash(gh auth status) Bash(gh auth status *) Bash(gh release view *) Bash(gh release create *) Bash(gh release upload *) Bash(gh release edit *) Bash(bash scripts/gitee-release.sh *) Bash(date *) Bash(test *) Bash(ls *) Bash(mktemp *) Bash(unzip -tq *) Bash(sed *) Bash(awk *) Bash(head *) Bash(curl *) Bash(jq *) Read Edit Write
+allowed-tools: Bash(git status *) Bash(git diff *) Bash(git log *) Bash(git tag *) Bash(git fetch *) Bash(git branch *) Bash(git remote *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(python3 scripts/build.py *) Bash(python3 scripts/release_notes.py *) Bash(make changelog) Bash(make check-changelog) Bash(make prepare-release *) Bash(make doc) Bash(make doc-basic) Bash(make examples) Bash(make examples-basic) Bash(bash scripts/test-build.sh) Bash(l3build check) Bash(l3build check *) Bash(l3build save *) Bash(latexmk -xelatex *) Bash(gh auth status) Bash(gh auth status *) Bash(gh release view *) Bash(gh release create *) Bash(gh release upload *) Bash(gh release edit *) Bash(bash scripts/gitee-release.sh *) Bash(date *) Bash(test *) Bash(ls *) Bash(mktemp *) Bash(unzip -tq *) Bash(sed *) Bash(awk *) Bash(head *) Bash(curl *) Bash(jq *) Read Edit Write
 disable-model-invocation: true
 ---
 
@@ -15,9 +15,11 @@ Use this skill for release, version, and tag workflows. For ordinary staging, co
 
 The first argument may restrict the workflow. Stop at the stated boundary.
 
-- `changelog`: inspect current changes, create or update structured fragments,
-  run `make changelog` and `make check-changelog`, then stop. Do not commit,
-  build, tag, push, or publish.
+- `prepare` (preferred) or `changelog` (compatibility alias): inspect current
+  changes, organize new tests, update affected manuals when needed, create or
+  update structured fragments, run focused checks plus `make changelog` and
+  `make check-changelog`, then stop. Do not commit, run the full release build,
+  tag, push, or publish.
 - `package [version]`: prepare notes, test, and build local archives only. Do
   not commit, tag, push, or create platform releases.
 - `github <version>`: verify an existing tag and local release archive, then
@@ -34,6 +36,7 @@ would normally follow in a complete release.
 This skill owns:
 
 - selecting or validating the release version;
+- preparing relevant test fixtures and user documentation for release;
 - updating release metadata with `scripts/build.py`;
 - preparing a reviewed `CHANGELOG.md` entry;
 - running focused build-script tests and the XeTeX regression suite;
@@ -44,7 +47,9 @@ This skill owns:
 - creating or updating the GitHub Release and uploading release assets;
 - creating or updating the Gitee Release and uploading release assets.
 
-Keep unrelated feature, fix, documentation, and test work outside the release commit. Review and commit that work before starting a formal release.
+Keep unrelated feature, fix, documentation, and test work outside the release
+commit. Documentation and tests required by the changes being released should
+be completed during `prepare`, then reviewed before starting the formal release.
 
 ## Inputs
 
@@ -95,6 +100,45 @@ git tag --sort=-v:refname | head -n 1
 
 Strip the leading `v`, increment the patch number, and use the resulting `X.Y.Z`. Ask for an explicit version when the newest tag is missing or not semantic.
 
+## Release Content Preparation
+
+Run this audit before finalizing changelog fragments in `prepare` or
+`changelog` mode. Review both tracked diffs and untracked files; do not assume
+that every new `.tex` file is a source artifact worth releasing.
+
+### Tests
+
+- Match each behavior change to focused coverage under `testfiles/`.
+- Prefer a stable `*.lvt` input with its reviewed `*.tlg` expectation when the
+  behavior can be asserted through `l3build` output.
+- Keep a standalone `*.tex` reproduction only when it provides distinct visual
+  or diagnostic coverage that a log test cannot preserve. Minimize it and use
+  the repository's existing test naming and location conventions.
+- Treat `.aux`, `.log`, `.out`, `.xdv`, `.fls`, `.fdb_latexmk`, `.synctex.gz`,
+  generated PDFs, and similar compiler output as build artifacts rather than
+  test sources unless the repository explicitly tracks that exact artifact.
+- Consolidate duplicate scratch reproductions. Do not delete an ambiguous user
+  file merely because it is untracked; classify it first and report uncertainty.
+- Run the narrow `l3build check <test-name>` checks for touched regression tests.
+  Use `l3build save <test-name>` only after reviewing an intentional log change.
+
+### Manuals And Examples
+
+- For user-visible syntax, options, layout, defaults, or behavior, locate the
+  corresponding section in `doc/` and update it when the existing text would be
+  incomplete or misleading.
+- Update `doc-basic/` when the change affects beginner-facing workflows or
+  examples. Do not force a documentation edit for an internal-only fix.
+- Keep examples consistent with the supported interface and avoid copying a
+  large regression fixture into a manual when a short example is sufficient.
+- Compile each touched manual or example with the narrowest relevant command,
+  such as `make doc`, `make doc-basic`, `make examples`, or
+  `make examples-basic`.
+
+After tests and documentation are settled, prepare the structured fragments,
+run `make changelog` and `make check-changelog`, summarize the files changed and
+checks run, then stop at the mode boundary.
+
 ## CHANGELOG And Release Fragments
 
 The source of truth is `.changes/unreleased/*.json`; the `[Unreleased]`
@@ -120,8 +164,8 @@ make changelog
 make check-changelog
 ```
 
-For `changelog` mode, stop here. For a formal release, finalize the reviewed
-fragments before tagging:
+For `prepare` or `changelog` mode, stop here. For a formal release, finalize the
+reviewed fragments before tagging:
 
 ```bash
 make prepare-release VERSION=X.Y.Z DATE=YYYY-MM-DD

@@ -12,8 +12,8 @@
 --]==========================================]--
 
 module           = "exam-zh"
-version          = "v0.3.5"
-date             = "2026-07-31"
+version          = "v0.3.6"
+date             = "2026-08-01"
 maintainer       = "Kangwei Xia"
 uploader         = maintainer
 email            = "kangweixia_xdyy@163.com"

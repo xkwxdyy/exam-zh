@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`exam-zh.cls` is the main class file. Feature modules live beside it as `exam-zh-*.sty`, including question, choices, font, math, symbols, bilingual text, and text-figure support. Examples are in the root (`example-single.tex`, `example-multiple.tex`) and `examples-basic/`. Full and beginner documentation sources are under `doc/` and `doc-basic/`; keep chapters in `body/` and appendices in `back/`. Regression tests use `testfiles/*.lvt` inputs and `.tlg` expected logs. Build and release helpers are in `build.lua`, `Makefile`, `tools/`, and `scripts/`.
+`exam-zh.cls` is the main class file. Feature modules live beside it as `exam-zh-*.sty`, including question, choices, font, math, symbols, bilingual text, and text-figure support. Examples are in the root (`example-single.tex`, `example-multiple.tex`) and `examples-basic/`. Full and beginner documentation sources are under `doc/` and `doc-basic/`; keep chapters in `body/` and appendices in `back/`. Regression tests and curated visual fixtures live in `testfiles/`. Build and release helpers are in `build.lua`, `Makefile`, `tools/`, and `scripts/`.
 
 ## Build, Test, and Development Commands
 
@@ -46,6 +46,13 @@ Follow existing `expl3` conventions: internal variables and functions use the `e
 ## Testing Guidelines
 
 Add or update `testfiles/*.lvt` for behavior changes, and commit the corresponding `.tlg` only after reviewing `build/test/*.diff`. Prefer narrow tests for option parsing, layout decisions, counters, and generated labels. For documentation-only changes, compile the touched example or manual section with `latexmk -xelatex` when feasible.
+
+### Temporary and Visual Test Files
+
+- Use `tmp/` only for short-lived compilation, rendering, and debugging artifacts. After inspection, remove its contents; before finishing work, `find tmp -mindepth 1 -print` should produce no output.
+- Keep automated `l3build` regressions in `testfiles/` as `.lvt` and `.tlg` pairs. Keep manually reviewed visual tests or demonstrations there as the minimal `.tex` source together with an intentionally retained PDF or PNG rendering.
+- Retain only the final, named result and the minimal source needed to reproduce it. Do not retain `.aux`, `.fdb_latexmk`, `.fls`, `.log`, `.out`, `.synctex.gz`, `.xdv`, duplicate intermediate renders, or release archives in `testfiles/`.
+- Rebuild visual fixtures through `tmp/`, review the result, move only the approved artifact into `testfiles/`, and then clean `tmp/` again.
 
 ## Commit & Pull Request Guidelines
 
