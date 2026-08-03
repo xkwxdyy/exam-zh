@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "fillin-auto-captured-unit-wrap",
+  "changes": [
+    {
+      "id": "fillin-auto-captured-unit-wrap",
+      "type": "fixed",
+      "zh": "修复隐藏答案时 `fillin/width=auto` 的短填空与后续标点在行尾可能拒绝换行并越出版心的问题（GitHub #52）。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

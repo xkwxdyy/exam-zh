@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "topic": "release-commit-changelog-body",
+  "changes": [
+    {
+      "id": "release-preparation-manual-review",
+      "type": "changed",
+      "zh": "强化 Dashboard 的 AI 发布内容整理：逐条对照用户可见 Changelog 审阅手册正文和短示例，明确版本元数据不算内容优化，并要求检查排版效果及在结束前清空临时文件。",
+      "changelog": true,
+      "announce": false
+    },
+    {
+      "id": "release-commit-changelog-body",
+      "type": "changed",
+      "zh": "改进 Dashboard 发布链的 Git 提交信息：保留简洁的版本标题，并在正文中自动附上该版本结构化 Changelog 的完整中文条目。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

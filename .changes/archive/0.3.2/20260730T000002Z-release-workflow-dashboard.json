@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "release-workflow-dashboard",
+  "changes": [
+    {
+      "id": "release-workflow-dashboard",
+      "type": "changed",
+      "zh": "新增本地发布工作流控制台，集中执行变更记录、验证、打包与平台发布流程。",
+      "changelog": false,
+      "announce": false
+    }
+  ]
+}

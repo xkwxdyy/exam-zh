@@ -55,14 +55,22 @@ bash scripts/build-ctan.sh 0.2.7
 
 #### CTAN 发布工作流
 
-在发布控制台选择“GitHub + Gitee + CTAN”或“单独发 CTAN”时，系统会用已经存在的
-Tag 手动触发 `.github/workflows/ctan-upload.yml`。只选择 GitHub + Gitee 不会触发
-CTAN。工作流会：
+在发布控制台选择“GitHub + Gitee + CTAN”或“单独发 CTAN”时，系统会触发
+`.github/workflows/ctan-upload.yml`。选择“单独发 CTAN”会自动读取最新的稳定
+GitHub Release，并使用它对应的版本、日期和 Tag；只选择 GitHub + Gitee 不会触发
+CTAN。Dashboard 会等待对应的 GitHub Actions run 完成，远程失败会让本地任务失败。
+如果 `ctan` Environment 或启用变量缺失，Dashboard 会在触发前明确提示并禁用 CTAN 发布按钮。
+工作流会：
 
-1. 校验 Tag、`build.lua`、类/宏包、手册与 `CHANGELOG.md` 的版本和日期一致性；
-2. 运行构建脚本测试、`l3build` 回归测试并生成 `exam-zh.zip`；
+1. 校验 Tag、`build.lua`、类/宏包、手册、版本清单与 `CHANGELOG.md` 的发布元数据；
+2. 编译完整手册和入门手册，运行 `l3build` 回归测试并从该 Tag 生成 `exam-zh.zip`；
 3. 检查压缩包结构、必需文件和临时文件，再调用 CTAN Validate 接口；
 4. 保存已校验的压缩包，在 `CTAN_UPLOAD_ENABLED=true` 时自动正式上传。
+
+CTAN 工作流只依赖已发布 Tag 内的版本清单，不会重新执行面向开发工作树的
+`make check-changelog` 或完整构建脚本测试，因此历史碎片归档缺失不会要求重发
+GitHub/Gitee。`.changes/archive/<version>/` 仍应随今后的版本清单纳入 Git，供开发期
+溯源和一致性检查使用。
 
 首次启用时，在 GitHub 的 **Settings → Environments** 中创建 `ctan`：
 
@@ -104,9 +112,10 @@ changelog 片段，把新增测试按项目约定归档为正式回归或必要�
 改动的需要同步完整手册和入门手册。主发布链从校验现有 changelog 开始，依次执行发布
 工具测试、XeTeX 回归、固化版本、编译打包、归档检查、Git 提交、创建 Tag、推送
 GitHub/Gitee 和创建平台 Release。发布出口有三种：只发 GitHub + Gitee、GitHub + Gitee
-+ CTAN、单独发 CTAN。单独发 CTAN 要求目标 Tag 已经存在，主链只做 CTAN 元数据检查并
-触发 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于
-局部重跑。主发布链会把任务参数、日志和已完成步骤保存在
++ CTAN、单独发 CTAN。单独发 CTAN 自动采用最新稳定 GitHub Release 的版本，不创建新版本，
+也不重新发布 GitHub/Gitee；主链会先确认远程 Release，再触发并等待 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于
+局部重跑。Git 提交标题由控制台填写或自动生成，提交正文则从该版本结构化清单自动附加
+完整中文 Changelog 条目。主发布链会把任务参数、日志和已完成步骤保存在
 `.release-dashboard/state.json`；版本、日期、发布出口、编译选项和提交信息完全匹配时，
 重新打开控制台会恢复原目标版本并可从失败步骤继续，也可以明确选择从头重跑。
 

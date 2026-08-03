@@ -66,9 +66,9 @@ class ReleaseNotesTests(unittest.TestCase):
                     "announce": False,
                 },
                 {
-                    "id": "small-fix",
-                    "type": "fixed",
-                    "zh": "修复一个小问题。",
+                    "id": "dashboard-update",
+                    "type": "changed",
+                    "zh": "改进本地 Dashboard。",
                     "changelog": True,
                     "announce": False,
                 },
@@ -93,10 +93,22 @@ class ReleaseNotesTests(unittest.TestCase):
         self.assertTrue((self.archive / "0.2.0" / fragment.name).is_file())
         manifest = release_notes.load_json(manifest_path)
         changes = release_notes.validate_manifest(manifest)
-        self.assertEqual([item["id"] for item in changes], ["public-feature", "small-fix"])
+        self.assertEqual(
+            [item["id"] for item in changes],
+            ["public-feature", "dashboard-update"],
+        )
         self.assertEqual(
             release_notes.render_announcement(changes),
             "### Added\n\n- Added a public feature.\n",
+        )
+        self.assertEqual(
+            release_notes.render_commit_message("chore(release): v0.2.0", changes),
+            "chore(release): v0.2.0\n\n"
+            "发布内容：\n\n"
+            "### Added\n\n"
+            "- 新增公开功能。\n\n"
+            "### Changed\n\n"
+            "- 改进本地 Dashboard。\n",
         )
         release_notes.check_changelog(self.changelog, self.fragments, self.releases)
 

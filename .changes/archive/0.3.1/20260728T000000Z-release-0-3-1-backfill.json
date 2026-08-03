@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "topic": "release-0-3-1-backfill",
+  "changes": [
+    {
+      "id": "fillin-auto-width",
+      "type": "added",
+      "zh": "为 `fillin` 新增 `width=auto` 值：隐藏答案时按已录入答案的自然宽度生成占位空间，`width-extra` 键可在自然宽度基础上额外留出书写余量；没有录入答案的 `\\fillin` 仍沿用 3em 默认宽度",
+      "en": "Added `width=auto` for `fillin`, using the recorded answer's natural width plus optional `width-extra` writing space while retaining the 3em default for empty answers.",
+      "changelog": true,
+      "announce": true
+    },
+    {
+      "id": "fillin-auto-punctuation",
+      "type": "added",
+      "zh": "`width=auto` 时自动吸附紧跟其后的右标点，将填空与标点作为不可分割单元排版，避免行末下划线与行首标点分离",
+      "en": "Kept trailing closing punctuation with `width=auto` fill-ins so the underline and punctuation cannot split across lines.",
+      "changelog": true,
+      "announce": true
+    },
+    {
+      "id": "ctan-upload-workflow",
+      "type": "changed",
+      "zh": "新增 GitHub Actions CTAN 上传工作流（`.github/workflows/ctan-upload.yml`）及 CTAN 包内容核查脚本（`scripts/check-ctan-release.py`），完善自动化发布流程",
+      "changelog": true,
+      "announce": false
+    },
+    {
+      "id": "doc-basic-missing-chapters",
+      "type": "fixed",
+      "zh": "修复 `doc-basic` 第 5 章遗留的孤立代码片段导致手册第 6/7 章及附录从未出现在编译输出中的问题（自 2025-11-12 起）",
+      "en": "Fixed an orphaned code fragment in chapter 5 of `doc-basic` that had omitted chapters 6 and 7 and the appendices from compiled manuals since 2025-11-12.",
+      "changelog": true,
+      "announce": true
+    }
+  ]
+}

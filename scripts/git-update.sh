@@ -25,6 +25,8 @@ OPTIONS:
   -r, --remote NAME   推送到指定远程（默认自动选择 origin、github 或唯一远程）
       --all-remotes   推送到所有已配置远程
   -a, --amend         修改上一次提交（注意：仅用于未推送的提交）
+      --message-file FILE
+                      从文件读取完整提交信息（标题和正文）
 
 EXAMPLES:
   $(basename "$0") "Fix typo in README"
@@ -32,6 +34,7 @@ EXAMPLES:
   $(basename "$0") -p "WIP: feature"      # 仅提交不推送
   $(basename "$0") -r gitee "Sync docs"   # 推送到指定远程
   $(basename "$0") --all-remotes "Sync docs"
+  $(basename "$0") -p --message-file build/release-commit-message.txt
   $(basename "$0") -f --amend             # 修改上次提交（跳过确认）
 
 EOF
@@ -43,6 +46,7 @@ FORCE=false
 NO_PUSH=false
 AMEND=false
 COMMIT_MSG=""
+COMMIT_MSG_FILE=""
 REMOTE=""
 ALL_REMOTES=false
 POSITIONAL_ARGS=()
@@ -83,6 +87,15 @@ while [[ $# -gt 0 ]]; do
       AMEND=true
       shift
       ;;
+    --message-file)
+      if [[ $# -lt 2 ]]; then
+        log_error "Missing file path after $1"
+        show_usage
+        exit 1
+      fi
+      COMMIT_MSG_FILE="$2"
+      shift 2
+      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -106,10 +119,26 @@ if [[ ${#POSITIONAL_ARGS[@]} -gt 0 ]]; then
   COMMIT_MSG="${POSITIONAL_ARGS[*]}"
 fi
 
+if [[ -n "$COMMIT_MSG_FILE" && -n "$COMMIT_MSG" ]]; then
+  log_error "COMMIT_MESSAGE and --message-file cannot be used together"
+  exit 1
+fi
+
 main() {
   cd "$PROJECT_ROOT"
 
   log_info "=== exam-zh Git Update Helper ==="
+
+  if [[ -n "$COMMIT_MSG_FILE" ]]; then
+    if [[ "$COMMIT_MSG_FILE" != /* ]]; then
+      COMMIT_MSG_FILE="$PROJECT_ROOT/$COMMIT_MSG_FILE"
+    fi
+    if [[ ! -s "$COMMIT_MSG_FILE" ]]; then
+      log_error "Commit message file does not exist or is empty: $COMMIT_MSG_FILE"
+      exit 1
+    fi
+    COMMIT_MSG="$(head -n 1 "$COMMIT_MSG_FILE")"
+  fi
 
   # 检查是否在 Git 仓库中
   if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -269,6 +298,9 @@ confirm_operation() {
   else
     echo "  2. Commit with message: \"$COMMIT_MSG\""
   fi
+  if [[ -n "$COMMIT_MSG_FILE" ]]; then
+    echo "     Full message: ${COMMIT_MSG_FILE#$PROJECT_ROOT/}"
+  fi
 
   if [[ "$NO_PUSH" == true ]]; then
     echo "  3. [SKIPPED] Push to remote"
@@ -295,13 +327,19 @@ show_dry_run() {
   echo "git add -A"
 
   if [[ "$AMEND" == true ]]; then
-    if [[ -n "$COMMIT_MSG" ]]; then
+    if [[ -n "$COMMIT_MSG_FILE" ]]; then
+      echo "git commit --amend -F \"${COMMIT_MSG_FILE#$PROJECT_ROOT/}\""
+    elif [[ -n "$COMMIT_MSG" ]]; then
       echo "git commit --amend -m \"$COMMIT_MSG\""
     else
       echo "git commit --amend --no-edit"
     fi
   else
-    echo "git commit -m \"$COMMIT_MSG\""
+    if [[ -n "$COMMIT_MSG_FILE" ]]; then
+      echo "git commit -F \"${COMMIT_MSG_FILE#$PROJECT_ROOT/}\""
+    else
+      echo "git commit -m \"$COMMIT_MSG\""
+    fi
   fi
 
   if [[ "$NO_PUSH" != true ]]; then
@@ -328,14 +366,20 @@ execute_git_workflow() {
   # 提交
   if [[ "$AMEND" == true ]]; then
     log_info "Amending last commit..."
-    if [[ -n "$COMMIT_MSG" ]]; then
+    if [[ -n "$COMMIT_MSG_FILE" ]]; then
+      git commit --amend -F "$COMMIT_MSG_FILE"
+    elif [[ -n "$COMMIT_MSG" ]]; then
       git commit --amend -m "$COMMIT_MSG"
     else
       git commit --amend --no-edit
     fi
   else
     log_info "Committing changes..."
-    git commit -m "$COMMIT_MSG"
+    if [[ -n "$COMMIT_MSG_FILE" ]]; then
+      git commit -F "$COMMIT_MSG_FILE"
+    else
+      git commit -m "$COMMIT_MSG"
+    fi
   fi
 
   # 推送

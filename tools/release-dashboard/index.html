@@ -73,7 +73,7 @@
             <label class="field field-wide">
               <span>提交信息</span>
               <input id="message-input" name="message" maxlength="200" autocomplete="off" placeholder="例如：fix: refine fillin auto width">
-              <small>留空时自动使用 chore(release): v版本号</small>
+              <small>这里只填写标题；提交正文自动附上该版本 Changelog 内容</small>
             </label>
             <label class="switch-field">
               <input id="skip-compile-input" type="checkbox">
@@ -85,7 +85,7 @@
               <div class="target-options">
                 <label class="target-option selected"><input type="radio" name="publish-target" value="platforms" checked><span><b>只发 GitHub + Gitee</b><small>用于平台测试，不触发 CTAN 发布</small></span></label>
                 <label class="target-option"><input type="radio" name="publish-target" value="all"><span><b>GitHub + Gitee + CTAN</b><small>完整发布链，最后触发 CTAN 工作流</small></span></label>
-                <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>单独发 CTAN</b><small>使用已经存在并测试通过的 Tag</small></span></label>
+                <label class="target-option"><input type="radio" name="publish-target" value="ctan"><span><b>单独发 CTAN</b><small>自动选择最新已发布 GitHub Release 对应的 Tag</small></span></label>
               </div>
             </fieldset>
           </div>

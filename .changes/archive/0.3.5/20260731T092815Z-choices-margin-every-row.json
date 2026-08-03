@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "choices-margin-every-row",
+  "changes": [
+    {
+      "id": "choices-margin-every-row",
+      "type": "fixed",
+      "zh": "修复 `choices/margin` 在多行选项中仅缩进首行的问题，使后续选项行使用相同的左右边距（GitHub #47）。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

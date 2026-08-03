@@ -252,6 +252,12 @@ def render_announcement(changes: list[dict[str, Any]]) -> str:
     return output
 
 
+def render_commit_message(title: str, changes: list[dict[str, Any]]) -> str:
+    subject = require_single_line(title, "commit title")
+    body = render_grouped(changes, "zh")
+    return f"{subject}\n\n发布内容：\n\n{body}\n"
+
+
 def read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
@@ -499,6 +505,8 @@ def main() -> int:
     render.add_argument("manifest", type=Path)
     render.add_argument("--changelog-output", type=Path)
     render.add_argument("--announcement-output", type=Path)
+    render.add_argument("--commit-message-output", type=Path)
+    render.add_argument("--commit-title")
 
     validate = commands.add_parser("validate", help="validate one versioned manifest")
     validate.add_argument("manifest", type=Path)
@@ -550,12 +558,25 @@ def main() -> int:
             )
             return 0
 
-        if not args.changelog_output and not args.announcement_output:
+        if bool(args.commit_message_output) != bool(args.commit_title):
+            raise NotesError(
+                "render requires --commit-message-output and --commit-title together"
+            )
+        if (
+            not args.changelog_output
+            and not args.announcement_output
+            and not args.commit_message_output
+        ):
             raise NotesError("render requires at least one output path")
         if args.changelog_output:
             write_atomic(args.changelog_output, render_release_section(data, changes))
         if args.announcement_output:
             write_atomic(args.announcement_output, announcement)
+        if args.commit_message_output:
+            write_atomic(
+                args.commit_message_output,
+                render_commit_message(args.commit_title, changes),
+            )
         print("release-note outputs rendered")
         return 0
     except NotesError as exc:

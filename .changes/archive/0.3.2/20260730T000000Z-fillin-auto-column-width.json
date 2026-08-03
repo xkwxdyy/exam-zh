@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "topic": "fillin-auto-column-width",
+  "issues": [
+    "GitHub #50"
+  ],
+  "changes": [
+    {
+      "id": "fillin-auto-column-width",
+      "type": "fixed",
+      "zh": "修复 `fillin/width=auto` 在 A3 双栏右栏中误用负的 `linegoal` 剩余宽度，导致隐藏答案时下划线异常跨行或超出栏宽的问题（GitHub #50）",
+      "en": "Fixed `fillin/width=auto` in the right column of A3 two-column layouts, where a negative remaining `linegoal` width caused hidden-answer underlines to wrap incorrectly or overflow the column.",
+      "changelog": true,
+      "announce": true
+    }
+  ]
+}

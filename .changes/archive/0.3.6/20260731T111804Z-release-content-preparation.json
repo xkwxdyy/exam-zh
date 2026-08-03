@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "release-content-preparation",
+  "changes": [
+    {
+      "id": "release-content-preparation",
+      "type": "fixed",
+      "zh": "扩展 Dashboard 的 AI 发布前准备步骤，在整理 changelog 的同时归档新增测试文件、排除测试生成物，并按用户可见改动的需要同步完整手册和入门手册。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

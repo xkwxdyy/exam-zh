@@ -354,3 +354,7 @@ issues/
 
 # Local build artifacts and scratch files
 tmp/
+
+# Release-note archives are source-of-truth inputs for remote validation.
+!.changes/archive/
+!.changes/archive/**

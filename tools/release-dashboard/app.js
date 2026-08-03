@@ -1,8 +1,8 @@
 (() => {
   "use strict";
 
-  const apiVersion = 7;
-  const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false };
+  const apiVersion = 10;
+  const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false, platformContext: null, ctanContext: null, selectedTarget: "platforms", targetLoading: false };
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const riskText = { safe: "本地 · 可重复", write: "本地 · 写入文件", interactive: "Claude · 终端确认", mutating: "会改变仓库", external: "外部 · 需确认" };
@@ -16,7 +16,8 @@
     ["编译并构建归档", "编译示例、双手册并生成两个发布包"],
     ["检查 CTAN ZIP", "检查压缩包完整性"],
     ["校验 CTAN 元数据", "核对版本、日期和公告"],
-    ["Git 提交", "暂存并提交当前发布变更"],
+    ["生成 Git 提交信息", "把 Changelog 中文条目写入提交正文"],
+    ["Git 提交", "使用标题和发布内容正文提交当前变更"],
     ["创建 Git Tag", "创建带注释的 vX.Y.Z Tag"],
     ["推送 GitHub main", "推送发布提交到 GitHub"],
     ["推送 GitHub Tag", "推送 Tag 到 GitHub"],
@@ -27,14 +28,14 @@
     ["发布 Gitee Release", "上传 Release 用户包并发布"],
   ];
   const ctanChainSteps = [
-    ["检查 CTAN 发布条件", "核对已存在 Tag 的版本与发布元数据"],
-    ["触发 CTAN 发布", "调用 CTAN GitHub Actions 工作流"],
+    ["确认 GitHub Release", "核对最新稳定 Release 的版本与 Tag"],
+    ["触发 CTAN 发布", "触发并等待 CTAN GitHub Actions 工作流"],
   ];
 
   function chainStepsForTarget(target) {
     if (target === "ctan") return ctanChainSteps;
     const steps = [...commonChainSteps];
-    if (target === "all") steps.push(["触发 CTAN 发布", "调用 CTAN GitHub Actions 工作流"]);
+    if (target === "all") steps.push(["触发 CTAN 发布", "触发并等待 CTAN GitHub Actions 工作流"]);
     return steps;
   }
 
@@ -117,8 +118,48 @@
     const target = $(`input[name="publish-target"][value="${params.publishTarget}"]`);
     if (target) target.checked = true;
     $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input")?.checked));
+    state.selectedTarget = params.publishTarget;
     $("#version-input").dataset.initialized = "true";
     $("#date-input").dataset.initialized = "true";
+  }
+
+  function rememberPlatformContext() {
+    if (state.selectedTarget === "ctan") return;
+    const context = normalizedPipelineParams(readParams());
+    context.publishTarget = state.selectedTarget;
+    state.platformContext = context;
+  }
+
+  async function selectPublishTarget(nextTarget) {
+    const previousTarget = state.selectedTarget;
+    if (nextTarget === "ctan") {
+      rememberPlatformContext();
+      state.targetLoading = true;
+      $$(`input[name="publish-target"]`).forEach((input) => { input.disabled = true; });
+      try {
+        state.ctanContext = state.ctanContext || await api("/api/ctan-context");
+        applyReleaseContext(state.ctanContext);
+        if (state.ctanContext.ctanUploadReady === false) {
+          toast(state.ctanContext.ctanUploadMessage, "error");
+        }
+      } catch (error) {
+        applyReleaseContext({ ...(state.platformContext || {}), publishTarget: previousTarget });
+        toast(`无法读取最新 GitHub Release：${error.message}`, "error");
+      } finally {
+        state.targetLoading = false;
+        $$(`input[name="publish-target"]`).forEach((input) => { input.disabled = false; });
+        updatePipelineControls();
+      }
+      return;
+    }
+    if (previousTarget === "ctan" && state.platformContext) {
+      applyReleaseContext({ ...state.platformContext, publishTarget: nextTarget });
+    } else {
+      state.selectedTarget = nextTarget;
+      rememberPlatformContext();
+      applyReleaseContext({ ...state.platformContext, publishTarget: nextTarget });
+    }
+    updatePipelineControls();
   }
 
   function fallbackReleaseContext(status) {
@@ -235,10 +276,11 @@
     const pipelineJob = matchingPipelineJob();
     const checkpoint = pipelineJob?.resumeAvailable ? pipelineJob : null;
     const completed = pipelineJob?.status === "success" && pipelineJob.completedSteps === pipelineJob.stepCount;
+    const ctanUnavailable = state.selectedTarget === "ctan" && state.ctanContext?.ctanUploadReady === false;
     const launch = $("#pipeline-launch");
     const restart = $("#pipeline-restart");
-    launch.disabled = running || completed || !state.backendCompatible;
-    restart.disabled = running || !state.backendCompatible;
+    launch.disabled = running || state.targetLoading || ctanUnavailable || completed || !state.backendCompatible;
+    restart.disabled = running || state.targetLoading || ctanUnavailable || !state.backendCompatible;
     restart.hidden = !checkpoint;
     launch.innerHTML = checkpoint
       ? `<i data-lucide="rotate-ccw"></i>从第 ${String((checkpoint.completedSteps || 0) + 1).padStart(2, "0")} 步继续`
@@ -346,7 +388,7 @@
     $("#manual-changelog").addEventListener("click", () => requestRun("ai-changelog"));
     $$(`input[name="publish-target"]`).forEach((input) => input.addEventListener("change", () => {
       $$(".target-option").forEach((option) => option.classList.toggle("selected", option.querySelector("input") === input && input.checked));
-      updatePipelineControls();
+      selectPublishTarget(input.value);
     }));
     $("#version-input").addEventListener("input", () => {
       const message = $("#message-input");
@@ -354,15 +396,17 @@
         message.value = defaultReleaseMessage($("#version-input").value);
         message.dataset.auto = "true";
       }
+      rememberPlatformContext();
       updatePipelineControls();
     });
-    $("#date-input").addEventListener("input", updatePipelineControls);
+    $("#date-input").addEventListener("input", () => { rememberPlatformContext(); updatePipelineControls(); });
     $("#message-input").addEventListener("input", () => {
       const message = $("#message-input");
       message.dataset.auto = String(!message.value.trim() || message.value.trim() === defaultReleaseMessage($("#version-input").value));
+      rememberPlatformContext();
       updatePipelineControls();
     });
-    $("#skip-compile-input").addEventListener("change", updatePipelineControls);
+    $("#skip-compile-input").addEventListener("change", () => { rememberPlatformContext(); updatePipelineControls(); });
     $("#refresh-button").addEventListener("click", refreshStatus); $("#status-refresh").addEventListener("click", refreshStatus);
     $("#clear-console").addEventListener("click", () => { $("#console-output").innerHTML = `<span class="console-placeholder">选择上方工作流，执行日志会显示在这里。</span>`; $("#console-dock").classList.remove("has-output"); });
     $("#cancel-button").addEventListener("click", async () => { if (!state.activeJob) return; try { state.activeJob = await api(`/api/jobs/${state.activeJob.id}/cancel`, { method: "POST", headers: { "X-Workflow-Token": state.token }, body: "{}" }); setConsole(state.activeJob, true); pollJob(state.activeJob.id); } catch (error) { toast(error.message, "error"); } });
@@ -378,6 +422,7 @@
       state.backendCompatible = data.apiVersion === apiVersion;
       state.token = data.token;
       state.workflows = data.workflows;
+      state.platformContext = data.status.releaseContext || fallbackReleaseContext(data.status);
       renderStatus(data.status);
       renderWorkflows();
       if (!state.backendCompatible) toast("前后端版本不一致，请重新运行 make dashboard", "error");

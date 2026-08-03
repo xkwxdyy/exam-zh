@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "linegoal-xetex-convergence",
+  "changes": [
+    {
+      "id": "linegoal-xetex-convergence",
+      "type": "fixed",
+      "zh": "稳定 XeTeX 下 `linegoal` 的横坐标记录，避免 `fillin/width=auto` 因 1sp 级位置波动导致 `latexmk` 多轮编译无法收敛（GitHub #51）。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

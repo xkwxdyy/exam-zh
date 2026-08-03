@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "topic": "fillin-auto-hidden-natural-breaks",
+  "issues": [
+    "https://github.com/xkwxdyy/exam-zh/issues/52"
+  ],
+  "changes": [
+    {
+      "id": "fillin-auto-hidden-natural-breaks",
+      "type": "fixed",
+      "zh": "修复隐藏答案时 `fillin/width=auto` 将自然宽度填空压成刚性空白，导致 `\\fillin*` 的换行位置与显示答案时不一致的问题；现保留答案内容自身的 CJK 与数学断点，同时隐藏文字并保留下划线，并使以中文开头的可换行答案在行末至少保留两个汉字。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

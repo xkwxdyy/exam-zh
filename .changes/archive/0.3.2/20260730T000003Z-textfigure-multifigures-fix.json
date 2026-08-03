@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "topic": "textfigure-multifigures-fix",
+  "changes": [
+    {
+      "id": "multifigures-item-width",
+      "type": "fixed",
+      "zh": "修复 `multifigures` 各列项宽使用 `\\hsize` 而非按列数与列间距计算所得宽度的问题，以及表格总宽使用 `\\textwidth` 而非 `\\linewidth` 导致在题目等窄宽环境中溢出的问题；列数超出实际图片数量时现自动收缩",
+      "en": "Fixed `multifigures` item width using `\\hsize` instead of the computed per-column width, and tblr table width using `\\textwidth` instead of `\\linewidth` (causing overflow inside narrow environments such as `problem`). Column count is now automatically clamped to the actual number of items.",
+      "changelog": true,
+      "announce": true
+    },
+    {
+      "id": "textfigure-block-output",
+      "type": "fixed",
+      "zh": "修复 `textfigure` 末尾缺少 `\\par` 导致后续内容不另起新段、直接行内续排的问题",
+      "en": "Fixed `textfigure` missing a trailing `\\par`, which caused following content to continue inline instead of starting a new paragraph.",
+      "changelog": true,
+      "announce": true
+    },
+    {
+      "id": "textfigure-min-text-width-deferred",
+      "type": "fixed",
+      "zh": "修复 `textfigure` 的 `min-text-width` 键不接受相对长度表达式（如 `\\linewidth - 3cm`）的问题，现改为在排版时延迟求值",
+      "en": "Fixed `textfigure`'s `min-text-width` key not accepting relative length expressions such as `\\linewidth - 3cm`; the value is now evaluated at typeset time.",
+      "changelog": true,
+      "announce": true
+    }
+  ]
+}

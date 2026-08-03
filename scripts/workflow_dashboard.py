@@ -20,7 +20,7 @@ import time
 import uuid
 import webbrowser
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -33,9 +33,13 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
-DASHBOARD_API_VERSION = 7
+DASHBOARD_API_VERSION = 10
 STATE_SCHEMA_VERSION = 1
 STATE_PATH = ROOT / ".release-dashboard" / "state.json"
+GITHUB_REPOSITORY = "xkwxdyy/exam-zh"
+CTAN_WORKFLOW = "ctan-upload.yml"
+REMOTE_WORKFLOW_POLL_INTERVAL = 2.0
+REMOTE_WORKFLOW_TIMEOUT = 30 * 60
 
 
 WORKFLOWS: tuple[dict[str, Any], ...] = (
@@ -362,7 +366,7 @@ def suggested_release_context(
         and latest.step_count > 0
         and latest.completed_steps == latest.step_count
     )
-    if latest and not completed:
+    if latest and not completed and latest.params.get("publishTarget") != "ctan":
         try:
             return normalized_pipeline_params(latest.params)
         except DashboardError:
@@ -383,6 +387,126 @@ def suggested_release_context(
         "message": f"chore(release): v{version}" if version else "",
         "skipCompile": False,
     }
+
+
+def _release_version(tag: str) -> tuple[str, tuple[int, int, int]] | None:
+    match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", str(tag).strip())
+    if not match:
+        return None
+    version = ".".join(match.groups())
+    return version, tuple(int(part) for part in match.groups())
+
+
+def _github_release_list() -> list[dict[str, Any]]:
+    try:
+        result = subprocess.run(
+            [
+                "gh",
+                "release",
+                "list",
+                "--repo",
+                GITHUB_REPOSITORY,
+                "--limit",
+                "100",
+                "--json",
+                "tagName,publishedAt,isDraft,isPrerelease",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise DashboardError(f"无法读取 GitHub Release：{exc}") from exc
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise DashboardError(f"无法读取 GitHub Release：{detail or result.returncode}")
+    try:
+        releases = json.loads(result.stdout or "[]")
+    except json.JSONDecodeError as exc:
+        raise DashboardError("GitHub Release 返回了无法解析的数据") from exc
+    if not isinstance(releases, list):
+        raise DashboardError("GitHub Release 返回格式错误")
+    return [item for item in releases if isinstance(item, dict)]
+
+
+def latest_github_release_context() -> dict[str, Any]:
+    candidates: list[tuple[tuple[int, int, int], dict[str, Any], str]] = []
+    for release in _github_release_list():
+        if release.get("isDraft") or release.get("isPrerelease"):
+            continue
+        parsed = _release_version(str(release.get("tagName", "")))
+        if parsed is None:
+            continue
+        version, ordering = parsed
+        candidates.append((ordering, release, version))
+    if not candidates:
+        raise DashboardError("GitHub 没有可用于 CTAN 的稳定 Release")
+
+    _, release, version = max(candidates, key=lambda item: item[0])
+    tag = f"v{version}"
+    published_at = str(release.get("publishedAt", ""))
+    try:
+        tag_source = capture(["git", "show", f"{tag}:build.lua"], timeout=8)
+    except DashboardError:
+        tag_source = ""
+    date_match = re.search(r'^date\s*=\s*"([^\"]+)"', tag_source, re.MULTILINE)
+    release_date = date_match.group(1) if date_match else published_at[:10]
+    if not release_date:
+        raise DashboardError(f"无法确定 GitHub Release {tag} 的发布日期")
+    return {
+        "version": version,
+        "date": release_date,
+        "publishTarget": "ctan",
+        "message": f"chore(release): v{version}",
+        "skipCompile": False,
+        "source": "github-release",
+        "sourceTag": tag,
+        "publishedAt": published_at,
+    }
+
+
+def ctan_upload_environment_status() -> dict[str, Any]:
+    environments = _gh_json(
+        ["gh", "api", f"repos/{GITHUB_REPOSITORY}/environments"],
+        timeout=10,
+    )
+    items = environments.get("environments", []) if isinstance(environments, dict) else []
+    if not any(isinstance(item, dict) and item.get("name") == "ctan" for item in items):
+        return {
+            "ctanUploadReady": False,
+            "ctanUploadMessage": (
+                "GitHub Environment ctan 尚未创建；请先创建并设置变量 "
+                "CTAN_UPLOAD_ENABLED=true"
+            ),
+        }
+
+    variables = _gh_json(
+        ["gh", "api", f"repos/{GITHUB_REPOSITORY}/environments/ctan/variables"],
+        timeout=10,
+    )
+    items = variables.get("variables", []) if isinstance(variables, dict) else []
+    enabled = any(
+        isinstance(item, dict)
+        and item.get("name") == "CTAN_UPLOAD_ENABLED"
+        and str(item.get("value", "")).lower() == "true"
+        for item in items
+    )
+    return {
+        "ctanUploadReady": enabled,
+        "ctanUploadMessage": (
+            "CTAN 上传门禁已启用"
+            if enabled
+            else "GitHub Environment ctan 缺少变量 CTAN_UPLOAD_ENABLED=true"
+        ),
+    }
+
+
+def ctan_release_context() -> dict[str, Any]:
+    context = latest_github_release_context()
+    context.update(ctan_upload_environment_status())
+    return context
 
 
 def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, list[str]]]:
@@ -423,8 +547,17 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
         if target == "ctan":
             ctan_steps = [
                 (
-                    "检查 CTAN 发布条件",
-                    ["python3", "scripts/check-ctan-release.py", "--tag", f"v{version}"],
+                    "确认 GitHub Release",
+                    [
+                        "gh",
+                        "release",
+                        "view",
+                        f"v{version}",
+                        "--repo",
+                        GITHUB_REPOSITORY,
+                        "--json",
+                        "tagName,isDraft,isPrerelease,publishedAt",
+                    ],
                 ),
                 (
                     "触发 CTAN 发布",
@@ -432,9 +565,9 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                         "gh",
                         "workflow",
                         "run",
-                        "ctan-upload.yml",
+                        CTAN_WORKFLOW,
                         "--repo",
-                        "xkwxdyy/exam-zh",
+                        GITHUB_REPOSITORY,
                         "--ref",
                         "main",
                         "-f",
@@ -472,8 +605,28 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                     ],
                 ),
                 (
+                    "生成 Git 提交信息",
+                    [
+                        "python3",
+                        "scripts/release_notes.py",
+                        "render",
+                        f".changes/releases/{version}.json",
+                        "--commit-message-output",
+                        f"build/release-commit-v{version}.txt",
+                        "--commit-title",
+                        message,
+                    ],
+                ),
+                (
                     "Git 提交",
-                    ["bash", "scripts/git-update.sh", "--force", "--no-push", message],
+                    [
+                        "bash",
+                        "scripts/git-update.sh",
+                        "--force",
+                        "--no-push",
+                        "--message-file",
+                        f"build/release-commit-v{version}.txt",
+                    ],
                 ),
                 ("创建 Git Tag", ["git", "tag", "-a", f"v{version}", "-m", f"Release v{version}"]),
                 ("推送 GitHub main", ["git", "push", "github", "main"]),
@@ -536,7 +689,7 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                 (
                     "触发 CTAN 发布",
                     [
-                        "gh", "workflow", "run", "ctan-upload.yml", "--repo", "xkwxdyy/exam-zh",
+                        "gh", "workflow", "run", CTAN_WORKFLOW, "--repo", GITHUB_REPOSITORY,
                         "--ref", "main", "-f", f"tag=v{version}",
                     ]
                 )
@@ -607,8 +760,11 @@ def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
         return (
             "/examzh-release prepare 审阅当前工作树：整理结构化变更片段，"
             "把新增测试文件按项目约定归档为可维护的回归测试或必要的最小复现，"
-            "排除测试生成物，并按用户可见改动的实际需要优化完整手册和入门手册；"
+            "排除测试生成物；逐条对照用户可见 Changelog，按实际需要更新完整手册和"
+            "入门手册的具体说明与短示例，不要把后续自动更新的版本号或日期算作手册优化；"
+            "编译改动过的手册或示例，排版相关改动还要渲染并检查受影响页面；"
             "运行相关聚焦检查、make changelog 和 make check-changelog 后停止；"
+            "结束前清空 tmp/；"
             "不要执行完整发布构建，也不要提交、打 Tag、推送或发布。"
         )
     if workflow_id == "ai-git-update":
@@ -672,6 +828,8 @@ class Job:
     resumed_from_step: int | None = None
     params: dict[str, Any] = field(default_factory=dict)
     plan_signature: str = ""
+    remote_run_id: int | None = None
+    remote_url: str = ""
     process: subprocess.Popen[str] | None = None
     logs: list[str] = field(default_factory=list)
     log_offset: int = 0
@@ -702,6 +860,8 @@ class Job:
             "completedSteps": self.completed_steps,
             "resumedFromStep": self.resumed_from_step,
             "params": self.params,
+            "remoteRunId": self.remote_run_id,
+            "remoteUrl": self.remote_url,
             "logs": self.logs[relative:],
             "cursor": self.log_offset + len(self.logs),
         }
@@ -745,6 +905,8 @@ class Job:
             resumed_from_step=int(resumed_from) if isinstance(resumed_from, int) else None,
             params=dict(params),
             plan_signature=value.get("planSignature") if isinstance(value.get("planSignature"), str) else "",
+            remote_run_id=value.get("remoteRunId") if isinstance(value.get("remoteRunId"), int) else None,
+            remote_url=value.get("remoteUrl") if isinstance(value.get("remoteUrl"), str) else "",
             logs=logs[-MAX_LOG_LINES:],
             log_offset=max(0, int(value.get("cursor", len(logs))) - min(len(logs), MAX_LOG_LINES)),
         )
@@ -781,6 +943,16 @@ class JobManager:
                 job.return_code = None
                 job.finished_at = utc_now()
                 job.append("Dashboard 服务曾中断；可从最近完成的步骤继续。")
+                interrupted = True
+            elif (
+                job.status == "success"
+                and job.workflow_id == "release-pipeline"
+                and job.params.get("publishTarget") in {"ctan", "all"}
+                and job.remote_run_id is None
+            ):
+                job.status = "interrupted"
+                job.return_code = None
+                job.append("旧版 Dashboard 只记录了 CTAN 触发命令，未核实远程 Actions 结果；请重新触发并等待完成。")
                 interrupted = True
             self.jobs[job.id] = job
         if interrupted:
@@ -851,9 +1023,17 @@ class JobManager:
                     raise DashboardError("发布链只能从 main 分支执行")
                 if not capture(["git", "remote", "get-url", "github"]):
                     raise DashboardError("未配置 github 远程仓库")
+                if target == "ctan":
+                    latest = latest_github_release_context()
+                    if latest["version"] != version:
+                        raise DashboardError(
+                            f"CTAN 只能发布最新已发布的 GitHub Release v{latest['version']}，当前是 v{version}"
+                        )
+                if target in {"ctan", "all"}:
+                    readiness = ctan_upload_environment_status()
+                    if not readiness["ctanUploadReady"]:
+                        raise DashboardError(str(readiness["ctanUploadMessage"]))
                 local_tag = capture(["git", "tag", "--list", f"v{version}"])
-                if target == "ctan" and not local_tag:
-                    raise DashboardError(f"找不到已测试的 Tag v{version}，请先完成 GitHub + Gitee 发布链")
                 tag_step = next(
                     (index for index, (label, _) in enumerate(steps, 1) if label.endswith("创建 Git Tag")),
                     len(steps) + 1,
@@ -972,23 +1152,26 @@ class JobManager:
                 job.append(f"\n[{label}]")
                 job.append(f"$ {shlex.join(command)}")
                 self._persist()
-                process = subprocess.Popen(
-                    command,
-                    cwd=ROOT,
-                    env=env,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1,
-                    start_new_session=True,
-                )
-                job.process = process
-                assert process.stdout is not None
-                with process.stdout:
-                    for line in process.stdout:
-                        job.append(line)
-                return_code = process.wait()
-                job.process = None
+                if is_ctan_workflow_command(command):
+                    return_code = run_github_workflow_and_wait(job, command)
+                else:
+                    process = subprocess.Popen(
+                        command,
+                        cwd=ROOT,
+                        env=env,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1,
+                        start_new_session=True,
+                    )
+                    job.process = process
+                    assert process.stdout is not None
+                    with process.stdout:
+                        for line in process.stdout:
+                            job.append(line)
+                    return_code = process.wait()
+                    job.process = None
                 if job.cancel_requested:
                     self._finish(job, "cancelled", return_code)
                     return
@@ -1058,6 +1241,166 @@ def capture(command: list[str], timeout: float = 4.0) -> str:
     except (OSError, subprocess.SubprocessError):
         return ""
     return (result.stdout or result.stderr).strip()
+
+
+def is_ctan_workflow_command(command: list[str]) -> bool:
+    return command[:4] == ["gh", "workflow", "run", CTAN_WORKFLOW]
+
+
+def _parse_github_timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _gh_json(command: list[str], timeout: float = 15.0) -> Any:
+    try:
+        result = subprocess.run(
+            command,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise DashboardError(f"GitHub CLI 执行失败：{exc}") from exc
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise DashboardError(f"GitHub CLI 执行失败：{detail or result.returncode}")
+    try:
+        return json.loads(result.stdout or "null")
+    except json.JSONDecodeError as exc:
+        raise DashboardError("GitHub CLI 返回了无法解析的数据") from exc
+
+
+def _append_command_output(job: Job, result: subprocess.CompletedProcess[str]) -> None:
+    output = (result.stdout or "") + (result.stderr or "")
+    for line in output.splitlines():
+        job.append(line)
+
+
+def run_github_workflow_and_wait(job: Job, command: list[str]) -> int:
+    """Dispatch CTAN Actions and wait for that exact run to finish."""
+    list_command = [
+        "gh",
+        "run",
+        "list",
+        "--repo",
+        GITHUB_REPOSITORY,
+        "--workflow",
+        CTAN_WORKFLOW,
+        "--limit",
+        "20",
+        "--json",
+        "databaseId,status,conclusion,createdAt,headBranch,event,url",
+    ]
+    existing_ids: set[int] = set()
+    try:
+        previous_runs = _gh_json(list_command)
+    except DashboardError as exc:
+        job.append(f"读取触发前 GitHub Actions 记录失败，将继续触发：{exc}")
+        previous_runs = []
+    if isinstance(previous_runs, list):
+        existing_ids = {
+            item["databaseId"]
+            for item in previous_runs
+            if isinstance(item, dict) and isinstance(item.get("databaseId"), int)
+        }
+
+    dispatched_at = datetime.now(timezone.utc)
+    try:
+        trigger = subprocess.run(
+            command,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        job.append(f"GitHub Actions 触发失败：{exc}")
+        return 1
+    _append_command_output(job, trigger)
+    if trigger.returncode != 0:
+        job.append(f"GitHub Actions 触发失败，退出码 {trigger.returncode}。")
+        return trigger.returncode or 1
+
+    job.append("GitHub Actions 已接受触发请求，等待远程运行实例……")
+    run: dict[str, Any] | None = None
+    deadline = time.monotonic() + REMOTE_WORKFLOW_TIMEOUT
+    while time.monotonic() < deadline:
+        if job.cancel_requested:
+            job.append("已取消等待 GitHub Actions。")
+            return 130
+        try:
+            runs = _gh_json(list_command)
+        except DashboardError as exc:
+            job.append(f"等待 GitHub Actions 实例时暂时失败：{exc}")
+            runs = []
+        if isinstance(runs, list):
+            for candidate in runs:
+                if not isinstance(candidate, dict):
+                    continue
+                created_at = _parse_github_timestamp(candidate.get("createdAt"))
+                if (
+                    candidate.get("event") == "workflow_dispatch"
+                    and candidate.get("headBranch") == "main"
+                    and created_at is not None
+                    and created_at >= dispatched_at - timedelta(seconds=2)
+                    and isinstance(candidate.get("databaseId"), int)
+                    and candidate["databaseId"] not in existing_ids
+                ):
+                    run = candidate
+                    break
+        if run is not None:
+            break
+        time.sleep(min(REMOTE_WORKFLOW_POLL_INTERVAL, max(0.1, deadline - time.monotonic())))
+
+    if run is None:
+        job.append("等待 GitHub Actions 实例超时。")
+        return 1
+
+    run_id = str(run["databaseId"])
+    run_url = str(run.get("url", ""))
+    job.remote_run_id = int(run_id)
+    job.remote_url = run_url
+    job.append(f"已找到 GitHub Actions 运行 #{run_id}{f'：{run_url}' if run_url else ''}")
+    view_command = [
+        "gh",
+        "run",
+        "view",
+        run_id,
+        "--repo",
+        GITHUB_REPOSITORY,
+        "--json",
+        "status,conclusion,url",
+    ]
+    while time.monotonic() < deadline:
+        if job.cancel_requested:
+            job.append("已取消等待 GitHub Actions。")
+            return 130
+        try:
+            details = _gh_json(view_command)
+        except DashboardError as exc:
+            job.append(f"读取 GitHub Actions 状态时暂时失败：{exc}")
+            details = {}
+        if isinstance(details, dict):
+            status = str(details.get("status", ""))
+            conclusion = str(details.get("conclusion", ""))
+            run_url = str(details.get("url", "")) or run_url
+            job.remote_url = run_url
+            if status == "completed":
+                job.append(f"GitHub Actions 已结束：{conclusion or 'unknown'}{f'：{run_url}' if run_url else ''}")
+                if conclusion == "success":
+                    return 0
+                return 1
+        time.sleep(min(REMOTE_WORKFLOW_POLL_INTERVAL, max(0.1, deadline - time.monotonic())))
+    job.append("等待 GitHub Actions 完成超时。")
+    return 1
 
 
 def artifact(path: Path) -> dict[str, Any]:
@@ -1231,6 +1574,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/status":
             self.send_json(repository_status(self.server.jobs))
+            return
+        if parsed.path == "/api/ctan-context":
+            try:
+                self.send_json(ctan_release_context())
+            except DashboardError as exc:
+                self.send_error_json(str(exc), HTTPStatus.CONFLICT)
             return
         if parsed.path.startswith("/api/jobs/"):
             job_id = parsed.path.removeprefix("/api/jobs/").strip("/")

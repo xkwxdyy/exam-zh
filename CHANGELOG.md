@@ -8,6 +8,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 强化 Dashboard 的 AI 发布内容整理：逐条对照用户可见 Changelog 审阅手册正文和短示例，明确版本元数据不算内容优化，并要求检查排版效果及在结束前清空临时文件。
+- 改进 Dashboard 发布链的 Git 提交信息：保留简洁的版本标题，并在正文中自动附上该版本结构化 Changelog 的完整中文条目。
+- 改进 Dashboard 的单独 CTAN 发布：自动复用最新已成功发布到 GitHub 的稳定版本，不再递增版本号或重复发布 GitHub、Gitee。
+
 ## [0.3.6] - 2026-08-01
 
 ### Fixed

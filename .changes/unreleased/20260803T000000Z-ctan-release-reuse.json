@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-release-reuse",
+  "changes": [
+    {
+      "id": "ctan-release-reuse",
+      "type": "changed",
+      "zh": "改进 Dashboard 的单独 CTAN 发布：自动复用最新已成功发布到 GitHub 的稳定版本，不再递增版本号或重复发布 GitHub、Gitee。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

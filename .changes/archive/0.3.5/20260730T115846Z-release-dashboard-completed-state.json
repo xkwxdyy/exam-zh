@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "topic": "release-dashboard-completed-state",
+  "changes": [
+    {
+      "id": "release-dashboard-completed-state",
+      "type": "fixed",
+      "zh": "修复发布链续跑成功后仍显示旧失败步骤和继续按钮的问题，以同一版本的最新成功任务终结旧 checkpoint 并显示完成状态。",
+      "changelog": true,
+      "announce": false
+    },
+    {
+      "id": "release-dashboard-context-layout",
+      "type": "fixed",
+      "zh": "修复发布参数区域的桌面端网格留白，将跳过编译开关并入参数行，并在窄屏上保持整行布局。",
+      "changelog": true,
+      "announce": false
+    },
+    {
+      "id": "release-dashboard-next-context",
+      "type": "fixed",
+      "zh": "发布链完整成功后，Dashboard 下次打开会自动切换到下一补丁版本、当天日期和匹配的提交信息，同时继续保留未完成任务的原参数以供恢复。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

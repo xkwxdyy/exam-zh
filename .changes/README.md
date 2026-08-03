@@ -33,6 +33,9 @@ topic. `CHANGELOG.md` is the generated user-facing view; do not edit its
 - `announce` selects important user-visible entries for the English CTAN
   announcement. It requires `changelog: true` and a reviewed English `en`.
 - Internal maintenance uses `changelog: false` and `announce: false`.
+- Dashboard and local release-workflow updates may use `changelog: true` for
+  GitHub/Gitee release notes, but use `announce: false` so they do not enter the
+  CTAN announcement unless they directly affect CTAN package users.
 
 ## Commands
 

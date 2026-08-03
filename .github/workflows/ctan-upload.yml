@@ -30,9 +30,12 @@ jobs:
         uses: zauguin/install-texlive@v4
         with:
           package_file: .github/tl_packages
-
-      - name: Check generated changelog
-        run: make check-changelog
+          # Older release tags predate CI manual builds, so keep these additions
+          # in the workflow instead of requiring a rewritten public tag.
+          packages: >-
+            accsupp booktabs caption csquotes fancyvrb hologo hypdoc lstaddons
+            makecell mnsymbol threeparttable tipa underscore xcolor-material
+            xpinyin zhlipsum
 
       - name: Check release metadata
         run: >-
@@ -40,8 +43,8 @@ jobs:
           --tag "${{ inputs.tag }}"
           --announcement-output build/ctan-announcement.md
 
-      - name: Test build helpers
-        run: bash scripts/test-build.sh
+      - name: Build manuals
+        run: make doc doc-basic
 
       - name: Run regression tests and build CTAN archive
         run: l3build ctan

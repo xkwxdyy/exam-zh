@@ -61,6 +61,7 @@ class ValidationTests(unittest.TestCase):
         commands = [command for _, command in github_steps]
         self.assertEqual(labels[0], "01 · 校验 Changelog")
         self.assertTrue(any(label.endswith("Git 提交") for label in labels))
+        self.assertTrue(any(label.endswith("生成 Git 提交信息") for label in labels))
         self.assertTrue(any(label.endswith("创建 Git Tag") for label in labels))
         self.assertTrue(any(label.endswith("发布 GitHub Release") for label in labels))
         self.assertTrue(any(label.endswith("发布 Gitee Release") for label in labels))
@@ -68,6 +69,15 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(any(command[0] == "claude" for command in commands))
         self.assertTrue(any(command[:3] == ["git", "push", "github"] for command in commands))
         self.assertTrue(any(command[:3] == ["gh", "release", "create"] for command in commands))
+        commit_message_command = next(
+            command for label, command in github_steps if label.endswith("生成 Git 提交信息")
+        )
+        self.assertIn("--commit-message-output", commit_message_command)
+        self.assertEqual(commit_message_command[-2:], ["--commit-title", VALID_PARAMS["message"]])
+        commit_command = next(
+            command for label, command in github_steps if label.endswith("Git 提交")
+        )
+        self.assertEqual(commit_command[-2:], ["--message-file", "build/release-commit-v1.2.3.txt"])
 
         all_steps = dashboard.build_steps("release-pipeline", {**VALID_PARAMS, "publishTarget": "all"})
         self.assertTrue(any(label.endswith("触发 CTAN 发布") for label, _ in all_steps))
@@ -75,7 +85,10 @@ class ValidationTests(unittest.TestCase):
         ctan_steps = dashboard.build_steps(
             "release-pipeline", {**VALID_PARAMS, "publishTarget": "ctan"}
         )
+        self.assertEqual(ctan_steps[0][0], "01 · 确认 GitHub Release")
+        self.assertEqual(ctan_steps[0][1][:4], ["gh", "release", "view", "v1.2.3"])
         self.assertEqual(ctan_steps[-1][0], "02 · 触发 CTAN 发布")
+        self.assertFalse(any("check-ctan-release.py" in command for _, command in ctan_steps))
 
     def test_release_pipeline_rejects_unknown_publish_target(self) -> None:
         with self.assertRaises(dashboard.DashboardError):
@@ -100,6 +113,10 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("/examzh-release prepare", changelog)
         self.assertIn("新增测试文件", changelog)
         self.assertIn("完整手册和入门手册", changelog)
+        self.assertIn("具体说明与短示例", changelog)
+        self.assertIn("不要把后续自动更新的版本号或日期算作手册优化", changelog)
+        self.assertIn("渲染并检查受影响页面", changelog)
+        self.assertIn("清空 tmp/", changelog)
         self.assertIn("make changelog", changelog)
         self.assertIn("不要提交", changelog)
         self.assertIn("不要执行完整发布构建", changelog)
@@ -129,6 +146,83 @@ class ValidationTests(unittest.TestCase):
 
 
 class ReleaseContextTests(unittest.TestCase):
+    @mock.patch("workflow_dashboard.capture")
+    @mock.patch("workflow_dashboard._github_release_list")
+    def test_ctan_context_uses_latest_stable_github_release(
+        self,
+        release_list: mock.Mock,
+        capture: mock.Mock,
+    ) -> None:
+        release_list.return_value = [
+            {"tagName": "v0.3.5", "publishedAt": "2026-07-31T11:14:09Z", "isDraft": False, "isPrerelease": False},
+            {"tagName": "v0.3.6", "publishedAt": "2026-08-01T08:12:23Z", "isDraft": False, "isPrerelease": False},
+            {"tagName": "v0.4.0-rc1", "publishedAt": "2026-08-02T08:12:23Z", "isDraft": False, "isPrerelease": True},
+        ]
+        capture.return_value = 'version = "v0.3.6"\ndate = "2026-08-01"'
+
+        context = dashboard.latest_github_release_context()
+
+        self.assertEqual(context["version"], "0.3.6")
+        self.assertEqual(context["date"], "2026-08-01")
+        self.assertEqual(context["publishTarget"], "ctan")
+        self.assertEqual(context["sourceTag"], "v0.3.6")
+
+    @mock.patch("workflow_dashboard.capture", side_effect=dashboard.DashboardError("missing tag"))
+    @mock.patch("workflow_dashboard._github_release_list")
+    def test_ctan_context_does_not_require_a_local_tag(
+        self,
+        release_list: mock.Mock,
+        _capture: mock.Mock,
+    ) -> None:
+        release_list.return_value = [
+            {
+                "tagName": "v0.3.6",
+                "publishedAt": "2026-08-01T08:12:23Z",
+                "isDraft": False,
+                "isPrerelease": False,
+            }
+        ]
+
+        context = dashboard.latest_github_release_context()
+
+        self.assertEqual(context["version"], "0.3.6")
+        self.assertEqual(context["date"], "2026-08-01")
+
+    def test_ctan_workflow_does_not_require_development_fragment_archives(self) -> None:
+        workflow = (dashboard.ROOT / ".github" / "workflows" / "ctan-upload.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('ref: ${{ inputs.tag }}', workflow)
+        self.assertIn("python3 scripts/check-ctan-release.py", workflow)
+        self.assertIn("run: make doc doc-basic", workflow)
+        self.assertIn("run: l3build ctan", workflow)
+        self.assertIn("l3build upload --dry-run", workflow)
+        for package in ("hypdoc", "makecell", "mnsymbol", "xpinyin", "zhlipsum"):
+            self.assertIn(package, workflow)
+        self.assertNotIn("make check-changelog", workflow)
+        self.assertNotIn("scripts/test-build.sh", workflow)
+
+    @mock.patch("workflow_dashboard._gh_json")
+    def test_ctan_environment_must_explicitly_enable_upload(self, gh_json: mock.Mock) -> None:
+        gh_json.side_effect = [
+            {"environments": [{"name": "ctan"}]},
+            {"variables": [{"name": "CTAN_UPLOAD_ENABLED", "value": "true"}]},
+        ]
+
+        status = dashboard.ctan_upload_environment_status()
+
+        self.assertTrue(status["ctanUploadReady"])
+
+    @mock.patch("workflow_dashboard._gh_json")
+    def test_missing_ctan_environment_is_reported_before_dispatch(self, gh_json: mock.Mock) -> None:
+        gh_json.return_value = {"environments": []}
+
+        status = dashboard.ctan_upload_environment_status()
+
+        self.assertFalse(status["ctanUploadReady"])
+        self.assertIn("尚未创建", status["ctanUploadMessage"])
+
     def test_new_release_uses_next_patch_today_and_matching_commit_message(self) -> None:
         context = dashboard.suggested_release_context("0.3.4", "2026-07-31", [])
 
@@ -164,6 +258,29 @@ class ReleaseContextTests(unittest.TestCase):
         context = dashboard.suggested_release_context("0.3.4", "2026-07-31", [failed])
 
         self.assertEqual(context, dashboard.normalized_pipeline_params(failed.params))
+
+    def test_incomplete_ctan_attempt_does_not_change_platform_context(self) -> None:
+        failed = dashboard.Job(
+            id="failed-ctan",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="interrupted",
+            created_at="2026-08-03T13:27:55+00:00",
+            step_count=2,
+            completed_steps=2,
+            params={
+                "version": "0.3.6",
+                "date": "2026-08-03",
+                "publishTarget": "ctan",
+                "message": "chore(release): v0.3.6",
+                "skipCompile": False,
+            },
+        )
+
+        context = dashboard.suggested_release_context("0.3.6", "2026-08-03", [failed])
+
+        self.assertEqual(context["version"], "0.3.7")
+        self.assertEqual(context["publishTarget"], "platforms")
 
     def test_completed_release_advances_instead_of_restoring_old_inputs(self) -> None:
         completed = dashboard.Job(
@@ -270,6 +387,25 @@ class PersistenceTests(unittest.TestCase):
         self.assertEqual(restored.status, "interrupted")
         self.assertEqual(restored.completed_steps, 2)
 
+    def test_legacy_ctan_success_is_not_kept_as_verified(self) -> None:
+        manager = dashboard.JobManager(self.state_path)
+        job = dashboard.Job(
+            id="legacy-ctan",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="success",
+            step_count=2,
+            completed_steps=2,
+            params={"version": "0.3.6", "publishTarget": "ctan"},
+        )
+        manager.jobs[job.id] = job
+        manager._persist()
+
+        restored = dashboard.JobManager(self.state_path).get(job.id)
+
+        self.assertEqual(restored.status, "interrupted")
+        self.assertIn("未核实远程 Actions", "\n".join(restored.logs))
+
     def test_successful_retry_invalidates_older_failed_checkpoint(self) -> None:
         params = dashboard.normalized_pipeline_params(VALID_PARAMS)
         steps = dashboard.build_steps("release-pipeline", params)
@@ -327,6 +463,64 @@ class PersistenceTests(unittest.TestCase):
         self.assertFalse(any("FIRST-RAN" in line for line in job.logs))
         self.assertTrue(any("SECOND-RAN" in line for line in job.logs))
 
+    @mock.patch("workflow_dashboard.run_github_workflow_and_wait", return_value=1)
+    def test_remote_workflow_failure_marks_dashboard_job_failed(self, _run_remote: mock.Mock) -> None:
+        manager = dashboard.JobManager(None)
+        job = dashboard.Job(
+            id="remote-failure",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            step_count=1,
+        )
+        manager.jobs[job.id] = job
+        manager.active_id = job.id
+        command = ["gh", "workflow", "run", dashboard.CTAN_WORKFLOW, "--repo", dashboard.GITHUB_REPOSITORY]
+
+        manager._run_processes(job, [("01 · 触发 CTAN 发布", command)])
+
+        self.assertEqual(job.status, "failed")
+        self.assertEqual(job.return_code, 1)
+        self.assertEqual(job.completed_steps, 0)
+
+    @mock.patch("workflow_dashboard.REMOTE_WORKFLOW_POLL_INTERVAL", 0)
+    @mock.patch("workflow_dashboard._gh_json")
+    @mock.patch("workflow_dashboard.subprocess.run")
+    def test_remote_workflow_waits_for_the_new_run_conclusion(
+        self,
+        run: mock.Mock,
+        gh_json: mock.Mock,
+    ) -> None:
+        trigger = dashboard.subprocess.CompletedProcess([], 0, "", "")
+        run.return_value = trigger
+        gh_json.side_effect = [
+            [],
+            [{
+                "databaseId": 123,
+                "status": "queued",
+                "conclusion": None,
+                "createdAt": dashboard.datetime.now(dashboard.timezone.utc).isoformat(),
+                "headBranch": "main",
+                "event": "workflow_dispatch",
+                "url": "https://github.com/xkwxdyy/exam-zh/actions/runs/123",
+            }],
+            {
+                "status": "completed",
+                "conclusion": "success",
+                "url": "https://github.com/xkwxdyy/exam-zh/actions/runs/123",
+            },
+        ]
+        job = dashboard.Job(
+            id="remote-success",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+        )
+        command = ["gh", "workflow", "run", dashboard.CTAN_WORKFLOW, "--repo", dashboard.GITHUB_REPOSITORY]
+
+        result = dashboard.run_github_workflow_and_wait(job, command)
+
+        self.assertEqual(result, 0)
+        self.assertTrue(any("GitHub Actions 已结束：success" in line for line in job.logs))
+
     @mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool")
     @mock.patch("workflow_dashboard.capture")
     def test_pipeline_rejects_missing_fragments_before_expensive_tests(
@@ -344,6 +538,55 @@ class PersistenceTests(unittest.TestCase):
         with mock.patch.object(dashboard, "ROOT", root), mock.patch.dict(os.environ, {"GITEE_TOKEN": "test"}):
             with self.assertRaisesRegex(dashboard.DashboardError, "没有未发布的 JSON 变更片段"):
                 dashboard.JobManager(None).start("release-pipeline", VALID_PARAMS)
+
+    @mock.patch("workflow_dashboard.latest_github_release_context")
+    @mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool")
+    @mock.patch("workflow_dashboard.capture")
+    def test_ctan_pipeline_requires_latest_github_release(
+        self,
+        capture: mock.Mock,
+        _which: mock.Mock,
+        latest: mock.Mock,
+    ) -> None:
+        params = {**VALID_PARAMS, "publishTarget": "ctan"}
+        latest.return_value = {"version": "1.2.4"}
+        capture.side_effect = lambda command: (
+            "main" if command[:3] == ["git", "branch", "--show-current"]
+            else "https://example.invalid/repo" if command[:4] == ["git", "remote", "get-url", "github"]
+            else "v1.2.3" if command[:3] == ["git", "tag", "--list"]
+            else ""
+        )
+
+        with self.assertRaisesRegex(dashboard.DashboardError, "最新已发布的 GitHub Release v1.2.4"):
+            dashboard.JobManager(None).start("release-pipeline", params)
+
+    def test_ctan_pipeline_does_not_require_a_local_tag_or_fragment_archives(self) -> None:
+        params = {**VALID_PARAMS, "publishTarget": "ctan"}
+
+        def command_output(command: list[str]) -> str:
+            if command[:3] == ["git", "branch", "--show-current"]:
+                return "main"
+            if command[:4] == ["git", "remote", "get-url", "github"]:
+                return "https://example.invalid/repo"
+            return ""
+
+        with (
+            mock.patch("workflow_dashboard.capture", side_effect=command_output),
+            mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool"),
+            mock.patch(
+                "workflow_dashboard.latest_github_release_context",
+                return_value={"version": "1.2.3"},
+            ),
+            mock.patch(
+                "workflow_dashboard.ctan_upload_environment_status",
+                return_value={"ctanUploadReady": True, "ctanUploadMessage": "ready"},
+            ),
+            mock.patch("workflow_dashboard.threading.Thread.start"),
+        ):
+            job = dashboard.JobManager(None).start("release-pipeline", params)
+
+        self.assertEqual(job.params["version"], "1.2.3")
+        self.assertEqual(job.params["publishTarget"], "ctan")
 
     @mock.patch("workflow_dashboard.shutil.which", return_value="/usr/local/bin/tool")
     @mock.patch("workflow_dashboard.capture")
@@ -451,6 +694,32 @@ class HttpTests(unittest.TestCase):
     def test_artifact_preview_asset_is_not_served(self) -> None:
         status, _ = self.request("/assets/gitee-release.png")
         self.assertEqual(status, 404)
+
+    @mock.patch("workflow_dashboard.ctan_upload_environment_status")
+    @mock.patch("workflow_dashboard.latest_github_release_context")
+    def test_ctan_context_uses_remote_github_release(
+        self,
+        latest: mock.Mock,
+        environment: mock.Mock,
+    ) -> None:
+        latest.return_value = {
+            "version": "0.3.6",
+            "date": "2026-08-01",
+            "publishTarget": "ctan",
+            "message": "chore(release): v0.3.6",
+            "skipCompile": False,
+        }
+        environment.return_value = {
+            "ctanUploadReady": True,
+            "ctanUploadMessage": "CTAN 上传门禁已启用",
+        }
+
+        status, payload = self.request("/api/ctan-context")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["version"], "0.3.6")
+        self.assertEqual(payload["publishTarget"], "ctan")
+        self.assertTrue(payload["ctanUploadReady"])
 
     def test_harmless_job_can_run_and_stream_logs(self) -> None:
         status, payload = self.request(

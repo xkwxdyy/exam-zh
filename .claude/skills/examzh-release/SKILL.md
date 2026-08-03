@@ -124,9 +124,11 @@ that every new `.tex` file is a source artifact worth releasing.
 
 ### Manuals And Examples
 
-- For user-visible syntax, options, layout, defaults, or behavior, locate the
-  corresponding section in `doc/` and update it when the existing text would be
-  incomplete or misleading.
+- Review every user-visible Changelog item against the corresponding `doc/`
+  section. For syntax, options, layout, defaults, or behavior changes, update
+  the concrete explanation or a short example whenever that helps a user
+  understand or apply the released behavior. Version and date metadata are
+  updated later and do not count as this content review.
 - Update `doc-basic/` when the change affects beginner-facing workflows or
   examples. Do not force a documentation edit for an internal-only fix.
 - Keep examples consistent with the supported interface and avoid copying a
@@ -134,10 +136,16 @@ that every new `.tex` file is a source artifact worth releasing.
 - Compile each touched manual or example with the narrowest relevant command,
   such as `make doc`, `make doc-basic`, `make examples`, or
   `make examples-basic`.
+- For layout-sensitive changes, render and inspect the affected manual/example
+  pages. If visual inspection is unavailable, report it as pending rather than
+  treating compilation as visual acceptance.
+- Before stopping, ensure `find tmp -mindepth 1 -print` has no output. Keep
+  reviewed final fixtures under `testfiles/`, not comparison renders in `tmp/`.
 
 After tests and documentation are settled, prepare the structured fragments,
 run `make changelog` and `make check-changelog`, summarize the files changed and
-checks run, then stop at the mode boundary.
+checks run, explain any user-visible item that genuinely required no manual
+change, then stop at the mode boundary.
 
 ## CHANGELOG And Release Fragments
 
@@ -156,6 +164,12 @@ in `.changes/README.md`. Every change has Chinese `zh` text. Use
 `changelog: false, announce: false` for internal-only work. Important
 user-visible release items use `changelog: true, announce: true` and require
 reviewed English `en` text.
+
+Dashboard and local release-workflow changes may use `changelog: true` so they
+appear in the repository Changelog and GitHub/Gitee Release notes, but keep
+`announce: false`: CTAN users do not need local Dashboard updates. Only depart
+from this rule when the tooling change directly changes the CTAN package or a
+required CTAN-user workflow.
 
 Regenerate and verify:
 
@@ -222,8 +236,17 @@ Commit the release metadata and intentional release-tooling changes:
 
 ```bash
 git add .changes CHANGELOG.md build.lua exam-zh.cls exam-zh-*.sty doc/exam-zh-doc.tex doc-basic/exam-zh-doc-basic.tex scripts .claude/skills
-git commit -m "chore(release): vX.Y.Z"
+python3 scripts/release_notes.py render \
+  .changes/releases/X.Y.Z.json \
+  --commit-message-output build/release-commit-vX.Y.Z.txt \
+  --commit-title "chore(release): vX.Y.Z"
+bash scripts/git-update.sh --force --no-push \
+  --message-file build/release-commit-vX.Y.Z.txt
 ```
+
+The commit title remains concise, while its body includes every Chinese
+Changelog item from the versioned manifest. Do not reconstruct this body from
+Git history or omit it in favor of a title-only release commit.
 
 Inspect any additional tracked source changes and add them when they are intentional release updates. Keep `CTAN/` and `release/` as build artifacts unless the repository policy changes.
 

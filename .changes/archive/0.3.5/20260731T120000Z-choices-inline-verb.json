@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "choices-inline-verb",
+  "issues": ["https://github.com/xkwxdyy/exam-zh/issues/30"],
+  "changes": [
+    {
+      "id": "choices-inline-verb",
+      "type": "fixed",
+      "zh": "修复 GitHub #30 原始复现中 `choices` 的常规内联 `\\verb` 选项无法编译的问题。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

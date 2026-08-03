@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "release-dashboard-resume",
+  "changes": [
+    {
+      "id": "release-dashboard-resume",
+      "type": "fixed",
+      "zh": "修复发布控制台失败后重复执行的问题：持久保存与目标版本绑定的步骤进度，重新打开时恢复原版本并从失败步骤继续，同时在缺少未发布变更片段时提前停止。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

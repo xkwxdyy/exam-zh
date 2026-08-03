@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "structured-release-notes",
+  "changes": [
+    {
+      "id": "structured-release-notes",
+      "type": "changed",
+      "zh": "引入结构化变更片段、确定性 changelog 生成及英文 CTAN 公告校验。",
+      "changelog": false,
+      "announce": false
+    }
+  ]
+}
