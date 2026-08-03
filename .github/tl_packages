@@ -29,7 +29,6 @@ linegoal
 listings
 lm
 lstaddons
-lstautogobble
 makecell
 mwe
 mnsymbol
@@ -44,7 +43,6 @@ threeparttable
 tikzfill
 tikzpagenodes
 tipa
-trace
 unicode-math
 underscore
 varwidth
