@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-manual-dependencies",
+  "changes": [
+    {
+      "id": "ctan-manual-dependencies",
+      "type": "fixed",
+      "zh": "补齐 CTAN Actions 编译完整手册和入门手册所需的 TeX Live 直接依赖，确保既有发布标签可在隔离环境中完成归档校验。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

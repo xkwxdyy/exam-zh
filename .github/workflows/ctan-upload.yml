@@ -33,9 +33,10 @@ jobs:
           # Older release tags predate CI manual builds, so keep these additions
           # in the workflow instead of requiring a rewritten public tag.
           packages: >-
-            accsupp booktabs caption csquotes fancyvrb hologo hypdoc lstaddons
-            makecell mnsymbol threeparttable tipa underscore xcolor-material
-            xpinyin zhlipsum
+            accsupp alphalph amsfonts booktabs caption colortbl csquotes fancyvrb
+            hologo hypdoc lm lstaddons lstautogobble makecell mnsymbol ninecolors
+            psnfss threeparttable tipa trace underscore xcolor-material xpinyin
+            xunicode zhlipsum zref
 
       - name: Check release metadata
         run: >-

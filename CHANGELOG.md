@@ -14,6 +14,10 @@
 - 改进 Dashboard 发布链的 Git 提交信息：保留简洁的版本标题，并在正文中自动附上该版本结构化 Changelog 的完整中文条目。
 - 改进 Dashboard 的单独 CTAN 发布：自动复用最新已成功发布到 GitHub 的稳定版本，不再递增版本号或重复发布 GitHub、Gitee。
 
+### Fixed
+
+- 补齐 CTAN Actions 编译完整手册和入门手册所需的 TeX Live 直接依赖，确保既有发布标签可在隔离环境中完成归档校验。
+
 ## [0.3.6] - 2026-08-01
 
 ### Fixed

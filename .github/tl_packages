@@ -7,10 +7,13 @@ xetex
 
 # Class, package, and example dependencies
 accsupp
+alphalph
+amsfonts
 amsmath
 asana-math
 booktabs
 caption
+colortbl
 csquotes
 ctex
 enumitem
@@ -24,12 +27,16 @@ hypdoc
 lastpage
 linegoal
 listings
+lm
 lstaddons
+lstautogobble
 makecell
 mwe
 mnsymbol
 newcomputermodern
+ninecolors
 pgf
+psnfss
 siunitx
 tabularray
 tcolorbox
@@ -37,6 +44,7 @@ threeparttable
 tikzfill
 tikzpagenodes
 tipa
+trace
 unicode-math
 underscore
 varwidth
@@ -44,4 +52,6 @@ wrapstuff
 xcolor
 xcolor-material
 xpinyin
+xunicode
+zref
 zhlipsum
