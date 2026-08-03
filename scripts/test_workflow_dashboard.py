@@ -195,11 +195,10 @@ class ReleaseContextTests(unittest.TestCase):
 
         self.assertIn('ref: ${{ inputs.tag }}', workflow)
         self.assertIn("python3 scripts/check-ctan-release.py", workflow)
-        self.assertIn("run: make doc doc-basic", workflow)
+        self.assertIn("name: Verify committed manuals", workflow)
+        self.assertIn("test -s doc/exam-zh-doc.pdf", workflow)
         self.assertIn("run: l3build ctan", workflow)
         self.assertIn("l3build upload --dry-run", workflow)
-        for package in ("hypdoc", "makecell", "mnsymbol", "xpinyin", "zhlipsum"):
-            self.assertIn(package, workflow)
         self.assertNotIn("make check-changelog", workflow)
         self.assertNotIn("scripts/test-build.sh", workflow)
 
