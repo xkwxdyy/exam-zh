@@ -24,6 +24,7 @@ geometry
 hologo
 hyperref
 hypdoc
+ifoddpage
 lastpage
 linegoal
 listings
@@ -35,6 +36,7 @@ mnsymbol
 newcomputermodern
 ninecolors
 pgf
+pdfcol
 psnfss
 siunitx
 tabularray

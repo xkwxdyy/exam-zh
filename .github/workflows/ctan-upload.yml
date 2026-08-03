@@ -34,8 +34,8 @@ jobs:
           # in the workflow instead of requiring a rewritten public tag.
           packages: >-
             accsupp alphalph amsfonts booktabs caption colortbl csquotes fancyvrb
-            hologo hypdoc lm lstaddons makecell mnsymbol ninecolors psnfss
-            threeparttable tipa underscore xcolor-material xpinyin
+            hologo hypdoc ifoddpage lm lstaddons makecell mnsymbol ninecolors
+            pdfcol psnfss threeparttable tipa underscore xcolor-material xpinyin
             xunicode zhlipsum zref
 
       - name: Check release metadata

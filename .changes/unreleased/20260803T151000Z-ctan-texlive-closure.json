@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-texlive-closure",
+  "changes": [
+    {
+      "id": "ctan-texlive-closure",
+      "type": "fixed",
+      "zh": "按手册编译的实际依赖闭包修正 CTAN Actions 的 TeX Live 包名与缺失依赖，避免隔离构建在安装或载入 `tikzpagenodes` 时中断。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}
