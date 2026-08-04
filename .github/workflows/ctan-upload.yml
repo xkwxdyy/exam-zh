@@ -30,6 +30,9 @@ jobs:
         uses: zauguin/install-texlive@v4
         with:
           package_file: .github/tl_packages
+          # v0.3.6 predates the explicit dependency closure on main.  Its
+          # tcolorbox regressions load pdfcol through the breakable library.
+          packages: pdfcol
 
       - name: Check release metadata
         run: >-
