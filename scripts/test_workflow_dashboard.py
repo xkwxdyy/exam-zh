@@ -195,7 +195,9 @@ class ReleaseContextTests(unittest.TestCase):
 
         self.assertIn('ref: ${{ inputs.tag }}', workflow)
         self.assertIn("python3 scripts/check-ctan-release.py", workflow)
-        self.assertIn("name: Verify committed manuals", workflow)
+        self.assertIn("name: Restore published manual PDFs", workflow)
+        self.assertIn("gh release download", workflow)
+        self.assertIn("name: Verify restored manuals", workflow)
         self.assertIn("test -s doc/exam-zh-doc.pdf", workflow)
         self.assertIn("run: l3build ctan", workflow)
         self.assertIn("l3build upload --dry-run", workflow)

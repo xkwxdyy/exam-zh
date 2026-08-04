@@ -5,7 +5,7 @@
     {
       "id": "ctan-tagged-manual-artifacts",
       "type": "fixed",
-      "zh": "调整既有 CTAN 标签的发布校验：核验标签中已提交的两份手册 PDF，并继续在隔离环境中完成示例、回归、归档和上传验证，避免旧标签因字体不可用而无法复现手册。",
+      "zh": "调整既有 CTAN 标签的发布校验：从对应 GitHub Release 资产恢复已发布的两份手册 PDF，并继续在隔离环境中完成示例、回归、归档和上传验证，避免旧标签因字体不可用而无法复现手册。",
       "changelog": true,
       "announce": false
     }

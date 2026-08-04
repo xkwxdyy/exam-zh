@@ -37,7 +37,21 @@ jobs:
           --tag "${{ inputs.tag }}"
           --announcement-output build/ctan-announcement.md
 
-      - name: Verify committed manuals
+      - name: Restore published manual PDFs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CTAN_TAG: ${{ inputs.tag }}
+        run: |
+          mkdir -p build/release-assets
+          gh release download "$CTAN_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "exam-zh-${CTAN_TAG}.zip" \
+            --dir build/release-assets
+          asset="build/release-assets/exam-zh-${CTAN_TAG}.zip"
+          unzip -p "$asset" exam-zh-doc.pdf > doc/exam-zh-doc.pdf
+          unzip -p "$asset" exam-zh-doc-basic.pdf > doc-basic/exam-zh-doc-basic.pdf
+
+      - name: Verify restored manuals
         run: >-
           test -s doc/exam-zh-doc.pdf
           && test -s doc-basic/exam-zh-doc-basic.pdf
