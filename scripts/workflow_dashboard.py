@@ -661,6 +661,7 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                         "create",
                         f"v{version}",
                         f"release/exam-zh-v{version}.zip",
+                        "CTAN/exam-zh.zip",
                         "--repo",
                         "xkwxdyy/exam-zh",
                         "--title",

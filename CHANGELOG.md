@@ -19,6 +19,7 @@
 - 补齐 CTAN Actions 编译完整手册和入门手册所需的 TeX Live 直接依赖，确保既有发布标签可在隔离环境中完成归档校验。
 - 按手册编译的实际依赖闭包修正 CTAN Actions 的 TeX Live 包名与缺失依赖，避免隔离构建在安装或载入 `tikzpagenodes` 时中断。
 - 调整既有 CTAN 标签的发布校验：从对应 GitHub Release 资产恢复已发布的两份手册 PDF，并继续在隔离环境中完成示例、回归、归档和上传验证，避免旧标签因字体不可用而无法复现手册。
+- 将 CTAN 发布改为复用 GitHub Release 中已测试的 CTAN-ready 归档，避免历史版本因 TeX Live 依赖及回归输出漂移而重复构建失败，并校验上传前后归档 SHA-256 与 CTAN 响应。
 
 ## [0.3.6] - 2026-08-01
 

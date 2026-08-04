@@ -62,15 +62,17 @@ CTAN。Dashboard 会等待对应的 GitHub Actions run 完成，远程失败会�
 如果 `ctan` Environment 或启用变量缺失，Dashboard 会在触发前明确提示并禁用 CTAN 发布按钮。
 工作流会：
 
-1. 校验 Tag、`build.lua`、类/宏包、手册、版本清单与 `CHANGELOG.md` 的发布元数据；
-2. 编译完整手册和入门手册，运行 `l3build` 回归测试并从该 Tag 生成 `exam-zh.zip`；
-3. 检查压缩包结构、必需文件和临时文件，再调用 CTAN Validate 接口；
-4. 保存已校验的压缩包，在 `CTAN_UPLOAD_ENABLED=true` 时自动正式上传。
+1. GitHub/Gitee 发布链完成测试和编译，同时生成用户包与 CTAN 包；GitHub Release
+   会同时保存 `exam-zh-vX.Y.Z.zip` 和 CTAN-ready 的 `exam-zh.zip`；
+2. CTAN 工作流从所选 GitHub Release 下载这份 `exam-zh.zip`，校验 Tag、发布元数据、
+   压缩包结构与 SHA-256，再调用 CTAN Validate 接口；
+3. 把同一字节的归档传入受保护的 `ctan` Environment，在
+   `CTAN_UPLOAD_ENABLED=true` 时正式上传，并要求响应含 `Upload succeeded` 且不含
+   `WARNING` 或 `ERROR`。
 
-CTAN 工作流只依赖已发布 Tag 内的版本清单，不会重新执行面向开发工作树的
-`make check-changelog` 或完整构建脚本测试，因此历史碎片归档缺失不会要求重发
-GitHub/Gitee。`.changes/archive/<version>/` 仍应随今后的版本清单纳入 Git，供开发期
-溯源和一致性检查使用。
+CTAN 阶段不会重新编译手册、重建归档或重跑历史回归；这些检查属于 GitHub/Gitee
+平台发布阶段。这样可以避免旧 Tag 的固定回归基线被后来更新的 TeX Live 宏包输出
+漂移阻断，也不会要求重发或重复创建 GitHub/Gitee Release。
 
 首次启用时，在 GitHub 的 **Settings → Environments** 中创建 `ctan`：
 

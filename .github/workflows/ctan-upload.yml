@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Test and package
+  validate:
+    name: Validate published archive
     if: github.repository == 'xkwxdyy/exam-zh'
     runs-on: ubuntu-latest
     steps:
@@ -29,11 +29,7 @@ jobs:
       - name: Install TeX Live
         uses: zauguin/install-texlive@v4
         with:
-          package_file: .github/tl_packages
-          # v0.3.6 predates the explicit dependency closure on main.  Its
-          # regressions load etex-pkg through linegoal and pdfcol through the
-          # tcolorbox breakable library.
-          packages: etex-pkg pdfcol zref
+          packages: scheme-basic l3build
 
       - name: Check release metadata
         run: >-
@@ -41,38 +37,15 @@ jobs:
           --tag "${{ inputs.tag }}"
           --announcement-output build/ctan-announcement.md
 
-      - name: Restore published manual PDFs
+      - name: Download published CTAN archive
         env:
           GH_TOKEN: ${{ github.token }}
           CTAN_TAG: ${{ inputs.tag }}
         run: |
-          mkdir -p build/release-assets
           gh release download "$CTAN_TAG" \
             --repo "${{ github.repository }}" \
-            --pattern "exam-zh-${CTAN_TAG}.zip" \
-            --dir build/release-assets
-          asset="build/release-assets/exam-zh-${CTAN_TAG}.zip"
-          unzip -p "$asset" exam-zh-doc.pdf > doc/exam-zh-doc.pdf
-          unzip -p "$asset" exam-zh-doc-basic.pdf > doc-basic/exam-zh-doc-basic.pdf
-
-      - name: Verify restored manuals
-        run: >-
-          test -s doc/exam-zh-doc.pdf
-          && test -s doc-basic/exam-zh-doc-basic.pdf
-
-      - name: Run regression tests and build CTAN archive
-        run: l3build ctan --halt-on-error --show-log-on-error
-
-      - name: Save regression failure diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ctan-regression-failure-${{ inputs.tag }}
-          path: |
-            build/test/*.diff
-            build/test/*.log
-          if-no-files-found: warn
-          retention-days: 7
+            --pattern "exam-zh.zip" \
+            --dir .
 
       - name: Inspect CTAN archive
         run: >-
@@ -81,9 +54,19 @@ jobs:
           --archive exam-zh.zip
 
       - name: Validate submission with CTAN
-        run: >-
-          l3build upload --dry-run
-          --file build/ctan-announcement.md
+        run: |
+          set -o pipefail
+          l3build upload --dry-run \
+            --file build/ctan-announcement.md 2>&1 \
+            | tee build/ctan-validation.log
+          grep -Fq "CTAN validation successful" build/ctan-validation.log
+          if grep -Eq "WARNING|ERROR" build/ctan-validation.log; then
+            echo "CTAN validation returned a warning or error" >&2
+            exit 1
+          fi
+
+      - name: Record archive checksum
+        run: sha256sum exam-zh.zip | tee build/ctan-sha256.txt
 
       - name: Save reviewed upload inputs
         uses: actions/upload-artifact@v4
@@ -92,12 +75,17 @@ jobs:
           path: |
             exam-zh.zip
             build/ctan-announcement.md
+            build/ctan-sha256.txt
           if-no-files-found: error
           retention-days: 30
 
+      - name: Remove validation form data
+        if: always()
+        run: rm -f exam-zh.curlopt
+
   upload:
-    name: Upload archive
-    needs: build
+    name: Upload published archive
+    needs: validate
     runs-on: ubuntu-latest
     environment: ctan
     steps:
@@ -116,6 +104,9 @@ jobs:
         with:
           name: ctan-${{ inputs.tag }}
 
+      - name: Verify reviewed archive checksum
+        run: sha256sum --check build/ctan-sha256.txt
+
       - name: Require explicit CTAN environment opt-in
         env:
           CTAN_UPLOAD_ENABLED: ${{ vars.CTAN_UPLOAD_ENABLED }}
@@ -124,6 +115,17 @@ jobs:
       - name: Upload to CTAN
         env:
           L3BUILD_CTAN_UPLOAD: "true"
-        run: >-
-          l3build upload
-          --file build/ctan-announcement.md
+        run: |
+          set -o pipefail
+          l3build upload \
+            --file build/ctan-announcement.md 2>&1 \
+            | tee build/ctan-upload.log
+          grep -Fq "Upload succeeded" build/ctan-upload.log
+          if grep -Eq "WARNING|ERROR" build/ctan-upload.log; then
+            echo "CTAN upload returned a warning or error" >&2
+            exit 1
+          fi
+
+      - name: Remove upload form data
+        if: always()
+        run: rm -f exam-zh.curlopt

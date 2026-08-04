@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-published-archive",
+  "changes": [
+    {
+      "id": "ctan-published-archive",
+      "type": "fixed",
+      "zh": "将 CTAN 发布改为复用 GitHub Release 中已测试的 CTAN-ready 归档，避免历史版本因 TeX Live 依赖及回归输出漂移而重复构建失败，并校验上传前后归档 SHA-256 与 CTAN 响应。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

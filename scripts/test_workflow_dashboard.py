@@ -69,6 +69,11 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(any(command[0] == "claude" for command in commands))
         self.assertTrue(any(command[:3] == ["git", "push", "github"] for command in commands))
         self.assertTrue(any(command[:3] == ["gh", "release", "create"] for command in commands))
+        release_command = next(
+            command for label, command in github_steps if label.endswith("发布 GitHub Release")
+        )
+        self.assertIn("release/exam-zh-v1.2.3.zip", release_command)
+        self.assertIn("CTAN/exam-zh.zip", release_command)
         commit_message_command = next(
             command for label, command in github_steps if label.endswith("生成 Git 提交信息")
         )
@@ -195,12 +200,15 @@ class ReleaseContextTests(unittest.TestCase):
 
         self.assertIn('ref: ${{ inputs.tag }}', workflow)
         self.assertIn("python3 scripts/check-ctan-release.py", workflow)
-        self.assertIn("name: Restore published manual PDFs", workflow)
+        self.assertIn("name: Download published CTAN archive", workflow)
         self.assertIn("gh release download", workflow)
-        self.assertIn("name: Verify restored manuals", workflow)
-        self.assertIn("test -s doc/exam-zh-doc.pdf", workflow)
-        self.assertIn("run: l3build ctan", workflow)
+        self.assertIn('--pattern "exam-zh.zip"', workflow)
+        self.assertIn("sha256sum --check build/ctan-sha256.txt", workflow)
         self.assertIn("l3build upload --dry-run", workflow)
+        self.assertIn('grep -Fq "Upload succeeded"', workflow)
+        self.assertNotIn("name: Restore published manual PDFs", workflow)
+        self.assertNotIn("run: l3build ctan", workflow)
+        self.assertNotIn("Run regression tests", workflow)
         self.assertNotIn("make check-changelog", workflow)
         self.assertNotIn("scripts/test-build.sh", workflow)
 
