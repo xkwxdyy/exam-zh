@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-artifact-actions",
+  "changes": [
+    {
+      "id": "ctan-artifact-actions",
+      "type": "changed",
+      "zh": "升级 CTAN 工作流的 GitHub artifact actions，消除 Node.js 20 弃用提示。",
+      "changelog": false,
+      "announce": false
+    }
+  ]
+}
