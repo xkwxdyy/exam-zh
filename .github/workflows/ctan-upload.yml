@@ -33,7 +33,7 @@ jobs:
           # v0.3.6 predates the explicit dependency closure on main.  Its
           # regressions load etex-pkg through linegoal and pdfcol through the
           # tcolorbox breakable library.
-          packages: etex-pkg pdfcol
+          packages: etex-pkg pdfcol zref
 
       - name: Check release metadata
         run: >-
