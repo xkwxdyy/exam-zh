@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-regression-diagnostics",
+  "changes": [
+    {
+      "id": "ctan-regression-diagnostics",
+      "type": "changed",
+      "zh": "让 CTAN Actions 的隔离回归在首个错误处输出完整日志并保留失败诊断 artifact。",
+      "changelog": false,
+      "announce": false
+    }
+  ]
+}

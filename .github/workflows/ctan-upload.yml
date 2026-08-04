@@ -57,7 +57,18 @@ jobs:
           && test -s doc-basic/exam-zh-doc-basic.pdf
 
       - name: Run regression tests and build CTAN archive
-        run: l3build ctan
+        run: l3build ctan --halt-on-error --show-log-on-error
+
+      - name: Save regression failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctan-regression-failure-${{ inputs.tag }}
+          path: |
+            build/test/*.diff
+            build/test/*.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Inspect CTAN archive
         run: >-
