@@ -7,7 +7,7 @@
 
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]
 \RequirePackage{expl3}
-\ProvidesExplClass {exam-zh} {2026-08-01} {v0.3.6} {LaTeX template for Chinese exam}
+\ProvidesExplClass {exam-zh} {2026-08-11} {v0.3.7} {LaTeX template for Chinese exam}
 
 % 检查 LaTeX2e kernel 版本
 \msg_new:nnn { exam-zh } { latex-too-old }
@@ -681,6 +681,7 @@
   {
     title-format .tl_set:N = \l__examzh_title_format_tl,
     subject-format .tl_set:N = \l__examzh_subject_format_tl,
+    subject-sep .skip_set:N = \l__examzh_title_subject_sep_skip,
     top-sep .skip_set:N = \l__examzh_title_top_sep_skip,
     bottom-sep .skip_set:N = \l__examzh_title_bottom_sep_skip,
   }
@@ -688,8 +689,9 @@
   {
     title-format   = \Large,
     subject-format = \sffamily \bfseries \huge,
-    top-sep        = -.5em plus 0.3em minus 0.2em,
-    bottom-sep     = 0em plus 0.3em minus 0.2em,
+    subject-sep    = -.35em,
+    top-sep        = -.5em,
+    bottom-sep     = .33em,
   }
 \keys_define:nn { exam-zh }
   { title .meta:nn = { exam-zh / title } {#1} }
@@ -729,16 +731,16 @@
   {
     \par
     \vspace { \l__examzh_title_top_sep_skip }
-    \begin { center }
+    \group_begin:
+      \centering
       \let \footnote \thanks
       { \l__examzh_title_format_tl \@title \par }
       \tl_if_blank:VF \l__examzh_subject_tl
         {
-          \addvspace { 1em }
-          { \l__examzh_subject_format_tl \l__examzh_subject_tl }
+          \vspace { \l__examzh_title_subject_sep_skip }
+          { \l__examzh_subject_format_tl \l__examzh_subject_tl \par }
         }
-    \end { center }
-    \par
+    \group_end:
     \vspace { \l__examzh_title_bottom_sep_skip }
   }
 

@@ -1,0 +1,17 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+Package fontspec Info: 
+(fontspec)             Script 'CJK' not explicitly supported within font 'Heiti SC Light'. Check the typeset output, and if it is okay then ignore this warning. Otherwise a different font should be chosen.
+Package fontspec Info: 
+(fontspec)             Could not resolve font "Heiti SC Medium/I" (it probably doesn't exist).
+Package fontspec Info: 
+(fontspec)             Could not resolve font "Heiti SC Light/I" (it probably doesn't exist).
+Package fontspec Info: 
+(fontspec)             Font family 'HeitiSCLight(0)' created for font 'Heiti SC Light' with options [Script={CJK},BoldFont={Heiti SC Medium}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.: <->"Heiti SC Light/OT:script=hani;language=dflt;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.: <->"Heiti SC Medium/OT:script=hani;language=dflt;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.: <->"Heiti SC Light/BI/OT:script=hani;language=dflt;"
+title-block-height=58.36105pt

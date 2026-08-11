@@ -26,6 +26,14 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
+      # Submission metadata may be corrected without rewriting an existing release tag.
+      - name: Apply canonical CTAN directory
+        run: |
+          sed -i -E \
+            's#^([[:space:]]*ctanPath[[:space:]]*=[[:space:]]*).*$#\1"/macros/xetex/latex/exam-zh",#' \
+            build.lua
+          test "$(grep -Ec '^[[:space:]]*ctanPath[[:space:]]*=[[:space:]]*"/macros/xetex/latex/exam-zh",$' build.lua)" -eq 1
+
       - name: Install TeX Live
         uses: zauguin/install-texlive@v4
         with:
@@ -59,6 +67,7 @@ jobs:
           l3build upload --dry-run \
             --file build/ctan-announcement.md 2>&1 \
             | tee build/ctan-validation.log
+          grep -Fq "ctan-upload | ctanPath: /macros/xetex/latex/exam-zh" build/ctan-validation.log
           grep -Fq "CTAN validation successful" build/ctan-validation.log
           if grep -Eq "WARNING|ERROR" build/ctan-validation.log; then
             echo "CTAN validation returned a warning or error" >&2
@@ -94,6 +103,13 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
+      - name: Apply canonical CTAN directory
+        run: |
+          sed -i -E \
+            's#^([[:space:]]*ctanPath[[:space:]]*=[[:space:]]*).*$#\1"/macros/xetex/latex/exam-zh",#' \
+            build.lua
+          test "$(grep -Ec '^[[:space:]]*ctanPath[[:space:]]*=[[:space:]]*"/macros/xetex/latex/exam-zh",$' build.lua)" -eq 1
+
       - name: Install l3build
         uses: zauguin/install-texlive@v4
         with:
@@ -120,6 +136,7 @@ jobs:
           l3build upload \
             --file build/ctan-announcement.md 2>&1 \
             | tee build/ctan-upload.log
+          grep -Fq "ctan-upload | ctanPath: /macros/xetex/latex/exam-zh" build/ctan-upload.log
           grep -Fq "Upload succeeded" build/ctan-upload.log
           if grep -Eq "WARNING|ERROR" build/ctan-upload.log; then
             echo "CTAN upload returned a warning or error" >&2

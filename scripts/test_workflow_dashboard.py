@@ -199,12 +199,20 @@ class ReleaseContextTests(unittest.TestCase):
         )
 
         self.assertIn('ref: ${{ inputs.tag }}', workflow)
+        self.assertEqual(workflow.count("name: Apply canonical CTAN directory"), 2)
+        self.assertEqual(workflow.count("sed -i -E"), 2)
         self.assertIn("python3 scripts/check-ctan-release.py", workflow)
         self.assertIn("name: Download published CTAN archive", workflow)
         self.assertIn("gh release download", workflow)
         self.assertIn('--pattern "exam-zh.zip"', workflow)
         self.assertIn("sha256sum --check build/ctan-sha256.txt", workflow)
         self.assertIn("l3build upload --dry-run", workflow)
+        self.assertEqual(
+            workflow.count(
+                'grep -Fq "ctan-upload | ctanPath: /macros/xetex/latex/exam-zh"'
+            ),
+            2,
+        )
         self.assertIn('grep -Fq "Upload succeeded"', workflow)
         self.assertNotIn("name: Restore published manual PDFs", workflow)
         self.assertNotIn("run: l3build ctan", workflow)

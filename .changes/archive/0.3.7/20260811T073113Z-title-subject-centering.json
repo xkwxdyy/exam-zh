@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "title-subject-centering",
+  "changes": [
+    {
+      "id": "title-subject-centering",
+      "type": "fixed",
+      "zh": "修复 `\\title` 与 `\\subject` 通过 `center` 环境排版时叠加该环境自身的段间距，导致 `title/top-sep`、`title/bottom-sep` 实际显示间距与设置值不一致的问题；改为直接使用 `\\centering` 分组输出，并新增 `title/subject-sep` 键单独控制标题与科目之间的间距（默认 `-.35em`），同时将 `title/top-sep` 与 `title/bottom-sep` 的默认值调整为 `-.5em` 与 `.33em`。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

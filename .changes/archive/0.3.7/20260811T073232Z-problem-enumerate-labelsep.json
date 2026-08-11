@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "problem-enumerate-labelsep",
+  "changes": [
+    {
+      "id": "problem-enumerate-labelsep",
+      "type": "fixed",
+      "zh": "修复 `problem` 环境内第一层 `enumerate` 序号与文字之间遗留的 4pt 固定间距，使其与该环境内第二、三层 `enumerate` 保持一致的贴紧排版。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

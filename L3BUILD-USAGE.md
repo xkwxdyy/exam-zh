@@ -124,7 +124,7 @@ tagfiles         -- 需要更新版本号的文件
 - pkg, version, author, email
 - summary, description
 - license (lppl1.3c)
-- ctanPath (/macros/latex/contrib/exam-zh)
+- ctanPath (`/macros/xetex/latex/exam-zh`)
 - repository URLs
 
 ## 与 build.py 的对比

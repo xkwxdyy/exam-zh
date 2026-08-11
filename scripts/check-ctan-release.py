@@ -15,6 +15,7 @@ import release_notes
 ROOT = Path(__file__).resolve().parent.parent
 VERSION_RE = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+")
 DATE_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+EXPECTED_CTAN_PATH = "/macros/xetex/latex/exam-zh"
 FORBIDDEN_SUFFIXES = (
     ".aux",
     ".curlopt",
@@ -59,11 +60,20 @@ def lua_string(name: str, content: str) -> str:
     return match.group(1)
 
 
+def validate_ctan_path(content: str) -> None:
+    ctan_path = lua_string("ctanPath", content)
+    if ctan_path != EXPECTED_CTAN_PATH:
+        raise ReleaseError(
+            f"build.lua ctanPath must be {EXPECTED_CTAN_PATH}, got {ctan_path}"
+        )
+
+
 def release_metadata(tag: str) -> tuple[str, str, str]:
     if not VERSION_RE.fullmatch(tag):
         raise ReleaseError(f"tag must have the form vX.Y.Z, got {tag!r}")
 
     build_lua = read(ROOT / "build.lua")
+    validate_ctan_path(build_lua)
     version = lua_string("version", build_lua)
     date = lua_string("date", build_lua)
     if version != tag:

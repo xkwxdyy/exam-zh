@@ -1806,18 +1806,25 @@
   \tn{subject} 的格式命令。默认为 |\sffamily \bfseries \huge|。
 \end{function}
 
-\begin{function}[added = 2022-07-03]{title/top-sep}
-  \begin{examzhsyntax}[emph={[1]top-sep}]
-    top-sep = (*\meta{弹性长度}*)
+\begin{function}[added = 2026-08-11]{title/subject-sep}
+  \begin{examzhsyntax}[emph={[1]subject-sep}]
+    subject-sep = (*\meta{长度}*)
   \end{examzhsyntax}
-  \tn{title} 和 \tn{subject} 的整体上方间距。默认为 |-.5em plus 0.3em minus 0.2em|。
+  \tn{title} 和 \tn{subject} 之间的间距。默认为 |-.35em|。仅在 \tn{subject} 非空时生效。
 \end{function}
 
-\begin{function}[added = 2022-07-03]{title/bottom-sep}
-  \begin{examzhsyntax}[emph={[1]bottom-sep}]
-    bottom-sep = (*\meta{弹性长度}*)
+\begin{function}[added = 2022-07-03, updated = 2026-08-11]{title/top-sep}
+  \begin{examzhsyntax}[emph={[1]top-sep}]
+    top-sep = (*\meta{长度}*)
   \end{examzhsyntax}
-  \tn{title} 和 \tn{subject} 的整体下方间距。默认为 |0em plus 0.3em minus 0.2em|。
+  \tn{title} 上方的间距。默认为 |-.5em|。
+\end{function}
+
+\begin{function}[added = 2022-07-03, updated = 2026-08-11]{title/bottom-sep}
+  \begin{examzhsyntax}[emph={[1]bottom-sep}]
+    bottom-sep = (*\meta{长度}*)
+  \end{examzhsyntax}
+  \tn{title} 和 \tn{subject} 整体下方的间距。默认为 |.33em|。
 \end{function}
 
 

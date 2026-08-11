@@ -1,0 +1,26 @@
+\documentclass{exam-zh}
+
+\input{regression-test}
+
+\title{A sufficiently long examination title}
+\subject[8em]{Math}
+
+\begin{document}
+\START
+
+\ExplSyntaxOn
+\vbox_set:Nn \l_tmpa_box
+  {
+    \hsize = 40em
+    \maketitle
+    Body~text~following~the~title.
+  }
+\TYPE
+  {
+    title-block-height=
+    \dim_eval:n { \box_ht:N \l_tmpa_box + \box_dp:N \l_tmpa_box }
+  }
+\ExplSyntaxOff
+
+\END
+\end{document}

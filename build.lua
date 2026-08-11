@@ -12,8 +12,8 @@
 --]==========================================]--
 
 module           = "exam-zh"
-version          = "v0.3.6"
-date             = "2026-08-01"
+version          = "v0.3.7"
+date             = "2026-08-11"
 maintainer       = "Kangwei Xia"
 uploader         = maintainer
 email            = "kangweixia_xdyy@163.com"
@@ -117,7 +117,7 @@ uploadconfig = {
   announcement = announcement,
   note         = note,
   license      = "lppl1.3c",
-  ctanPath     = "/macros/latex/contrib/" .. module,
+  ctanPath     = "/macros/xetex/latex/exam-zh",
   home         = repository,
   support      = repository .. "/issues",
   bugtracker   = repository .. "/issues",

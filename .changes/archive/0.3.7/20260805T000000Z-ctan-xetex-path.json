@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "ctan-xetex-path",
+  "changes": [
+    {
+      "id": "ctan-xetex-path",
+      "type": "fixed",
+      "zh": "修正 CTAN 自动上传目录为 `/macros/xetex/latex/exam-zh`；Dashboard 对既有发布 Tag 的提交元数据同样执行归一化，并在验证与正式上传阶段阻止错误目录进入 CTAN。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

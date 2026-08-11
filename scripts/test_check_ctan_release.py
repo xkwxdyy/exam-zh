@@ -18,6 +18,22 @@ check_ctan_release = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check_ctan_release)
 
 
+class MetadataValidationTests(unittest.TestCase):
+    def test_accepts_xetex_ctan_path(self) -> None:
+        check_ctan_release.validate_ctan_path(
+            'ctanPath = "/macros/xetex/latex/exam-zh"\n'
+        )
+
+    def test_rejects_generic_latex_contrib_ctan_path(self) -> None:
+        with self.assertRaisesRegex(
+            check_ctan_release.ReleaseError,
+            "/macros/xetex/latex/exam-zh",
+        ):
+            check_ctan_release.validate_ctan_path(
+                'ctanPath = "/macros/latex/contrib/exam-zh"\n'
+            )
+
+
 class ArchiveValidationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()

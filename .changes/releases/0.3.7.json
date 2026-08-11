@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "version": "0.3.7",
+  "date": "2026-08-11",
+  "source_fragments": [
+    "20260801T170000Z-release-commit-changelog-body.json",
+    "20260803T000000Z-ctan-release-reuse.json",
+    "20260803T150000Z-ctan-manual-dependencies.json",
+    "20260803T151000Z-ctan-texlive-closure.json",
+    "20260803T152000Z-ctan-tagged-manual-artifacts.json",
+    "20260804T013000Z-ctan-regression-diagnostics.json",
+    "20260804T020500Z-ctan-published-archive.json",
+    "20260804T022900Z-ctan-artifact-actions.json",
+    "20260805T000000Z-ctan-xetex-path.json",
+    "20260811T073113Z-title-subject-centering.json",
+    "20260811T073232Z-problem-enumerate-labelsep.json"
+  ],
+  "changes": [
+    {
+      "id": "release-preparation-manual-review",
+      "type": "changed",
+      "zh": "强化 Dashboard 的 AI 发布内容整理：逐条对照用户可见 Changelog 审阅手册正文和短示例，明确版本元数据不算内容优化，并要求检查排版效果及在结束前清空临时文件。",
+      "announce": false
+    },
+    {
+      "id": "release-commit-changelog-body",
+      "type": "changed",
+      "zh": "改进 Dashboard 发布链的 Git 提交信息：保留简洁的版本标题，并在正文中自动附上该版本结构化 Changelog 的完整中文条目。",
+      "announce": false
+    },
+    {
+      "id": "ctan-release-reuse",
+      "type": "changed",
+      "zh": "改进 Dashboard 的单独 CTAN 发布：自动复用最新已成功发布到 GitHub 的稳定版本，不再递增版本号或重复发布 GitHub、Gitee。",
+      "announce": false
+    },
+    {
+      "id": "ctan-manual-dependencies",
+      "type": "fixed",
+      "zh": "补齐 CTAN Actions 编译完整手册和入门手册所需的 TeX Live 直接依赖，确保既有发布标签可在隔离环境中完成归档校验。",
+      "announce": false
+    },
+    {
+      "id": "ctan-texlive-closure",
+      "type": "fixed",
+      "zh": "按手册编译的实际依赖闭包修正 CTAN Actions 的 TeX Live 包名与缺失依赖，避免隔离构建在安装或载入 `tikzpagenodes` 时中断。",
+      "announce": false
+    },
+    {
+      "id": "ctan-tagged-manual-artifacts",
+      "type": "fixed",
+      "zh": "调整既有 CTAN 标签的发布校验：从对应 GitHub Release 资产恢复已发布的两份手册 PDF，并继续在隔离环境中完成示例、回归、归档和上传验证，避免旧标签因字体不可用而无法复现手册。",
+      "announce": false
+    },
+    {
+      "id": "ctan-published-archive",
+      "type": "fixed",
+      "zh": "将 CTAN 发布改为复用 GitHub Release 中已测试的 CTAN-ready 归档，避免历史版本因 TeX Live 依赖及回归输出漂移而重复构建失败，并校验上传前后归档 SHA-256 与 CTAN 响应。",
+      "announce": false
+    },
+    {
+      "id": "ctan-xetex-path",
+      "type": "fixed",
+      "zh": "修正 CTAN 自动上传目录为 `/macros/xetex/latex/exam-zh`；Dashboard 对既有发布 Tag 的提交元数据同样执行归一化，并在验证与正式上传阶段阻止错误目录进入 CTAN。",
+      "announce": false
+    },
+    {
+      "id": "title-subject-centering",
+      "type": "fixed",
+      "zh": "修复 `\\title` 与 `\\subject` 通过 `center` 环境排版时叠加该环境自身的段间距，导致 `title/top-sep`、`title/bottom-sep` 实际显示间距与设置值不一致的问题；改为直接使用 `\\centering` 分组输出，并新增 `title/subject-sep` 键单独控制标题与科目之间的间距（默认 `-.35em`），同时将 `title/top-sep` 与 `title/bottom-sep` 的默认值调整为 `-.5em` 与 `.33em`。",
+      "announce": false
+    },
+    {
+      "id": "problem-enumerate-labelsep",
+      "type": "fixed",
+      "zh": "修复 `problem` 环境内第一层 `enumerate` 序号与文字之间遗留的 4pt 固定间距，使其与该环境内第二、三层 `enumerate` 保持一致的贴紧排版。",
+      "announce": false
+    }
+  ]
+}

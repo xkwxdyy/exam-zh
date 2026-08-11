@@ -8,6 +8,8 @@
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-08-11
+
 ### Changed
 
 - 强化 Dashboard 的 AI 发布内容整理：逐条对照用户可见 Changelog 审阅手册正文和短示例，明确版本元数据不算内容优化，并要求检查排版效果及在结束前清空临时文件。
@@ -20,6 +22,9 @@
 - 按手册编译的实际依赖闭包修正 CTAN Actions 的 TeX Live 包名与缺失依赖，避免隔离构建在安装或载入 `tikzpagenodes` 时中断。
 - 调整既有 CTAN 标签的发布校验：从对应 GitHub Release 资产恢复已发布的两份手册 PDF，并继续在隔离环境中完成示例、回归、归档和上传验证，避免旧标签因字体不可用而无法复现手册。
 - 将 CTAN 发布改为复用 GitHub Release 中已测试的 CTAN-ready 归档，避免历史版本因 TeX Live 依赖及回归输出漂移而重复构建失败，并校验上传前后归档 SHA-256 与 CTAN 响应。
+- 修正 CTAN 自动上传目录为 `/macros/xetex/latex/exam-zh`；Dashboard 对既有发布 Tag 的提交元数据同样执行归一化，并在验证与正式上传阶段阻止错误目录进入 CTAN。
+- 修复 `\title` 与 `\subject` 通过 `center` 环境排版时叠加该环境自身的段间距，导致 `title/top-sep`、`title/bottom-sep` 实际显示间距与设置值不一致的问题；改为直接使用 `\centering` 分组输出，并新增 `title/subject-sep` 键单独控制标题与科目之间的间距（默认 `-.35em`），同时将 `title/top-sep` 与 `title/bottom-sep` 的默认值调整为 `-.5em` 与 `.33em`。
+- 修复 `problem` 环境内第一层 `enumerate` 序号与文字之间遗留的 4pt 固定间距，使其与该环境内第二、三层 `enumerate` 保持一致的贴紧排版。
 
 ## [0.3.6] - 2026-08-01
 

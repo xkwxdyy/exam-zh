@@ -283,9 +283,9 @@ Completed box being shipped out [1]
 ...\write-{}
 ...\special{color push gray 0}
 ...\glue(\topskip) 2.5
-...\hbox(7.5+2.49998)x308.22, glue set 124.79fil, shifted 36.78
+...\hbox(7.5+2.49998)x312.22, glue set 128.79fil, shifted 32.78
 ....\hbox(7.5+2.49998)x0.0
-.....\glue -36.78
+.....\glue -32.78
 .....\hbox(6.66+0.0)x0.0, glue set - 20.0fil
 ......\hbox(6.66+0.0)x20.0
 .......\glue 20.0
@@ -303,10 +303,10 @@ Completed box being shipped out [1]
 ........\special{color pop}
 .......\glue 6.99997
 ......\glue 0.0 plus 1.0fil minus 1.0fil
-.....\glue 36.78
+.....\glue 32.78
 .....\glue 0.0
 .....\glue -12.78
-.....\glue -4.0
+.....\glue 0.0
 .....\hbox(7.5+2.49998)x12.78, glue set 12.78fil
 ......\special{color push gray 0}
 ......\penalty 10000
@@ -317,7 +317,7 @@ Completed box being shipped out [1]
 .......\kern -0.0002
 .......\kern 0.0002
 ......\special{color pop}
-.....\glue 4.0
+.....\glue 0.0
 ....\penalty 0
 ....\TU/lmr/m/n/10 First
 ....\glue 3.33 plus 1.665 minus 1.11
@@ -340,11 +340,11 @@ Completed box being shipped out [1]
 ...\glue(\parskip) 2.0 plus 1.0 minus 1.0
 ...\glue(\parskip) 0.0
 ...\glue(\baselineskip) 2.00002
-...\hbox(7.5+2.49998)x308.22, glue set 252.11fil, shifted 36.78
+...\hbox(7.5+2.49998)x312.22, glue set 256.11fil, shifted 32.78
 ....\hbox(7.5+2.49998)x0.0
 .....\glue 0.0
 .....\glue -12.78
-.....\glue -4.0
+.....\glue 0.0
 .....\hbox(7.5+2.49998)x12.78, glue set 12.78fil
 ......\special{color push gray 0}
 ......\penalty 10000
@@ -355,7 +355,7 @@ Completed box being shipped out [1]
 .......\kern -0.0002
 .......\kern 0.0002
 ......\special{color pop}
-.....\glue 4.0
+.....\glue 0.0
 ....\penalty 0
 ....\TU/lmr/m/n/10 Second
 ....\glue 3.33 plus 1.665 minus 1.11
@@ -368,11 +368,11 @@ Completed box being shipped out [1]
 ...\glue(\parskip) 2.0 plus 1.0 minus 1.0
 ...\glue(\parskip) 0.0
 ...\glue(\baselineskip) 2.00002
-...\hbox(7.5+2.49998)x308.22, glue set 257.62999fil, shifted 36.78
+...\hbox(7.5+2.49998)x312.22, glue set 261.62999fil, shifted 32.78
 ....\hbox(7.5+2.49998)x0.0
 .....\glue 0.0
 .....\glue -12.78
-.....\glue -4.0
+.....\glue 0.0
 .....\hbox(7.5+2.49998)x12.78, glue set 12.78fil
 ......\special{color push gray 0}
 ......\penalty 10000
@@ -383,7 +383,7 @@ Completed box being shipped out [1]
 .......\kern -0.0002
 .......\kern 0.0002
 ......\special{color pop}
-.....\glue 4.0
+.....\glue 0.0
 ....\penalty 0
 ....\TU/lmr/m/n/10 Third
 ....\glue 3.33 plus 1.665 minus 1.11
@@ -446,11 +446,11 @@ Completed box being shipped out [1]
 ...\glue(\parskip) 2.0 plus 1.0 minus 1.0
 ...\glue(\parskip) 0.0
 ...\glue(\baselineskip) 2.56001
-...\hbox(7.5+2.49998)x308.22, glue set 205.70999fil, shifted 36.78
+...\hbox(7.5+2.49998)x312.22, glue set 209.70999fil, shifted 32.78
 ....\hbox(7.5+2.49998)x0.0
 .....\glue 0.0
 .....\glue -12.78
-.....\glue -4.0
+.....\glue 0.0
 .....\hbox(7.5+2.49998)x12.78, glue set 12.78fil
 ......\special{color push gray 0}
 ......\penalty 10000
@@ -461,7 +461,7 @@ Completed box being shipped out [1]
 .......\kern -0.0002
 .......\kern 0.0002
 ......\special{color pop}
-.....\glue 4.0
+.....\glue 0.0
 ....\penalty 0
 ....\TU/lmr/m/n/10 First
 ....\glue 3.33 plus 1.665 minus 1.11
@@ -480,11 +480,11 @@ Completed box being shipped out [1]
 ...\glue(\parskip) 2.0 plus 1.0 minus 1.0
 ...\glue(\parskip) 0.0
 ...\glue(\baselineskip) 2.00002
-...\hbox(7.5+2.49998)x308.22, glue set 196.20999fil, shifted 36.78
+...\hbox(7.5+2.49998)x312.22, glue set 200.20999fil, shifted 32.78
 ....\hbox(7.5+2.49998)x0.0
 .....\glue 0.0
 .....\glue -12.78
-.....\glue -4.0
+.....\glue 0.0
 .....\hbox(7.5+2.49998)x12.78, glue set 12.78fil
 ......\special{color push gray 0}
 ......\penalty 10000
@@ -495,7 +495,7 @@ Completed box being shipped out [1]
 .......\kern -0.0002
 .......\kern 0.0002
 ......\special{color pop}
-.....\glue 4.0
+.....\glue 0.0
 ....\penalty 0
 ....\TU/lmr/m/n/10 Second
 ....\glue 3.33 plus 1.665 minus 1.11
