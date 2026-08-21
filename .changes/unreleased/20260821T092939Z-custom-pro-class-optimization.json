@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "custom-pro-class-optimization",
+  "changes": [
+    {
+      "id": "custom-pro-class-optimization",
+      "type": "changed",
+      "zh": "深度优化 exam-zh-pro 定制类：同步上游排版修复，增强自定义纸张、题目环境、自动宽度填空与图文排版。",
+      "changelog": false,
+      "announce": false
+    }
+  ]
+}
