@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "chinese-composition-grid",
+  "changes": [
+    {
+      "id": "chinese-composition-grid",
+      "type": "added",
+      "zh": "语文模块新增基于 `hanzibox` 的 `\\compositiongrid` 中文作文格命令：必选参数指定最少作文格数并自动向上补齐整行，支持按当前页剩余空间自动分页、在 600 等累计字数处显示提示，并可设置每行格数、按当前字号缩放或直接指定格子大小、行距比例、格型、颜色和线宽；同时补充真实跨页示例与手册说明。",
+      "changelog": true,
+      "announce": true,
+      "en": "Added a `hanzibox`-based `\\compositiongrid` command to the Chinese module. Its mandatory argument requests a minimum cell count rounded up to a complete row; it also supports automatic page splitting, cumulative character-count markers, font-relative or explicit cell sizing, configurable grid styling, and a realistic multi-page example."
+    }
+  ]
+}

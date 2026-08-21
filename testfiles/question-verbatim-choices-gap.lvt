@@ -1,0 +1,25 @@
+\documentclass[fontset=fandol]{exam-zh}
+
+\input{regression-test}
+
+\makeatletter
+\AddToHook{env/verbatim/end}
+  {\TYPE{question-verbatim-topsepadd=\the\@topsepadd}}
+\makeatother
+
+\begin{document}
+\START
+
+\begin{question}
+  题干。
+  \begin{verbatim}
+    code line
+  \end{verbatim}
+  \begin{choices}
+    \item 选项 A
+    \item 选项 B
+  \end{choices}
+\end{question}
+
+\END
+\end{document}

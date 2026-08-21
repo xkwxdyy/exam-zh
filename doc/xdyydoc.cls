@@ -821,6 +821,19 @@
   ItalicFont     = *-Italic,
   BoldItalicFont = *-BoldItalic,
   Scale          = 1.1]
+% Libertinus is an OpenType family and does not ship a TS1 .fd file.  Map
+% legacy text symbols to Computer Modern instead of letting NFSS abort when
+% documentation examples request a TS1 symbol.
+\DeclareFontFamily{TS1}{LibertinusSerif}{}
+\DeclareFontShape{TS1}{LibertinusSerif}{m}{n}{<->ssub*cmr/m/n}{}
+\DeclareFontShape{TS1}{LibertinusSerif}{b}{n}{<->ssub*cmr/b/n}{}
+\DeclareFontShape{TS1}{LibertinusSerif}{m}{it}{<->ssub*cmr/m/it}{}
+\DeclareFontShape{TS1}{LibertinusSerif}{b}{it}{<->ssub*cmr/b/it}{}
+\DeclareFontFamily{TS1}{LibertinusSerif(0)}{}
+\DeclareFontShape{TS1}{LibertinusSerif(0)}{m}{n}{<->ssub*cmr/m/n}{}
+\DeclareFontShape{TS1}{LibertinusSerif(0)}{b}{n}{<->ssub*cmr/b/n}{}
+\DeclareFontShape{TS1}{LibertinusSerif(0)}{m}{it}{<->ssub*cmr/m/it}{}
+\DeclareFontShape{TS1}{LibertinusSerif(0)}{b}{it}{<->ssub*cmr/b/it}{}
 \setsansfont{IBMPlexSansCondensed}[%
   Extension      = .otf,
   UprightFont    = *-Regular,
@@ -847,18 +860,44 @@
     StylisticSet = 1,
     range        = { \subsetneqq, \supsetneqq, \checkmark} ,
   ]
-\setCJKmainfont{Source Han Serif SC}[%
-  ItalicFont     = FZKai-Z03,
-  CharacterWidth = Full]
-\setCJKsansfont{Source Han Sans SC}[%
-  ItalicFont     = *,
-  CharacterWidth = Full]
-\setCJKmonofont{Source Han Sans SC}[%
-  UprightFont    = * Normal,
-  BoldFont       = * Bold,
-  AutoFakeSlant  = 0.1763,  % = tan(10 deg)
-  Scale          = 0.8903,
-  CharacterWidth = Full]
+% Prefer the documentation's intended CJK fonts, but keep the manual
+% buildable on TeX installations where the macOS font names are unavailable.
+\IfFontExistsTF{Source Han Serif SC}{%
+  \IfFontExistsTF{FZKai-Z03}{%
+    \setCJKmainfont{Source Han Serif SC}[%
+      ItalicFont     = FZKai-Z03,
+      CharacterWidth = Full]%%
+  }{%
+    \setCJKmainfont{Source Han Serif SC}[%
+      CharacterWidth = Full]%%
+  }%%
+}{%
+  \setCJKmainfont{FandolSong-Regular.otf}[%
+    BoldFont       = FandolSong-Bold.otf,
+    ItalicFont     = FandolKai-Regular.otf,
+    BoldItalicFont = FandolKai-Regular.otf,
+    CharacterWidth = Full]%%
+}%%
+\IfFontExistsTF{Source Han Sans SC}{%
+  \setCJKsansfont{Source Han Sans SC}[%
+    ItalicFont     = *,
+    CharacterWidth = Full]%%
+  \setCJKmonofont{Source Han Sans SC}[%
+    UprightFont    = * Normal,
+    BoldFont       = * Bold,
+    AutoFakeSlant  = 0.1763,  % = tan(10 deg)
+    Scale          = 0.8903,
+    CharacterWidth = Full]%%
+}{%
+  \setCJKsansfont{FandolHei-Regular.otf}[%
+    BoldFont       = FandolHei-Bold.otf,
+    CharacterWidth = Full]%%
+  \setCJKmonofont{FandolHei-Regular.otf}[%
+    BoldFont       = FandolHei-Bold.otf,
+    AutoFakeSlant  = 0.1763,
+    Scale          = 0.8903,
+    CharacterWidth = Full]%%
+}%%
 \ctexset{%
   section/name        = {第,节},
   section/format+     = \raggedright,

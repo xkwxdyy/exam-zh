@@ -755,7 +755,7 @@
 
 \subsubsection{选择标记题型}
 
-% 本节主要介绍 \file{exam-zh-chinese.sty} 模块中的命令环境的使用。要注意的是，此模块中大部分命令环境设计灵感和原因一般来自于语文学科，但是具体使用起来一般不限制于语文学科。
+本节主要介绍 \file{exam-zh-chinese.sty} 模块中的命令和环境。该模块的功能主要来自语文学科的排版需求，但 \env{select} 和 \env{lineto} 也可以用于其他学科。
 
 \begin{function}[added = 2022-07-19,updated = 2022-07-23]{select 环境}
   \begin{examzhsyntax}[emph={[2]select}]
@@ -869,7 +869,29 @@
 \end{latexexample}
 
 
+\subsubsection{语文-作文格}
+
+\begin{function}[added = 2026-08-11]{\compositiongrid}
+  \begin{examzhsyntax}[emph={[1]compositiongrid}]
+    \compositiongrid(*\oarg{键值列表}\marg{目标字数}*)
+  \end{examzhsyntax}
+  中文作文答题格命令，底层使用 \pkg{hanzibox} 的 \tn{writegrid} 绘制。
+  必选参数表示希望提供的最少作文格数；实际格数会按每行格数向上补齐成完整行。
+  例如“不少于 800 字”的作文通常可用 |\compositiongrid{1000}| 提供约 1000 格。
+  \meta{键值列表} 见~\ref{subsubsec:参数-作文格} 节。网格默认先利用当前页的剩余空间，
+  再自动分页续排。
+\end{function}
+
+\begin{latexexample}{\tn{compositiongrid} 命令示例}
+  \compositiongrid
+    [columns = 12, row-sep-ratio = 2, count-marks = {24}]
+    {36}
+\end{latexexample}
+
+
 \subsubsection{英语-作文框}
+
+\file{exam-zh-english.sty} 模块提供英语学科相关的命令和环境。
 
 \begin{function}[added = 2022-07-26]{writingbox 环境}
   \begin{examzhsyntax}[emph={[2]writingbox}]
@@ -897,6 +919,31 @@
     \vspace*{4em}
   \end{writingbox}
 \end{latexexample}
+
+\begin{function}[added = 2026-08-21]{\writinglines 命令}
+  \begin{examzhsyntax}[emph={[1]\writinglines}]
+    \writinglines(*\oarg{键值列表}\marg{行数}*)
+  \end{examzhsyntax}
+  生成英语作文答题横线框。横线两端与作文框边框对齐，命令不参与填空答案或师生两版处理。
+  可选键包括：\kvopt{line-width}{长度}、\kvopt{line-height}{长度}、
+  \kvopt{line-thickness}{长度}、\kvopt{line-color}{颜色}，以及传递给底层
+  \env{tcolorbox} 的 \kvopt{box-options}{键值列表}。
+\end{function}
+
+\begin{latexexample}{\tn{writinglines} 命令示例}
+  \writinglines
+    [line-height = 0.75cm, line-thickness = 0.4pt]
+    {8}
+\end{latexexample}
+
+需要把横线插入已有的作文框时，也可以直接使用单行命令：
+\begin{latexcode}
+  \begin{writingbox}[left = 0pt, right = 0pt, boxsep = 0pt]
+    \writingline
+    \writingline
+    \writingline
+  \end{writingbox}
+\end{latexcode}
 
 
 \subsubsection{师生两版}   \label{subsubsec:命令环境-师生两版}
@@ -2875,6 +2922,105 @@
   本
 \end{latexexample}
 
+
+
+\subsubsection{作文格} \label{subsubsec:参数-作文格}
+
+\begin{function}[added = 2026-08-11]{composition-grid}
+  \begin{examzhsyntax}[emph={[1]composition-grid}]
+    composition-grid = (*\marg{键值列表}*)
+    composition-grid/(*\meta{key}*) = (*\meta{value}*)
+  \end{examzhsyntax}
+  该选项包含多个子项目，用于设置 \tn{compositiongrid} 命令。可以在
+  \tn{examsetup} 中使用，也可以在 \tn{compositiongrid} 的可选参数中使用。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/columns}
+  \begin{examzhsyntax}[emph={[1]columns}]
+    columns = (*\meta{整数}*)
+  \end{examzhsyntax}
+  每行的格子数，默认为 |20|。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/row-sep-ratio}
+  \begin{examzhsyntax}[emph={[1]row-sep-ratio}]
+    row-sep-ratio = (*\meta{数值}*)
+  \end{examzhsyntax}
+  行间距比例，直接对应 \pkg{hanzibox} 的 |gridsepv|，默认为 |2|。
+  数值越大，行间距越小。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/cell-format}
+  \begin{examzhsyntax}[emph={[1]cell-format}]
+    cell-format = (*\meta{字号命令}*)
+  \end{examzhsyntax}
+  用于计算单个作文格尺寸的原始字号命令，直接对应 \pkg{hanzibox} 的 |charf|。
+  默认值为空；设置后优先于 \opt{cell-size} 和 \opt{cell-scale}，主要用于高级定制。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/cell-size,composition-grid/cell-scale}
+  \begin{examzhsyntax}[emph={[1]cell-size,cell-scale}]
+    cell-size = (*<auto|\meta{长度}>*)
+    cell-scale = (*\meta{数值}*)
+  \end{examzhsyntax}
+  格子的边长。\opt{cell-size} 默认为 |auto|，此时先取得命令所在位置的当前字号，
+  再乘以 \opt{cell-scale}；比例默认为 |1.75|。也可用 |cell-size = 18pt| 直接指定。
+  宏包会将该边长换算成 \pkg{hanzibox} 使用的基准字号。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/frame-type}
+  \begin{examzhsyntax}[emph={[1]frame-type}]
+    frame-type = (*<口|十|米|...>*)
+  \end{examzhsyntax}
+  格子类型，直接对应 \pkg{hanzibox} 的 |frametype|，默认为 |口|。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/frame-color,composition-grid/fill-color}
+  \begin{examzhsyntax}[emph={[1]frame-color,fill-color}]
+    frame-color = (*\meta{颜色}*)
+    fill-color = (*\meta{颜色}*)
+  \end{examzhsyntax}
+  格线颜色和格子填充颜色。格线颜色默认为 |black|，填充颜色默认为空，即不填充。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/frame-linewidth}
+  \begin{examzhsyntax}[emph={[1]frame-linewidth}]
+    frame-linewidth = (*\meta{长度}*)
+  \end{examzhsyntax}
+  格线宽度，默认为 |0.4pt|。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/auto-break}
+  \begin{examzhsyntax}[emph={[1]auto-break}]
+    auto-break = (*<true|false>*)
+  \end{examzhsyntax}
+  是否根据当前页的剩余高度自动拆分作文格，默认为 |true|。第一页尽量利用已有空间，
+  后续部分自动从下一页继续；设为 |false| 时，整个网格作为不可分页的一块排版。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/count-marks}
+  \begin{examzhsyntax}[emph={[1]count-marks}]
+    count-marks = (*\marg{整数列表}*)
+  \end{examzhsyntax}
+  在指定累计字数所在的行末显示小字提示，默认为空。例如生成 1000 格时，
+  可以将提示位置设为 600 和 800 格。
+  每个数值应为 |columns| 的正整数倍，且不能超过作文格总容量。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/count-format,composition-grid/count-sep}
+  \begin{examzhsyntax}[emph={[1]count-format,count-sep}]
+    count-format = (*\meta{格式命令}*)
+    count-sep = (*\meta{长度}*)
+  \end{examzhsyntax}
+  字数提示的格式和它与网格右边框的距离，默认分别为 |\scriptsize| 和 |2pt|。
+\end{function}
+
+\begin{function}[added = 2026-08-11]{composition-grid/hanzibox-options}
+  \begin{examzhsyntax}[emph={[1]hanzibox-options}]
+    hanzibox-options = (*\marg{hanzibox 键值列表}*)
+  \end{examzhsyntax}
+  向 \pkg{hanzibox} 直接传递额外键值，供高级设置使用。这些键值在上述常用键之后生效。
+\end{function}
 
 
 \subsubsection{连线题型}  \label{subsubsec:参数-连线题型}

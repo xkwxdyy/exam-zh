@@ -419,6 +419,8 @@ xelatex "\def\SHOWANSWER{1}\input{exam-main.tex}"
 
 \subsubsection{语文试卷}
 
+以下功能由 \file{exam-zh-chinese.sty} 模块提供。
+
 \textbf{古诗排版：}
 
 使用 |poem| 环境：
@@ -442,7 +444,29 @@ xelatex "\def\SHOWANSWER{1}\input{exam-main.tex}"
   \end{material}
 \end{latexcode}
 
+\textbf{作文答题格：}
+
+\begin{latexcode}
+  \section{写作}
+
+  请以“窗外”为题，写一篇不少于 800 字的文章。
+
+  \compositiongrid
+    [row-sep-ratio = 3, count-marks = {600, 800}]
+    {1000}
+\end{latexcode}
+
+\tn{compositiongrid} 的必选参数是希望提供的最少作文格数，默认每行排 20 格。
+上例为“不少于 800 字”的作文提供 1000 格；如果格数不能整除每行格数，命令会自动
+向上补成完整一行。例如每行 24 格而目标为 1000 格时，实际会提供 1008 格。
+网格先利用当前页的剩余空间，再自动分页续排，不需要手动插入 \tn{clearpage}。
+|row-sep-ratio = 3| 采用较紧凑的行距，|count-marks = {600, 800}| 会在相应行末
+显示累计字数提示。格子大小可用 |cell-size| 直接指定；默认则按当前字号和
+|cell-scale| 的比例自动计算。
+
 \subsubsection{英语试卷}
+
+以下功能由 \file{exam-zh-english.sty} 模块提供。
 
 \textbf{作文答题框：}
 

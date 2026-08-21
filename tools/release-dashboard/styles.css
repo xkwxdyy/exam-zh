@@ -131,14 +131,14 @@ h2 { font-size: 22px; line-height: 1.2; font-weight: 600; margin-bottom: 0; }
 .action-card.hidden { display: none; }
 .action-card-top { display: flex; gap: 12px; align-items: flex-start; }
 .action-icon { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid rgba(117, 169, 219, .28); color: var(--blue); flex: 0 0 auto; }
-.action-card[data-risk="interactive"] .action-icon { color: var(--yellow); border-color: rgba(229, 195, 122, .34); }
+.action-card[data-risk="interactive"] .action-icon, .action-card[data-risk="interactive-codex"] .action-icon { color: var(--yellow); border-color: rgba(229, 195, 122, .34); }
 .action-card[data-risk="external"] .action-icon, .action-card[data-risk="mutating"] .action-icon { color: var(--red); border-color: rgba(237, 128, 123, .34); }
 .action-icon svg { width: 16px; height: 16px; }
 .action-card h3 { font-size: 14px; font-weight: 600; line-height: 1.25; margin: 1px 0 5px; }
 .action-card p { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 0; }
 .action-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 15px; }
 .risk-label { color: var(--green); font-size: 10px; }
-.risk-label.interactive { color: var(--yellow); }
+.risk-label.interactive, .risk-label.interactive-codex { color: var(--yellow); }
 .risk-label.external, .risk-label.mutating { color: var(--red); }
 .run-button, .primary-button, .secondary-button, .cancel-button, .text-button { border: 0; transition: background .18s, color .18s, border-color .18s, opacity .18s; }
 .run-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); padding: 7px 11px; color: var(--ink); background: transparent; font-size: 11px; }

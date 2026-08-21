@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "chinese-english-package-split",
+  "changes": [
+    {
+      "id": "chinese-english-package-split",
+      "type": "changed",
+      "zh": "将原 `exam-zh-chinese-english.sty` 拆分为职责独立的 `exam-zh-chinese.sty` 与 `exam-zh-english.sty`；文档类仍默认加载全部学科功能，并补充语文、英语基础示例及对应手册说明。",
+      "changelog": true,
+      "announce": true,
+      "en": "Split the combined Chinese and English module into `exam-zh-chinese.sty` and `exam-zh-english.sty`, while keeping both modules enabled by default in the class and adding focused examples and documentation."
+    }
+  ]
+}

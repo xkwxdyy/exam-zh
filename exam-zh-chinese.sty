@@ -9,12 +9,405 @@
 
 \RequirePackage{expl3}
 
-\ProvidesExplPackage {exam-zh-chinese-english} {2026-08-11} {v0.3.7}
-  {exam-zh chinese and english module}
+\ProvidesExplPackage {exam-zh-chinese} {2026-08-21} {v0.3.8}
+  {exam-zh Chinese module}
 
-\PassOptionsToPackage { tcolorbox } { most }
-\RequirePackage { tcolorbox }
+\RequirePackage { tikz }
 \RequirePackage { varwidth }
+\RequirePackage { hanzibox }
+
+% hanzibox 2.3.0 uses the former l3draw function names.
+\cs_if_exist:NF \draw_linewidth:n
+  { \cs_new_eq:NN \draw_linewidth:n \draw_set_linewidth:n }
+\cs_if_exist:NF \draw_dash_pattern:nn
+  { \cs_new_eq:NN \draw_dash_pattern:nn \draw_set_dash_pattern:nn }
+
+% 中文作文格
+\int_new:N \l__examzh_composition_grid_columns_int
+\int_new:N \l__examzh_composition_grid_target_count_int
+\int_new:N \l__examzh_composition_grid_rows_int
+\int_new:N \l__examzh_composition_grid_rows_done_int
+\int_new:N \l__examzh_composition_grid_rows_fit_int
+\int_new:N \l__examzh_composition_grid_chunk_rows_int
+\int_new:N \l__examzh_composition_grid_mark_int
+\tl_new:N \l__examzh_composition_grid_row_sep_ratio_tl
+\tl_new:N \l__examzh_composition_grid_frame_type_tl
+\tl_new:N \l__examzh_composition_grid_frame_color_tl
+\tl_new:N \l__examzh_composition_grid_fill_color_tl
+\tl_new:N \l__examzh_composition_grid_cell_format_tl
+\tl_new:N \l__examzh_composition_grid_cell_size_tl
+\tl_new:N \l__examzh_composition_grid_effective_cell_format_tl
+\tl_new:N \l__examzh_composition_grid_hanzibox_options_tl
+\tl_new:N \l__examzh_composition_grid_options_tl
+\tl_new:N \l__examzh_composition_grid_count_format_tl
+\clist_new:N \l__examzh_composition_grid_count_marks_clist
+\bool_new:N \l__examzh_composition_grid_auto_break_bool
+\fp_new:N \l__examzh_composition_grid_cell_scale_fp
+\dim_new:N \l__examzh_composition_grid_frame_linewidth_dim
+\dim_new:N \l__examzh_composition_grid_cell_size_dim
+\dim_new:N \l__examzh_composition_grid_effective_cell_size_dim
+\dim_new:N \l__examzh_composition_grid_first_row_height_dim
+\dim_new:N \l__examzh_composition_grid_row_stride_dim
+\dim_new:N \l__examzh_composition_grid_available_height_dim
+\dim_new:N \l__examzh_composition_grid_count_sep_dim
+\dim_new:N \l__examzh_composition_grid_mark_raise_dim
+\box_new:N \l__examzh_composition_grid_one_row_box
+\box_new:N \l__examzh_composition_grid_two_rows_box
+\box_new:N \l__examzh_composition_grid_chunk_box
+
+\keys_define:nn { exam-zh }
+  { composition-grid .meta:nn = { exam-zh / composition-grid } {#1} }
+
+\keys_define:nn { exam-zh / composition-grid }
+  {
+    columns .int_set:N = \l__examzh_composition_grid_columns_int,
+    row-sep-ratio .tl_set:N = \l__examzh_composition_grid_row_sep_ratio_tl,
+    frame-type .tl_set:N = \l__examzh_composition_grid_frame_type_tl,
+    frame-color .tl_set:N = \l__examzh_composition_grid_frame_color_tl,
+    fill-color .tl_set:N = \l__examzh_composition_grid_fill_color_tl,
+    cell-format .tl_set:N = \l__examzh_composition_grid_cell_format_tl,
+    cell-size .tl_set:N = \l__examzh_composition_grid_cell_size_tl,
+    cell-scale .fp_set:N = \l__examzh_composition_grid_cell_scale_fp,
+    hanzibox-options .tl_set:N = \l__examzh_composition_grid_hanzibox_options_tl,
+    frame-linewidth .dim_set:N = \l__examzh_composition_grid_frame_linewidth_dim,
+    auto-break .bool_set:N = \l__examzh_composition_grid_auto_break_bool,
+    count-marks .clist_set:N = \l__examzh_composition_grid_count_marks_clist,
+    count-format .tl_set:N = \l__examzh_composition_grid_count_format_tl,
+    count-sep .dim_set:N = \l__examzh_composition_grid_count_sep_dim
+  }
+
+\keys_set:nn { exam-zh / composition-grid }
+  {
+    columns         = 20,
+    row-sep-ratio   = 2,
+    frame-type      = 口,
+    frame-color     = black,
+    fill-color      =,
+    cell-format     =,
+    cell-size       = auto,
+    cell-scale      = 1.75,
+    hanzibox-options =,
+    frame-linewidth = 0.4pt,
+    auto-break      = true,
+    count-marks     =,
+    count-format    = \scriptsize,
+    count-sep       = 2pt
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid:nn #1#2
+  { \writegrid [#1] {#2} }
+
+\msg_new:nnn { exam-zh / chinese } { composition-grid-invalid-target }
+  { The~composition~grid~target~character~count~must~be~positive. }
+\msg_new:nnn { exam-zh / chinese } { composition-grid-invalid-columns }
+  { The~composition~grid~column~count~must~be~positive. }
+\msg_new:nnn { exam-zh / chinese } { composition-grid-row-too-tall }
+  { A~composition~grid~row~is~too~tall~for~the~page. }
+\msg_new:nnn { exam-zh / chinese } { composition-grid-invalid-mark }
+  {
+    Count~mark~'#1'~was~ignored.\\
+    Count~marks~must~be~positive~multiples~of~the~column~count~and~must~not
+    ~exceed~the~grid~capacity.
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_prepare_cell_format:
+  {
+    \tl_if_empty:NTF \l__examzh_composition_grid_cell_format_tl
+      {
+        \tl_if_eq:VnTF \l__examzh_composition_grid_cell_size_tl { auto }
+          {
+            \dim_set:Nn \l__examzh_composition_grid_cell_size_dim
+              {
+                \fp_to_dim:n
+                  {
+                    \l__examzh_composition_grid_cell_scale_fp
+                    * \f@size
+                  }
+              }
+          }
+          {
+            \dim_set:Nn \l__examzh_composition_grid_cell_size_dim
+              { \l__examzh_composition_grid_cell_size_tl }
+          }
+        % hanzibox adds 1pt around the base CJK glyph when sizing a frame.
+        \dim_set:Nn \l__examzh_composition_grid_effective_cell_size_dim
+          { \l__examzh_composition_grid_cell_size_dim - 1pt }
+        \tl_set:Nx \l__examzh_composition_grid_effective_cell_format_tl
+          {
+            \exp_not:N \fontsize
+              { \dim_use:N \l__examzh_composition_grid_effective_cell_size_dim }
+              {
+                \dim_eval:n
+                  { 1.2 \l__examzh_composition_grid_effective_cell_size_dim }
+              }
+            \exp_not:N \selectfont
+          }
+      }
+      {
+        \tl_set_eq:NN \l__examzh_composition_grid_effective_cell_format_tl
+          \l__examzh_composition_grid_cell_format_tl
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_prepare_options:
+  {
+    \__examzh_composition_grid_prepare_cell_format:
+    \tl_set:Nx \l__examzh_composition_grid_options_tl
+      {
+        gridcols       = \l__examzh_composition_grid_columns_int,
+        gridsepv       = \l__examzh_composition_grid_row_sep_ratio_tl,
+        frametype      = \l__examzh_composition_grid_frame_type_tl,
+        framecolor     = \l__examzh_composition_grid_frame_color_tl,
+        fillcolor      = \l__examzh_composition_grid_fill_color_tl,
+        charf          =
+          { \exp_not:V \l__examzh_composition_grid_effective_cell_format_tl },
+        framelinewidth = \l__examzh_composition_grid_frame_linewidth_dim
+      }
+    \tl_if_empty:NF \l__examzh_composition_grid_hanzibox_options_tl
+      {
+        \tl_put_right:Nn \l__examzh_composition_grid_options_tl { , }
+        \tl_put_right:NV \l__examzh_composition_grid_options_tl
+          \l__examzh_composition_grid_hanzibox_options_tl
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_write:n #1
+  {
+    \exp_args:NV \__examzh_composition_grid:nn
+      \l__examzh_composition_grid_options_tl {#1}
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_measure:
+  {
+    \hbox_set:Nn \l__examzh_composition_grid_one_row_box
+      { \__examzh_composition_grid_write:n {1} }
+    \hbox_set:Nn \l__examzh_composition_grid_two_rows_box
+      { \__examzh_composition_grid_write:n {2} }
+    \dim_set:Nn \l__examzh_composition_grid_first_row_height_dim
+      {
+        \box_ht:N \l__examzh_composition_grid_one_row_box
+        + \box_dp:N \l__examzh_composition_grid_one_row_box
+      }
+    \dim_set:Nn \l__examzh_composition_grid_row_stride_dim
+      {
+        \box_ht:N \l__examzh_composition_grid_two_rows_box
+        + \box_dp:N \l__examzh_composition_grid_two_rows_box
+        - \l__examzh_composition_grid_first_row_height_dim
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_set_rows_fit:
+  {
+    \dim_compare:nNnTF { \pagegoal } > { 10000pt }
+      {
+        \dim_set_eq:NN \l__examzh_composition_grid_available_height_dim
+          \textheight
+      }
+      {
+        \dim_set:Nn \l__examzh_composition_grid_available_height_dim
+          { \pagegoal - \pagetotal }
+      }
+    % Leave a small tolerance for page-builder rounding and the outer rule.
+    \dim_sub:Nn \l__examzh_composition_grid_available_height_dim { 1pt }
+    \dim_compare:nNnTF
+      { \l__examzh_composition_grid_available_height_dim }
+      < { \l__examzh_composition_grid_first_row_height_dim }
+      { \int_zero:N \l__examzh_composition_grid_rows_fit_int }
+      {
+        \int_set:Nn \l__examzh_composition_grid_rows_fit_int
+          {
+            1 + \int_div_truncate:nn
+              {
+                \dim_to_decimal_in_sp:n
+                  {
+                    \l__examzh_composition_grid_available_height_dim
+                    - \l__examzh_composition_grid_first_row_height_dim
+                  }
+              }
+              { \dim_to_decimal_in_sp:n { \l__examzh_composition_grid_row_stride_dim } }
+          }
+      }
+  }
+
+\prg_new_conditional:Npnn \__examzh_composition_grid_mark_valid:n #1 { T }
+  {
+    \int_set:Nn \l__examzh_composition_grid_mark_int {#1}
+    \bool_lazy_all:nTF
+      {
+        { \int_compare_p:n { \l__examzh_composition_grid_mark_int > 0 } }
+        {
+          \int_compare_p:n
+            {
+              \int_mod:nn
+                { \l__examzh_composition_grid_mark_int }
+                { \l__examzh_composition_grid_columns_int }
+              = 0
+            }
+        }
+        {
+          \int_compare_p:n
+            {
+              \l__examzh_composition_grid_mark_int
+              <= \l__examzh_composition_grid_rows_int
+                 * \l__examzh_composition_grid_columns_int
+            }
+        }
+      }
+      { \prg_return_true: }
+      {
+        \msg_warning:nnn { exam-zh / chinese }
+          { composition-grid-invalid-mark } {#1}
+        \prg_return_false:
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_mark:nn #1#2
+  {
+    \__examzh_composition_grid_mark_valid:nT {#2}
+      {
+        \int_set:Nn \l_tmpa_int
+          {
+            \int_div_truncate:nn
+              { \l__examzh_composition_grid_mark_int }
+              { \l__examzh_composition_grid_columns_int }
+          }
+        \bool_lazy_and:nnT
+          { \int_compare_p:n { \l_tmpa_int > #1 } }
+          {
+            \int_compare_p:n
+              {
+                \l_tmpa_int
+                <= #1 + \l__examzh_composition_grid_chunk_rows_int
+              }
+          }
+          {
+            \dim_set:Nn \l__examzh_composition_grid_mark_raise_dim
+              {
+                -\box_dp:N \l__examzh_composition_grid_chunk_box
+                + \int_eval:n
+                    {
+                      #1 + \l__examzh_composition_grid_chunk_rows_int
+                      - \l_tmpa_int
+                    }
+                  \l__examzh_composition_grid_row_stride_dim
+                + 0.6pt
+              }
+            \hbox_overlap_right:n
+              {
+                \skip_horizontal:n
+                  {
+                    \box_wd:N \l__examzh_composition_grid_chunk_box
+                    + \l__examzh_composition_grid_count_sep_dim
+                  }
+                \smash
+                  {
+                    \raisebox
+                      { \l__examzh_composition_grid_mark_raise_dim }
+                      { \tl_use:N \l__examzh_composition_grid_count_format_tl #2 }
+                  }
+              }
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_typeset_chunk:nn #1#2
+  {
+    \int_set:Nn \l__examzh_composition_grid_chunk_rows_int {#2}
+    \hbox_set:Nn \l__examzh_composition_grid_chunk_box
+      { \__examzh_composition_grid_write:n {#2} }
+    \nointerlineskip
+    \hbox:n
+      {
+        \clist_map_inline:Nn \l__examzh_composition_grid_count_marks_clist
+          { \__examzh_composition_grid_mark:nn {#1} {##1} }
+        \box_use_drop:N \l__examzh_composition_grid_chunk_box
+      }
+  }
+
+\cs_new_protected:Npn \__examzh_composition_grid_typeset_auto:
+  {
+    \__examzh_composition_grid_measure:
+    \int_zero:N \l__examzh_composition_grid_rows_done_int
+    \int_while_do:nn
+      { \l__examzh_composition_grid_rows_done_int < \l__examzh_composition_grid_rows_int }
+      {
+        \__examzh_composition_grid_set_rows_fit:
+        \int_compare:nNnT { \l__examzh_composition_grid_rows_fit_int } = {0}
+          {
+            \newpage
+            \__examzh_composition_grid_set_rows_fit:
+          }
+        \int_compare:nNnTF { \l__examzh_composition_grid_rows_fit_int } = {0}
+          {
+            \msg_error:nn { exam-zh / chinese }
+              { composition-grid-row-too-tall }
+            \int_set_eq:NN \l__examzh_composition_grid_rows_done_int
+              \l__examzh_composition_grid_rows_int
+          }
+          {
+            \int_set:Nn \l__examzh_composition_grid_chunk_rows_int
+              {
+                \int_min:nn
+                  { \l__examzh_composition_grid_rows_fit_int }
+                  {
+                    \l__examzh_composition_grid_rows_int
+                    - \l__examzh_composition_grid_rows_done_int
+                  }
+              }
+            \__examzh_composition_grid_typeset_chunk:nn
+              { \l__examzh_composition_grid_rows_done_int }
+              { \l__examzh_composition_grid_chunk_rows_int }
+            \int_add:Nn \l__examzh_composition_grid_rows_done_int
+              { \l__examzh_composition_grid_chunk_rows_int }
+            \int_compare:nNnT
+              { \l__examzh_composition_grid_rows_done_int }
+              < { \l__examzh_composition_grid_rows_int }
+              { \newpage }
+          }
+      }
+  }
+
+\NewDocumentCommand \compositiongrid { O{ } m }
+  {
+    \group_begin:
+      \keys_set:nn { exam-zh / composition-grid } {#1}
+      \int_set:Nn \l__examzh_composition_grid_target_count_int {#2}
+      \int_compare:nNnTF
+        { \l__examzh_composition_grid_target_count_int } > {0}
+        {
+          \int_compare:nNnTF
+            { \l__examzh_composition_grid_columns_int } > {0}
+            {
+              \int_set:Nn \l__examzh_composition_grid_rows_int
+                {
+                  \int_div_truncate:nn
+                    {
+                      \l__examzh_composition_grid_target_count_int
+                      + \l__examzh_composition_grid_columns_int - 1
+                    }
+                    { \l__examzh_composition_grid_columns_int }
+                }
+              \__examzh_composition_grid_prepare_options:
+              \par\addvspace{\medskipamount}
+              \bool_if:NTF \l__examzh_composition_grid_auto_break_bool
+                { \__examzh_composition_grid_typeset_auto: }
+                {
+                  \__examzh_composition_grid_measure:
+                  \__examzh_composition_grid_typeset_chunk:nn
+                    {0} { \l__examzh_composition_grid_rows_int }
+                }
+            }
+            {
+              \msg_error:nn { exam-zh / chinese }
+                { composition-grid-invalid-columns }
+            }
+        }
+        {
+          \msg_error:nn { exam-zh / chinese }
+            { composition-grid-invalid-target }
+        }
+    \group_end:
+  }
 
 \keys_define:nn { exam-zh }
   { select .meta:nn = { exam-zh / select } {#1} }
@@ -348,11 +741,14 @@
   {
     \tl_if_empty:NF \l__examzh_material_title_content_tl
       {
-        \noindent \hfill
-          \group_begin:
-            \l__examzh_material_title_format_tl
-            \l__examzh_material_title_content_tl
-          \group_end:
+        % Use paragraph centering instead of balancing two \hfill glues.
+        % The latter can lose its centering effect for CJK text when xeCJK
+        % applies punctuation hanging at the paragraph boundaries.
+        \noindent
+        \group_begin:
+          \centering
+          \l__examzh_material_title_format_tl
+          \l__examzh_material_title_content_tl
           \tl_if_empty:NF \l__examzh_material_author_content_tl
             {
               \hspace { \l__examzh_material_title_author_sep_skip }
@@ -361,8 +757,8 @@
                 \l__examzh_material_author_content_tl
               \group_end:
             }
-        \hfill \null
-        \par
+          \par
+        \group_end:
         \addvspace { \l__examzh_material_title_material_sep_skip }
       }
   }
@@ -636,38 +1032,5 @@
     \__examzh_chinese_tikz_circled_number_aux:n { \int_eval:n {#1} }
   }
 
-
-% 作文框
-\NewDocumentEnvironment { writingbox } { O{ } +b }
-  {
-    \begin{tcolorbox}
-      [
-        % 直角
-        sharp~corners = all,
-        % 颜色
-        colback = white,
-        colbacktitle = white,
-        % colframe = white,
-        coltitle = black,
-        % 边框粗细
-        boxrule   = 1pt,
-        titlerule = 0pt,
-        % 间距
-        toptitle  = 4pt,
-        % 字体
-        fonttitle = \centering,
-        % 首行缩进
-        parbox  = false,
-        before~upper = \indent,
-        % 跨页
-        breakable,
-        enhanced~jigsaw,
-        #1
-      ]
-      #2
-  }
-  {
-    \end{tcolorbox}
-  }
 
 \endinput

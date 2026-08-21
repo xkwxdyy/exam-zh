@@ -16,7 +16,7 @@
 | `test-build.sh` | 测试构建流程 | 验证构建脚本 |
 | `build-common.sh` | 公共函数库 | 被其他脚本引用 |
 | `release_notes.py` | 结构化变更记录 | 生成 changelog 与英文 CTAN 公告 |
-| `workflow_dashboard.py` | 本地发布控制台 | 可视化运行固定脚本与 Claude Code skill |
+| `workflow_dashboard.py` | 本地发布控制台 | 可视化运行固定脚本与 Codex/Claude Code skill |
 
 ### 使用方法
 
@@ -109,7 +109,7 @@ make prepare-release VERSION=0.3.2 DATE=2026-08-01
 make dashboard
 ```
 
-控制台只监听 `127.0.0.1:8765`。AI 整理发布内容是独立的手动动作：它会先整理
+控制台只监听 `127.0.0.1:8765`。Codex 整理发布内容是独立的手动动作：它会先整理
 changelog 片段，把新增测试按项目约定归档为正式回归或必要的最小复现，并按用户可见
 改动的需要同步完整手册和入门手册。主发布链从校验现有 changelog 开始，依次执行发布
 工具测试、XeTeX 回归、固化版本、编译打包、归档检查、Git 提交、创建 Tag、推送
@@ -118,7 +118,8 @@ GitHub/Gitee 和创建平台 Release。发布出口有三种：只发 GitHub + G
 也不重新发布 GitHub/Gitee；主链会先确认远程 Release，再触发并等待 CTAN 工作流。服务端只执行固定的参数数组，不提供任意命令接口；单步工具仍可用于
 局部重跑。Git 提交标题由控制台填写或自动生成，提交正文则从该版本结构化清单自动附加
 完整中文 Changelog 条目。主发布链会把任务参数、日志和已完成步骤保存在
-`.release-dashboard/state.json`；版本、日期、发布出口、编译选项和提交信息完全匹配时，
+`.release-dashboard/state.json`；Codex/Claude Code 整理任务的完整 Terminal transcript 会按次
+保存在 `.release-dashboard/logs/`，任务控制台会显示对应文件路径。版本、日期、发布出口、编译选项和提交信息完全匹配时，
 重新打开控制台会恢复原目标版本并可从失败步骤继续，也可以明确选择从头重跑。
 
 ```bash

@@ -1,0 +1,24 @@
+\documentclass[fontset=fandol]{exam-zh}
+
+\input{regression-test}
+
+\begin{document}
+\START
+
+\newcommand{\testfigure}{\rule{2em}{2em}}
+\begin{multifigures}[columns=4]
+  \item \testfigure
+  \item \testfigure
+  \item \testfigure
+  \item \testfigure
+\end{multifigures}
+\begin{multifigures}[columns=4,xshift=-2em]
+  \item \testfigure
+  \item \testfigure
+  \item \testfigure
+  \item \testfigure
+\end{multifigures}
+\TYPE{multifigures-xshift-rendered}
+
+\END
+\end{document}

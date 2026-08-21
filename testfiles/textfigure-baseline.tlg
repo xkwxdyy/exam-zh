@@ -14,25 +14,25 @@ Completed box being shipped out [1]
 .....\special{pdf:put @resources << /ColorSpace @pgfcolorspaces >>}
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade1 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0.0 0 100.00128 0] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0.0 0 100.0 0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade2 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0.0 0 100.00128 0] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0.0 0 100.0 0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade3 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0 0.0 0 100.00128] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0 0.0 0 100.0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade4 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0 0.0 0 100.00128] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0 0.0 0 100.0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -98,7 +98,7 @@ Completed box being shipped out [1]
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade9 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.00064] /Coords [50.00064 50.00064 0.0 50.00064 50.00064 50.00064] /Function << /FunctionType 3 /Domain [0.0 50.00064] /Functions [ << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 22.50027 25.00032] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.0] /Coords [50.0 50.0 0.0 50.0 50.0 50.0] /Function << /FunctionType 3 /Domain [0.0 50.0] /Functions [ << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 22.5 25.0] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -119,7 +119,7 @@ Completed box being shipped out [1]
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade11 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.00064] /Coords [50.00064 50.00064 0.0 50.00064 50.00064 50.00064] /Function << /FunctionType 3 /Domain [0.0 50.00064] /Functions [ << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 21.25026 25.00032] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.0] /Coords [50.0 50.0 0.0 50.0 50.0 50.0] /Function << /FunctionType 3 /Domain [0.0 50.0] /Functions [ << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 21.25 25.0] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -140,7 +140,7 @@ Completed box being shipped out [1]
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade13 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.00064] /Coords [50.00064 50.00064 0.0 50.00064 50.00064 50.00064] /Function << /FunctionType 3 /Domain [0.0 50.00064] /Functions [ << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 20.00024 25.00032] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.0] /Coords [50.0 50.0 0.0 50.0 50.0 50.0] /Function << /FunctionType 3 /Domain [0.0 50.0] /Functions [ << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 20.0 25.0] /Encode [0 1  0 1 0 1] >> /Extend [true false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -161,7 +161,7 @@ Completed box being shipped out [1]
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade15 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.00064] /Coords [50.00064 50.00064 0.0 50.00064 50.00064 50.00064] /Function << /FunctionType 3 /Domain [0.0 50.00064] /Functions [ << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.00064] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 21.25026 23.12529 25.00032] /Encode [0 1  0 1 0 1 0 1] >> /Extend [true false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 3 /ColorSpace /DeviceRGB /Domain [0.0 50.0] /Coords [50.0 50.0 0.0 50.0 50.0 50.0] /Function << /FunctionType 3 /Domain [0.0 50.0] /Functions [ << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [1 1 1] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [1 1 1] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 50.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 21.25 23.125 25.0] /Encode [0 1  0 1 0 1 0 1] >> /Extend [true false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -182,25 +182,25 @@ Completed box being shipped out [1]
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade17 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0.0 0 100.00128 0] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0.0 0 100.0 0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade18 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0.0 0 100.00128 0] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0.0 0 100.0 0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade19 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0 0.0 0 100.00128] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0 0.0 0 100.0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
 .....\glue 144.54
 .....\special{pdf:bxobj @pgfshade20 width 100.375pt height 100.375pt}
-.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.00128] /Coords [0 0.0 0 100.00128] /Function << /FunctionType 3 /Domain [0.0 100.00128] /Functions [ << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0 0 0] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.00128] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  ] /Bounds [ 25.00032 75.00096] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
+.....\special{pdf:put @resources << /Shading << /Sh << /ShadingType 2 /ColorSpace /DeviceRGB /Domain [0.0 100.0] /Coords [0 0.0 0 100.0] /Function << /FunctionType 3 /Domain [0.0 100.0] /Functions [ << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0 0 0] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0 0 0] /C1 [0.5 0.5 0.5] /N 1 >>  << /FunctionType 2 /Domain [0.0 100.0] /C0 [0.5 0.5 0.5] /C1 [0.5 0.5 0.5] /N 1 >>  ] /Bounds [ 25.0 75.0] /Encode [0 1  0 1 0 1] >> /Extend [false false] >> >> >>}
 .....\special{pdf:code /Sh sh}
 .....\special{pdf:exobj}
 .....\glue -144.54
@@ -356,7 +356,6 @@ Completed box being shipped out [1]
 ......\kern 253.94179
 ......\hbox(30.95276+25.95274)x85.35826, shifted 42.89275
 .......\special{pdf:bc [0]}
-.......\mathon
 .......\vbox(30.95276+25.95274)x85.35826
 ........\hbox(56.9055+0.0)x85.35826
 .........\kern 0.0
@@ -368,7 +367,6 @@ Completed box being shipped out [1]
 .........\glue(\parfillskip) 0.0
 .........\glue(\rightskip) 0.0 plus 1.0fil
 .........\kern 0.0
-.......\mathoff
 .......\special{pdf:ec}
 ....\penalty 10000
 ....\glue(\parfillskip) 0.0 plus 1.0fil
@@ -500,7 +498,6 @@ Completed box being shipped out [1]
 ......\kern 138.22577
 ......\hbox(30.95276+25.95274)x85.35826, shifted 44.40117
 .......\special{pdf:bc [0]}
-.......\mathon
 .......\vbox(30.95276+25.95274)x85.35826
 ........\hbox(56.9055+0.0)x85.35826
 .........\kern 0.0
@@ -512,7 +509,6 @@ Completed box being shipped out [1]
 .........\glue(\parfillskip) 0.0
 .........\glue(\rightskip) 0.0 plus 1.0fil
 .........\kern 0.0
-.......\mathoff
 .......\special{pdf:ec}
 ....\penalty 10000
 ....\glue(\parfillskip) 0.0 plus 1.0fil
@@ -642,7 +638,6 @@ Completed box being shipped out [1]
 ......\kern 144.68623
 ......\hbox(30.95276+25.95274)x85.35826, shifted 47.81227
 .......\special{pdf:bc [0]}
-.......\mathon
 .......\vbox(30.95276+25.95274)x85.35826
 ........\hbox(56.9055+0.0)x85.35826
 .........\kern 0.0
@@ -654,7 +649,6 @@ Completed box being shipped out [1]
 .........\glue(\parfillskip) 0.0
 .........\glue(\rightskip) 0.0 plus 1.0fil
 .........\kern 0.0
-.......\mathoff
 .......\special{pdf:ec}
 ....\penalty 10000
 ....\glue(\parfillskip) 0.0 plus 1.0fil

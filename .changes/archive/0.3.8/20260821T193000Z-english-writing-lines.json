@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "english-writing-lines",
+  "changes": [
+    {
+      "id": "english-writing-lines",
+      "type": "added",
+      "zh": "英语模块新增 `\\writinglines` 横线作文框命令和 `\\writingline` 单行命令，可设置行数、行距、线宽、线色和线条粗细，并支持跨页排版；该功能不参与填空答案或师生两版处理。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

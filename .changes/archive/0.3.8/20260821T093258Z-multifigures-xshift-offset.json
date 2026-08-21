@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "multifigures-xshift-offset",
+  "changes": [
+    {
+      "id": "multifigures-xshift-offset",
+      "type": "fixed",
+      "zh": "修复 `multifigures/xshift`（`hshift`）在多列排版下被重复施加到每个单元格，导致列间距随图片数量成倍偏移的问题；现改为对整体排版结果统一平移一次。",
+      "changelog": true,
+      "announce": true,
+      "en": "Fixed `multifigures/xshift` (`hshift`) being applied once per cell instead of once for the whole grid, which distorted inter-column gaps in multi-column layouts."
+    }
+  ]
+}

@@ -8,6 +8,24 @@
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-08-21
+
+### Added
+
+- 语文模块新增基于 `hanzibox` 的 `\compositiongrid` 中文作文格命令：必选参数指定最少作文格数并自动向上补齐整行，支持按当前页剩余空间自动分页、在 600 等累计字数处显示提示，并可设置每行格数、按当前字号缩放或直接指定格子大小、行距比例、格型、颜色和线宽；同时补充真实跨页示例与手册说明。
+- 英语模块新增 `\writinglines` 横线作文框命令和 `\writingline` 单行命令，可设置行数、行距、线宽、线色和线条粗细，并支持跨页排版；该功能不参与填空答案或师生两版处理。
+
+### Changed
+
+- 将原 `exam-zh-chinese-english.sty` 拆分为职责独立的 `exam-zh-chinese.sty` 与 `exam-zh-english.sty`；文档类仍默认加载全部学科功能，并补充语文、英语基础示例及对应手册说明。
+- 将本地发布 Dashboard 的“AI 整理发布内容”步骤改为在 Terminal 中启动 Codex，并按次保留 Codex/Claude Code 的完整终端日志；其他发布辅助步骤仍按原配置使用 Claude Code。
+
+### Fixed
+
+- 修复 `question` 环境内 `verbatim` 结束后与后续 `choices` 等内容之间出现的额外空行，避免 verbatim 内部列表的顶端间距重新叠加到题目正文。
+- 修复 `multifigures/xshift`（`hshift`）在多列排版下被重复施加到每个单元格，导致列间距随图片数量成倍偏移的问题；现改为对整体排版结果统一平移一次。
+- 修复 `material` 环境标题在 xeCJK 悬挂标点作用下可能出现视觉偏移、无法真正居中的问题；改为使用 `\centering` 分组代替左右 `\hfill` 撑开的方式排版标题。
+
 ## [0.3.7] - 2026-08-11
 
 ### Changed

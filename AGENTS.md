@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`exam-zh.cls` is the main class file. Feature modules live beside it as `exam-zh-*.sty`, including question, choices, font, math, symbols, bilingual text, and text-figure support. Examples are in the root (`example-single.tex`, `example-multiple.tex`) and `examples-basic/`. Full and beginner documentation sources are under `doc/` and `doc-basic/`; keep chapters in `body/` and appendices in `back/`. Regression tests and curated visual fixtures live in `testfiles/`. Build and release helpers are in `build.lua`, `Makefile`, `tools/`, and `scripts/`.
+`exam-zh.cls` is the main class file. Feature modules live beside it as `exam-zh-*.sty`, including question, choices, font, math, symbols, Chinese, English, and text-figure support. Examples are in the root (`example-single.tex`, `example-multiple.tex`) and `examples-basic/`. Full and beginner documentation sources are under `doc/` and `doc-basic/`; keep chapters in `body/` and appendices in `back/`. Regression tests and curated visual fixtures live in `testfiles/`. Build and release helpers are in `build.lua`, `Makefile`, `tools/`, and `scripts/`.
 
 ## Build, Test, and Development Commands
 

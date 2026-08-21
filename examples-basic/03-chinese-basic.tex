@@ -1,0 +1,50 @@
+% 基础语文试卷 - 展示材料、古诗、选择标记题型和自动跨页作文格
+% 编译：xelatex 03-chinese-basic.tex
+
+\documentclass{exam-zh}
+
+\begin{document}
+
+\title{高中语文练习卷}
+\subject{语文}
+\maketitle
+
+\section{现代文阅读}
+
+\begin{material}
+  [
+    title = {春日小记},
+    author = {佚名},
+    source = {（节选）}
+  ]
+  清晨，阳光越过窗台，照亮书桌上的一页纸。远处的树叶在风中轻轻摇动，
+  新的一天就这样安静地开始了。
+\end{material}
+
+\begin{question}
+  下列词语中，加点字读音正确的一项是
+  \begin{select}[show-mark = true]
+    \sitem 安静（jìn）
+    \sitem* 摇动（yáo）
+    \sitem 清晨（qīng）
+  \end{select}
+\end{question}
+
+\section{古诗文阅读}
+
+\begin{poem}[title = {登鹳雀楼}, author = {王之涣}]
+  白日依山尽，\\
+  黄河入海流。\\
+  欲穷千里目，\\
+  更上一层楼。
+\end{poem}
+
+\section{写作}
+
+请以“窗外”为题，写一篇不少于 800 字的文章。
+
+\compositiongrid
+  [row-sep-ratio = 3, count-marks = {600, 800}]
+  {1000}
+
+\end{document}

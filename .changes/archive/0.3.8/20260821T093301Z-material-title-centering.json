@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "material-title-centering",
+  "changes": [
+    {
+      "id": "material-title-centering",
+      "type": "fixed",
+      "zh": "修复 `material` 环境标题在 xeCJK 悬挂标点作用下可能出现视觉偏移、无法真正居中的问题；改为使用 `\\centering` 分组代替左右 `\\hfill` 撑开的方式排版标题。",
+      "changelog": true,
+      "announce": true,
+      "en": "Fixed `material` environment titles losing their centering under xeCJK punctuation hanging by switching from paired `\\hfill` glues to `\\centering`."
+    }
+  ]
+}

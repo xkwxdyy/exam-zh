@@ -129,6 +129,16 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("远程写操作前等待我确认", github)
         self.assertIn("/examzh-release full 1.2.3", full)
 
+    def test_codex_prompt_preserves_prepare_boundary(self) -> None:
+        spec = dashboard.WORKFLOW_BY_ID["ai-changelog"]
+        self.assertEqual(spec["executor"], "codex")
+        self.assertIn(".claude/skills/examzh-release/SKILL.md", dashboard.codex_prompt("ai-changelog", {}))
+        prompt = dashboard.codex_prompt("ai-changelog", {})
+        self.assertIn("整理结构化变更片段", prompt)
+        self.assertIn("完整手册和入门手册", prompt)
+        self.assertIn("make check-changelog", prompt)
+        self.assertIn("不要提交、打 Tag、推送或发布", prompt)
+
     def test_applescript_string_escapes_quotes_and_backslashes(self) -> None:
         self.assertEqual(dashboard.applescript_string('a"b\\c'), '"a\\"b\\\\c"')
 
@@ -148,6 +158,41 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("/usr/local/bin/claude", argv[2])
         self.assertIn("examzh-release github 1.2.3", prompt)
         self.assertNotIn("shell", run.call_args.kwargs)
+
+    @mock.patch("workflow_dashboard.subprocess.run")
+    @mock.patch("workflow_dashboard.shutil.which")
+    def test_codex_launch_uses_terminal_without_running_a_shell_api(
+        self,
+        which: mock.Mock,
+        run: mock.Mock,
+    ) -> None:
+        which.side_effect = lambda name: f"/usr/local/bin/{name}"
+        run.return_value = dashboard.subprocess.CompletedProcess([], 0, "tab 1", "")
+        prompt = dashboard.launch_codex("ai-changelog", {})
+        argv = run.call_args.args[0]
+        self.assertEqual(argv[:2], ["/usr/local/bin/osascript", "-e"])
+        self.assertIn("tell application \"Terminal\"", argv[2])
+        self.assertIn("/usr/local/bin/codex", argv[2])
+        self.assertIn("整理结构化变更片段", prompt)
+        self.assertNotIn("shell", run.call_args.kwargs)
+
+    @mock.patch("workflow_dashboard.subprocess.run")
+    @mock.patch("workflow_dashboard.shutil.which")
+    def test_interactive_launch_wraps_terminal_in_script_for_persistent_log(
+        self,
+        which: mock.Mock,
+        run: mock.Mock,
+    ) -> None:
+        which.side_effect = lambda name: f"/usr/local/bin/{name}"
+        run.return_value = dashboard.subprocess.CompletedProcess([], 0, "tab 1", "")
+        with tempfile.TemporaryDirectory() as temporary:
+            log_path = Path(temporary) / "ai-changelog.log"
+            dashboard.launch_codex("ai-changelog", {}, log_path)
+            self.assertTrue(log_path.parent.is_dir())
+        terminal_script = run.call_args.args[0][2]
+        self.assertIn("/usr/local/bin/script -q", terminal_script)
+        self.assertIn("ai-changelog.log", terminal_script)
+        self.assertIn("/usr/local/bin/codex", terminal_script)
 
 
 class ReleaseContextTests(unittest.TestCase):
@@ -359,6 +404,25 @@ class PersistenceTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    @mock.patch("workflow_dashboard.launch_codex", return_value="codex prompt")
+    def test_interactive_job_persists_terminal_log_path(self, launch: mock.Mock) -> None:
+        manager = dashboard.JobManager(self.state_path)
+        job = manager.start("ai-changelog", {})
+        for _ in range(50):
+            if job.status not in {"queued", "running"}:
+                break
+            time.sleep(0.01)
+        self.assertEqual(job.status, "success")
+        self.assertTrue(job.log_path.startswith(".release-dashboard/logs/"))
+        self.assertIn("终端日志：", "\n".join(job.logs))
+        launch.assert_called_once()
+        self.assertEqual(launch.call_args.args[0], "ai-changelog")
+        self.assertEqual(launch.call_args.args[1], {})
+        self.assertTrue(isinstance(launch.call_args.args[2], Path))
+        restored = dashboard.JobManager(self.state_path).get(job.id)
+        assert restored is not None
+        self.assertEqual(restored.log_path, job.log_path)
+
     def test_failed_pipeline_checkpoint_survives_restart_and_is_version_bound(self) -> None:
         params = dashboard.normalized_pipeline_params(VALID_PARAMS)
         steps = dashboard.build_steps("release-pipeline", params)
@@ -386,6 +450,39 @@ class PersistenceTests(unittest.TestCase):
         self.assertEqual(snapshot["params"]["version"], "1.2.3")
         other = dashboard.normalized_pipeline_params({**VALID_PARAMS, "version": "1.2.4"})
         self.assertIsNone(restored._resume_checkpoint(other, dashboard.step_plan_signature(steps)))
+
+    @mock.patch("workflow_dashboard._release_local_artifact_steps", return_value=8)
+    @mock.patch("workflow_dashboard._release_manifest_ready", return_value=True)
+    def test_external_local_progress_advances_only_local_release_steps(
+        self,
+        manifest_ready: mock.Mock,
+        artifact_steps: mock.Mock,
+    ) -> None:
+        params = dashboard.normalized_pipeline_params(VALID_PARAMS)
+        steps = dashboard.build_steps("release-pipeline", params)
+        manager = dashboard.JobManager(None)
+        job = dashboard.Job(
+            id="external-progress",
+            workflow_id="release-pipeline",
+            title="执行完整发布链",
+            status="failed",
+            step="04 · 固化发布说明",
+            step_number=4,
+            step_count=len(steps),
+            completed_steps=3,
+            params=params,
+            plan_signature=dashboard.step_plan_signature(steps),
+        )
+        manager.jobs[job.id] = job
+
+        self.assertTrue(manager._reconcile_external_release_progress())
+        self.assertEqual(job.status, "interrupted")
+        self.assertEqual(job.completed_steps, 8)
+        self.assertEqual(job.step_number, 9)
+        self.assertEqual(job.step, "09 · Git 提交")
+        self.assertIn("已同步 Dashboard", "\n".join(job.logs))
+        manifest_ready.assert_called_once_with("1.2.3", "2026-08-01")
+        artifact_steps.assert_called_once()
 
     def test_running_job_is_restored_as_interrupted(self) -> None:
         manager = dashboard.JobManager(self.state_path)

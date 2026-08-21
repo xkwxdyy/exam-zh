@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "dashboard-codex-prepare",
+  "changes": [
+    {
+      "id": "dashboard-codex-prepare",
+      "type": "changed",
+      "zh": "将本地发布 Dashboard 的“AI 整理发布内容”步骤改为在 Terminal 中启动 Codex，并按次保留 Codex/Claude Code 的完整终端日志；其他发布辅助步骤仍按原配置使用 Claude Code。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

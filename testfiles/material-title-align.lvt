@@ -1,0 +1,14 @@
+\documentclass[fontset=fandol]{exam-zh}
+
+\input{regression-test}
+
+\begin{document}
+\START
+
+\begin{material}[title={秋风}]
+  材料正文。
+\end{material}
+\TYPE{material-title-rendered}
+
+\END
+\end{document}

@@ -1,5 +1,15 @@
 \documentclass{exam-zh}
 
+% Font availability differs across macOS/TeX installations.  This test checks
+% moved-solution persistence, so keep diagnostic font messages out of its log.
+\ExplSyntaxOn
+\msg_redirect_name:nnn { fontspec } { script-not-exist } { none }
+\msg_redirect_name:nnn { fontspec } { font-not-found } { none }
+\msg_redirect_name:nnn { fontspec } { no-font-shape } { none }
+\msg_redirect_name:nnn { fontspec } { defining-font } { none }
+\msg_redirect_name:nnn { xeCJK } { CJKfamily-Unknown } { none }
+\ExplSyntaxOff
+
 \input{regression-test}
 
 \examsetup{solution/show-solution=show-move}

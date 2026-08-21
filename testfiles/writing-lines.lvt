@@ -1,0 +1,23 @@
+\documentclass{exam-zh}
+
+\input{regression-test}
+
+\begin{document}
+\pagestyle{empty}
+\START
+
+\writinglines
+  [line-height = 12pt, line-thickness = 0.5pt]
+  {4}
+\TYPE{writing-lines-command=ok}
+
+\begin{writingbox}[left = 0pt, right = 0pt, boxsep = 0pt]
+  \writingline
+  \writingline[line-color = blue]
+\end{writingbox}
+\TYPE{writing-line-command=ok}
+
+\clearpage
+
+\END
+\end{document}

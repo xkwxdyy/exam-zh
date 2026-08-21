@@ -7,7 +7,7 @@
 
 \NeedsTeXFormat{LaTeX2e}[2017/04/15]
 \RequirePackage{expl3}
-\ProvidesExplClass {exam-zh} {2026-08-11} {v0.3.7} {LaTeX template for Chinese exam}
+\ProvidesExplClass {exam-zh} {2026-08-21} {v0.3.8} {LaTeX template for Chinese exam}
 
 % 检查 LaTeX2e kernel 版本
 \msg_new:nnn { exam-zh } { latex-too-old }
@@ -85,7 +85,8 @@
 \RequirePackage { exam-zh-font }
 \RequirePackage { exam-zh-choices }
 \RequirePackage { exam-zh-symbols }
-\RequirePackage { exam-zh-chinese-english }
+\RequirePackage { exam-zh-chinese }
+\RequirePackage { exam-zh-english }
 \RequirePackage { exam-zh-textfigure }
 \RequirePackage { exam-zh-math }
 

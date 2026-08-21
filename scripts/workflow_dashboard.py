@@ -19,6 +19,7 @@ import threading
 import time
 import uuid
 import webbrowser
+import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from http import HTTPStatus
@@ -33,9 +34,10 @@ DASHBOARD_DIR = ROOT / "tools" / "release-dashboard"
 VERSION_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_LOG_LINES = 6000
-DASHBOARD_API_VERSION = 10
+DASHBOARD_API_VERSION = 11
 STATE_SCHEMA_VERSION = 1
 STATE_PATH = ROOT / ".release-dashboard" / "state.json"
+INTERACTIVE_LOG_DIR = ROOT / ".release-dashboard" / "logs"
 GITHUB_REPOSITORY = "xkwxdyy/exam-zh"
 CTAN_WORKFLOW = "ctan-upload.yml"
 REMOTE_WORKFLOW_POLL_INTERVAL = 2.0
@@ -79,12 +81,12 @@ WORKFLOWS: tuple[dict[str, Any], ...] = (
     {
         "id": "ai-changelog",
         "stage": "changes",
-        "title": "AI 整理发布内容",
-        "description": "整理 Changelog、测试文件和相关手册",
+        "title": "Codex 整理发布内容",
+        "description": "由 Codex 整理 Changelog、测试文件和相关手册",
         "icon": "sparkles",
-        "risk": "interactive",
-        "executor": "claude",
-        "command": "claude '/examzh-release prepare'",
+        "risk": "interactive-codex",
+        "executor": "codex",
+        "command": "codex '整理发布内容'",
         "requires": [],
     },
     {
@@ -748,12 +750,98 @@ def build_steps(workflow_id: str, params: dict[str, Any]) -> list[tuple[str, lis
                 ],
             )
         ]
-    raise DashboardError("该工作流必须通过 Claude Code 终端执行")
+    raise DashboardError("该工作流必须通过 AI 终端执行")
 
 
 def step_plan_signature(steps: list[tuple[str, list[str]]]) -> str:
     encoded = json.dumps(steps, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _release_manifest_ready(version: str, release_date: str) -> bool:
+    """Return whether ``prepare-release`` left a complete local checkpoint."""
+    manifest_path = ROOT / ".changes" / "releases" / f"{version}.json"
+    archive_dir = ROOT / ".changes" / "archive" / version
+    changelog_path = ROOT / "CHANGELOG.md"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        changelog = changelog_path.read_text(encoding="utf-8")
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(manifest, dict):
+        return False
+    if manifest.get("version") != version or manifest.get("date") != release_date:
+        return False
+    if f"## [{version}] - {release_date}" not in changelog:
+        return False
+    fragments = manifest.get("source_fragments")
+    if not isinstance(fragments, list) or not fragments:
+        return False
+    return all(isinstance(name, str) and (archive_dir / name).is_file() for name in fragments)
+
+
+def _valid_zip(path: Path) -> bool:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            return archive.testzip() is None
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+
+def _release_metadata_ready(version: str, release_date: str) -> bool:
+    """Check the local metadata that the CTAN release validator consumes."""
+    try:
+        build_lua = (ROOT / "build.lua").read_text(encoding="utf-8")
+        package = (ROOT / "exam-zh.cls").read_text(encoding="utf-8")
+        doc = (ROOT / "doc" / "exam-zh-doc.tex").read_text(encoding="utf-8")
+        basic_doc = (ROOT / "doc-basic" / "exam-zh-doc-basic.tex").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return (
+        f'version = "v{version}"' in build_lua
+        and f'date = "{release_date}"' in build_lua
+        and f"{{{release_date}}} {{{version}}}" in package
+        and f"\\newcommand{{\\DocDate}}{{{release_date}}}" in doc
+        and f"\\newcommand{{\\DocVersion}}{{{version}}}" in doc
+        and f"\\newcommand{{\\DocDate}}{{{release_date}}}" in basic_doc
+        and f"\\newcommand{{\\DocVersion}}{{{version}}}" in basic_doc
+    )
+
+
+def _release_local_artifact_steps(
+    version: str,
+    release_date: str,
+    steps: list[tuple[str, list[str]]],
+) -> int:
+    """Return the highest contiguous local-only release step proven by files."""
+    labels = {label.rsplit(" · ", 1)[-1]: index for index, (label, _) in enumerate(steps, 1)}
+    prepare_step = labels.get("固化发布说明", 0)
+    if not prepare_step or not _release_manifest_ready(version, release_date):
+        return 0
+    completed = prepare_step
+
+    build_step = labels.get("编译并构建归档", 0)
+    ctan_zip = ROOT / "CTAN" / "exam-zh.zip"
+    release_zip = ROOT / "release" / f"exam-zh-v{version}.zip"
+    if not build_step or not (ctan_zip.is_file() and release_zip.is_file()):
+        return completed
+    if ctan_zip.stat().st_size <= 0 or release_zip.stat().st_size <= 0:
+        return completed
+    completed = build_step
+
+    inspect_zip_step = labels.get("检查 CTAN ZIP", 0)
+    if inspect_zip_step and _valid_zip(ctan_zip):
+        completed = inspect_zip_step
+
+    metadata_step = labels.get("校验 CTAN 元数据", 0)
+    if metadata_step and _release_metadata_ready(version, release_date):
+        completed = metadata_step
+
+    commit_message_step = labels.get("生成 Git 提交信息", 0)
+    commit_message = ROOT / "build" / f"release-commit-v{version}.txt"
+    if commit_message_step and commit_message.is_file() and commit_message.stat().st_size > 0:
+        completed = commit_message_step
+    return completed
 
 
 def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
@@ -785,22 +873,47 @@ def claude_prompt(workflow_id: str, params: dict[str, Any]) -> str:
     return f"/examzh-release {mode} {version} 从项目 skill 的预检开始，并在任何远程写操作前等待我确认。"
 
 
+def codex_prompt(workflow_id: str, params: dict[str, Any]) -> str:
+    if workflow_id != "ai-changelog":
+        raise DashboardError("未知 Codex 工作流")
+    return (
+        "请在当前 exam-zh 项目执行发布前准备。先阅读并遵循 "
+        ".claude/skills/examzh-release/SKILL.md 中 prepare 模式的边界：审阅当前工作树，"
+        "整理结构化变更片段，把新增测试文件按项目约定归档为可维护的回归测试或必要的最小复现，"
+        "排除测试生成物；逐条对照用户可见 Changelog，按实际需要更新完整手册和入门手册的具体说明与短示例，"
+        "不要把后续自动更新的版本号或日期算作手册优化；编译改动过的手册或示例，排版相关改动还要渲染并检查"
+        "受影响页面；运行相关聚焦检查、make changelog 和 make check-changelog 后停止。"
+        "结束前清空 tmp/。不要执行完整发布构建，也不要提交、打 Tag、推送或发布。"
+    )
+
+
 def applescript_string(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def launch_claude(workflow_id: str, params: dict[str, Any]) -> str:
-    claude = shutil.which("claude")
+def launch_interactive(
+    executable_name: str,
+    executable_label: str,
+    prompt: str,
+    log_path: Path | None = None,
+) -> None:
+    executable = shutil.which(executable_name)
     osascript = shutil.which("osascript")
-    if not claude:
-        raise DashboardError("未找到 Claude Code CLI")
+    if not executable:
+        raise DashboardError(f"未找到 {executable_label} CLI")
     if not osascript:
-        raise DashboardError("当前系统不支持通过 Terminal 启动 Claude Code")
-    prompt = claude_prompt(workflow_id, params)
-    shell_command = f"cd {shlex.quote(str(ROOT))} && exec {shlex.quote(claude)} {shlex.quote(prompt)}"
-    script = f'tell application "Terminal" to do script {applescript_string(shell_command)}'
+        raise DashboardError(f"当前系统不支持通过 Terminal 启动 {executable_label}")
+    command = [executable, prompt]
+    if log_path is not None:
+        script = shutil.which("script")
+        if not script:
+            raise DashboardError("未找到 script 终端记录工具")
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        command = [script, "-q", str(log_path), *command]
+    shell_command = f"cd {shlex.quote(str(ROOT))} && exec {shlex.join(command)}"
+    apple_script = f'tell application "Terminal" to do script {applescript_string(shell_command)}'
     result = subprocess.run(
-        [osascript, "-e", script, "-e", 'tell application "Terminal" to activate'],
+        [osascript, "-e", apple_script, "-e", 'tell application "Terminal" to activate'],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -809,7 +922,31 @@ def launch_claude(workflow_id: str, params: dict[str, Any]) -> str:
     )
     if result.returncode != 0:
         raise DashboardError(result.stderr.strip() or "无法启动 Terminal")
+
+
+def launch_claude(
+    workflow_id: str,
+    params: dict[str, Any],
+    log_path: Path | None = None,
+) -> str:
+    prompt = claude_prompt(workflow_id, params)
+    launch_interactive("claude", "Claude Code", prompt, log_path)
     return prompt
+
+
+def launch_codex(
+    workflow_id: str,
+    params: dict[str, Any],
+    log_path: Path | None = None,
+) -> str:
+    prompt = codex_prompt(workflow_id, params)
+    launch_interactive("codex", "Codex", prompt, log_path)
+    return prompt
+
+
+def interactive_log_path(job: Job) -> Path:
+    stamp = re.sub(r"[^0-9A-Za-z-]+", "-", job.created_at).strip("-")
+    return INTERACTIVE_LOG_DIR / f"{stamp}-{job.workflow_id}-{job.id}.log"
 
 
 @dataclass
@@ -831,6 +968,7 @@ class Job:
     plan_signature: str = ""
     remote_run_id: int | None = None
     remote_url: str = ""
+    log_path: str = ""
     process: subprocess.Popen[str] | None = None
     logs: list[str] = field(default_factory=list)
     log_offset: int = 0
@@ -863,6 +1001,7 @@ class Job:
             "params": self.params,
             "remoteRunId": self.remote_run_id,
             "remoteUrl": self.remote_url,
+            "logPath": self.log_path,
             "logs": self.logs[relative:],
             "cursor": self.log_offset + len(self.logs),
         }
@@ -908,6 +1047,7 @@ class Job:
             plan_signature=value.get("planSignature") if isinstance(value.get("planSignature"), str) else "",
             remote_run_id=value.get("remoteRunId") if isinstance(value.get("remoteRunId"), int) else None,
             remote_url=value.get("remoteUrl") if isinstance(value.get("remoteUrl"), str) else "",
+            log_path=value.get("logPath") if isinstance(value.get("logPath"), str) else "",
             logs=logs[-MAX_LOG_LINES:],
             log_offset=max(0, int(value.get("cursor", len(logs))) - min(len(logs), MAX_LOG_LINES)),
         )
@@ -956,6 +1096,8 @@ class JobManager:
                 job.append("旧版 Dashboard 只记录了 CTAN 触发命令，未核实远程 Actions 结果；请重新触发并等待完成。")
                 interrupted = True
             self.jobs[job.id] = job
+        if self._reconcile_external_release_progress():
+            interrupted = True
         if interrupted:
             self._persist_locked()
 
@@ -980,6 +1122,63 @@ class JobManager:
     def _persist(self) -> None:
         with self.lock:
             self._persist_locked()
+
+    def _reconcile_external_release_progress(self) -> bool:
+        """Advance stale release checkpoints when local artifacts prove progress.
+
+        A release can be continued after a terminal session or a manual command
+        run.  Those commands cannot update the Dashboard's state file, so only
+        use unambiguous, version-bound local artifacts to advance the checkpoint.
+        Git commits, tags, pushes, and platform releases are intentionally not
+        inferred here; they remain explicit Dashboard steps.
+        """
+        changed = False
+        for job in self.jobs.values():
+            if (
+                job.workflow_id != "release-pipeline"
+                or job.status not in {"failed", "cancelled", "interrupted"}
+                or not job.params
+                or job.completed_steps <= 0
+            ):
+                continue
+            try:
+                params = normalized_pipeline_params(job.params)
+                steps = build_steps("release-pipeline", params)
+                if job.plan_signature and job.plan_signature != step_plan_signature(steps):
+                    continue
+                version, release_date, target, _ = pipeline_params(params)
+            except DashboardError:
+                continue
+            if target == "ctan":
+                continue
+
+            prepare_step = next(
+                (index for index, (label, _) in enumerate(steps, 1) if label.endswith("固化发布说明")),
+                0,
+            )
+            if job.completed_steps < prepare_step and not _release_manifest_ready(version, release_date):
+                continue
+
+            reconciled = max(job.completed_steps, prepare_step)
+            local_steps = _release_local_artifact_steps(version, release_date, steps)
+            reconciled = max(reconciled, local_steps)
+            if reconciled <= job.completed_steps:
+                continue
+
+            old_step = job.completed_steps
+            if job.status == "failed":
+                job.status = "interrupted"
+                job.return_code = None
+            job.completed_steps = min(reconciled, job.step_count)
+            if job.completed_steps < job.step_count:
+                job.step_number = job.completed_steps + 1
+                job.step = steps[job.completed_steps][0]
+            job.append(
+                f"检测到本地已完成步骤 {old_step + 1:02d}–{job.completed_steps:02d}；"
+                "已同步 Dashboard，后续从下一步继续。"
+            )
+            changed = True
+        return changed
 
     def _resume_checkpoint(
         self,
@@ -1008,7 +1207,7 @@ class JobManager:
         job_params: dict[str, Any] = {}
         plan_signature = ""
         completed_steps = 0
-        if spec["executor"] != "claude":
+        if spec["executor"] not in {"claude", "codex"}:
             steps = build_steps(workflow_id, params)
             if workflow_id == "release-pipeline":
                 job_params = normalized_pipeline_params(params)
@@ -1088,9 +1287,9 @@ class JobManager:
                 self.active_id = None
                 raise DashboardError(self.persistence_error)
 
-        if spec["executor"] == "claude":
+        if spec["executor"] in {"claude", "codex"}:
             thread = threading.Thread(
-                target=self._run_claude,
+                target=self._run_interactive,
                 args=(job, params),
                 daemon=True,
             )
@@ -1114,15 +1313,22 @@ class JobManager:
                 self.active_id = None
             self._persist_locked()
 
-    def _run_claude(self, job: Job, params: dict[str, Any]) -> None:
+    def _run_interactive(self, job: Job, params: dict[str, Any]) -> None:
+        spec = WORKFLOW_BY_ID[job.workflow_id]
+        executor = str(spec["executor"])
+        display_name = "Codex" if executor == "codex" else "Claude Code"
+        log_path = interactive_log_path(job)
+        job.log_path = str(log_path.relative_to(ROOT))
         with self.lock:
             job.status = "running"
             job.started_at = utc_now()
-            job.step = "启动 Claude Code"
+            job.step = f"启动 {display_name}"
+            job.append(f"终端日志：{job.log_path}")
             self._persist_locked()
         try:
-            prompt = launch_claude(job.workflow_id, params)
-            job.append("Claude Code 已在新的 Terminal 会话中启动。")
+            launcher = launch_codex if executor == "codex" else launch_claude
+            prompt = launcher(job.workflow_id, params, log_path)
+            job.append(f"{display_name} 已在新的 Terminal 会话中启动。")
             job.append(f"Skill prompt: {prompt}")
             self._finish(job, "success", 0)
         except (DashboardError, OSError, subprocess.SubprocessError) as exc:
@@ -1213,6 +1419,8 @@ class JobManager:
 
     def recent(self) -> list[dict[str, Any]]:
         with self.lock:
+            if self._reconcile_external_release_progress():
+                self._persist_locked()
             ordered = sorted(self.jobs.values(), key=lambda item: item.created_at, reverse=True)
             snapshots: list[dict[str, Any]] = []
             for item in ordered[:12]:
@@ -1460,6 +1668,7 @@ def repository_status(manager: JobManager) -> dict[str, Any]:
             "git": bool(shutil.which("git")),
             "gh": bool(shutil.which("gh")),
             "claude": bool(shutil.which("claude")),
+            "codex": bool(shutil.which("codex")),
             "giteeToken": bool(os.environ.get("GITEE_TOKEN")),
         },
         "skills": {

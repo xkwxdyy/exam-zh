@@ -1,11 +1,12 @@
 (() => {
   "use strict";
 
-  const apiVersion = 10;
+  const apiVersion = 11;
   const state = { workflows: [], status: null, token: "", filter: "all", activeJob: null, pipelineJob: null, cursor: 0, pollTimer: null, backendCompatible: true, stateErrorShown: false, platformContext: null, ctanContext: null, selectedTarget: "platforms", targetLoading: false };
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
-  const riskText = { safe: "本地 · 可重复", write: "本地 · 写入文件", interactive: "Claude · 终端确认", mutating: "会改变仓库", external: "外部 · 需确认" };
+  const riskText = { safe: "本地 · 可重复", write: "本地 · 写入文件", interactive: "Claude · 终端确认", "interactive-codex": "Codex · 终端确认", mutating: "会改变仓库", external: "外部 · 需确认" };
+  const interactiveExecutors = new Set(["claude", "codex"]);
   const stageText = { changes: "Changes", verify: "Verify", package: "Package", publish: "Publish", observe: "Observe" };
   const statusText = { queued: "排队中", running: "运行中", success: "完成", failed: "失败", cancelled: "已取消", interrupted: "已中断" };
   const commonChainSteps = [
@@ -214,7 +215,7 @@
     $("#changelog-detail").textContent = status.changelogOk ? "结构同步" : "运行 check-changelog";
     $("#tag-value").textContent = status.latestTag || "无 Tag";
     const checks = [
-      ["Python", status.tools?.python], ["l3build", status.tools?.l3build], ["git", status.tools?.git], ["gh", status.tools?.gh], ["Claude", status.tools?.claude], ["Gitee token", status.tools?.giteeToken],
+      ["Python", status.tools?.python], ["l3build", status.tools?.l3build], ["git", status.tools?.git], ["gh", status.tools?.gh], ["Claude", status.tools?.claude], ["Codex", status.tools?.codex], ["Gitee token", status.tools?.giteeToken],
     ];
     $("#tool-checks").innerHTML = checks.map(([label, ready]) => `<span class="tool-check ${ready ? "ready" : ""}"><i></i>${label}</span>`).join("");
     renderArtifacts(status.artifacts || []);
@@ -252,10 +253,11 @@
     $("#action-count").textContent = `${filtered.length} 项`;
     $("#action-list").innerHTML = filtered.map((item) => {
       const risk = item.risk || "safe";
-      const buttonIcon = item.executor === "claude" ? "terminal" : "play";
+      const interactive = interactiveExecutors.has(item.executor);
+      const buttonIcon = interactive ? "terminal" : "play";
       return `<article class="action-card" data-risk="${risk}" data-stage="${item.stage}">
         <div class="action-card-top"><span class="action-icon"><i data-lucide="${item.icon || "play"}"></i></span><div><h3>${item.title}</h3><p>${item.description}</p></div></div>
-        <div class="action-footer"><span class="risk-label ${risk}">${riskText[risk] || stageText[item.stage]}</span><button class="run-button" type="button" data-workflow-id="${item.id}"><i data-lucide="${buttonIcon}"></i>${item.executor === "claude" ? "打开终端" : "执行"}</button></div>
+        <div class="action-footer"><span class="risk-label ${risk}">${riskText[risk] || stageText[item.stage]}</span><button class="run-button" type="button" data-workflow-id="${item.id}"><i data-lucide="${buttonIcon}"></i>${interactive ? "打开终端" : "执行"}</button></div>
       </article>`;
     }).join("");
     if (!filtered.length) $("#action-list").innerHTML = `<div class="loading-block">这个阶段暂时没有可执行动作。</div>`;

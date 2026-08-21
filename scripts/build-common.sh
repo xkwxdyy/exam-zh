@@ -220,16 +220,25 @@ copy_to_clipboard() {
 
   if command -v pbcopy >/dev/null 2>&1; then
     # macOS
-    echo "$text" | pbcopy
-    log_info "Copied to clipboard: $text"
+    if echo "$text" | pbcopy; then
+      log_info "Copied to clipboard: $text"
+    else
+      log_warn "Clipboard is unavailable, skipping clipboard copy"
+    fi
   elif command -v xclip >/dev/null 2>&1; then
     # Linux with xclip
-    echo "$text" | xclip -selection clipboard
-    log_info "Copied to clipboard: $text"
+    if echo "$text" | xclip -selection clipboard; then
+      log_info "Copied to clipboard: $text"
+    else
+      log_warn "Clipboard is unavailable, skipping clipboard copy"
+    fi
   elif command -v xsel >/dev/null 2>&1; then
     # Linux with xsel
-    echo "$text" | xsel --clipboard
-    log_info "Copied to clipboard: $text"
+    if echo "$text" | xsel --clipboard; then
+      log_info "Copied to clipboard: $text"
+    else
+      log_warn "Clipboard is unavailable, skipping clipboard copy"
+    fi
   else
     log_warn "No clipboard tool available, skipping"
   fi
@@ -241,13 +250,19 @@ open_directory() {
 
   if command -v open >/dev/null 2>&1; then
     # macOS
-    open "$dir"
+    if ! open "$dir"; then
+      log_warn "Unable to open output directory automatically, skipping"
+    fi
   elif command -v xdg-open >/dev/null 2>&1; then
     # Linux
-    xdg-open "$dir"
+    if ! xdg-open "$dir"; then
+      log_warn "Unable to open output directory automatically, skipping"
+    fi
   elif command -v explorer.exe >/dev/null 2>&1; then
     # Windows (WSL)
-    explorer.exe "$(wslpath -w "$dir")"
+    if ! explorer.exe "$(wslpath -w "$dir")"; then
+      log_warn "Unable to open output directory automatically, skipping"
+    fi
   else
     log_info "Output directory: $dir"
   fi

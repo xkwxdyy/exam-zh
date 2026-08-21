@@ -16,46 +16,18 @@ second-solution=preserved
 LaTeX Warning: Reference `LastPage' on page 2 undefined on input line ....
 [2
 ]
-Package fontspec Info: 
-(fontspec)             Script 'CJK' not explicitly supported within font 'STHeiti'. Check the typeset output, and if it is okay then ignore this warning. Otherwise a different font should be chosen.
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STHeiti/BI" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STHeiti/B" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STHeiti/I" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Font family 'STHeiti(0)' created for font 'STHeiti' with options [Script={CJK}].
-(fontspec)              
-(fontspec)              This font family consists of the following NFSS series/shapes:
-(fontspec)              
-(fontspec)             - 'normal' (m/n) with NFSS spec.: <->"STHeiti/OT:script=hani;language=dflt;"
-Underfull \hbox (badness 10000) detected at line 57
-\TU/STHeiti(0)/m/n/18.06749 参 考 答 案
-\hbox(14.97795+1.96935)x90.33745, glue set 7.15927
-.\TU/STHeiti(0)/m/n/18.06749 参
+Underfull \hbox (badness 10000) detected at line 67
+\TU/HeitiSCLight(0)/m/n/18.06749 参 考 答 案
+\hbox(14.97795+1.93321)x90.33745, glue set 7.15927
+.\TU/HeitiSCLight(0)/m/n/18.06749 参
 .\glue 0.0 plus 0.84122
-.\TU/STHeiti(0)/m/n/18.06749 考
+.\TU/HeitiSCLight(0)/m/n/18.06749 考
 .\glue 0.0 plus 0.84122
-.\TU/STHeiti(0)/m/n/18.06749 答
+.\TU/HeitiSCLight(0)/m/n/18.06749 答
 .\glue 0.0 plus 0.84122
-.\TU/STHeiti(0)/m/n/18.06749 案
+.\TU/HeitiSCLight(0)/m/n/18.06749 案
 .\kern -0.00017
 .\kern 0.00017
-Package fontspec Info: 
-(fontspec)             Script 'CJK' not explicitly supported within font 'STKaiti'. Check the typeset output, and if it is okay then ignore this warning. Otherwise a different font should be chosen.
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STKaiti/BI" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STKaiti/B" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Could not resolve font "STKaiti/I" (it probably doesn't exist).
-Package fontspec Info: 
-(fontspec)             Font family 'STKaiti(0)' created for font 'STKaiti' with options [Script={CJK}].
-(fontspec)              
-(fontspec)              This font family consists of the following NFSS series/shapes:
-(fontspec)              
-(fontspec)             - 'normal' (m/n) with NFSS spec.: <->"STKaiti/OT:script=hani;language=dflt;"
 (solution-show-move-multiple-chapters.examzh-solution-1.solution
 first-answer=rendered
 ) (solution-show-move-multiple-chapters.examzh-solution-2.solution

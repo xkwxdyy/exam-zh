@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "topic": "question-verbatim-choices-gap",
+  "changes": [
+    {
+      "id": "question-verbatim-choices-gap",
+      "type": "fixed",
+      "zh": "修复 `question` 环境内 `verbatim` 结束后与后续 `choices` 等内容之间出现的额外空行，避免 verbatim 内部列表的顶端间距重新叠加到题目正文。",
+      "changelog": true,
+      "announce": true,
+      "en": "Fixed an extra blank line appearing after a `verbatim` block inside `question` before subsequent content such as `choices`."
+    }
+  ]
+}

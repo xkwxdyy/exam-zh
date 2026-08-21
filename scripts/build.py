@@ -313,11 +313,23 @@ def compile_latex(tex_file: Path, work_dir: Path) -> bool:
     """编译单个 LaTeX 文件"""
     log_info(f"  Compiling: {tex_file.name}")
 
+    # Compile against the sources in this checkout.  In particular, the
+    # basic examples are compiled from ``examples-basic/`` where kpathsea
+    # would otherwise prefer an older user-installed exam-zh class/package.
+    env = os.environ.copy()
+    # Keep an empty element so kpathsea still searches the system TeX trees.
+    texinputs = [str(PROJECT_ROOT), str(work_dir), ".", ""]
+    existing_texinputs = env.get("TEXINPUTS")
+    if existing_texinputs:
+        texinputs.append(existing_texinputs)
+    env["TEXINPUTS"] = os.pathsep.join(texinputs)
+
     result = subprocess.run(
         ['latexmk', '-xelatex', '-interaction=nonstopmode', str(tex_file.name)],
         cwd=work_dir,
         capture_output=True,
-        text=True
+        text=True,
+        env=env,
     )
 
     if result.returncode != 0:
@@ -337,7 +349,16 @@ def compile_examples() -> bool:
 
     examples = [
         (PROJECT_ROOT, ["example-single.tex", "example-multiple.tex"]),
-        (EXAMPLES_BASIC_DIR, ["00-minimal.tex", "01-first-exam.tex", "02-math-basic.tex"])
+        (
+            EXAMPLES_BASIC_DIR,
+            [
+                "00-minimal.tex",
+                "01-first-exam.tex",
+                "02-math-basic.tex",
+                "03-chinese-basic.tex",
+                "04-english-basic.tex",
+            ],
+        )
     ]
 
     for work_dir, files in examples:

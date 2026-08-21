@@ -10,7 +10,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 
-\ProvidesExplPackage {exam-zh-question} {2026-08-11} {v0.3.7}
+\ProvidesExplPackage {exam-zh-question} {2026-08-21} {v0.3.8}
   {exam-zh question module}
 
 
@@ -106,6 +106,21 @@
 \tl_new:N \l__examzh_question_label_align_tl
 \tl_new:N \l__examzh_problem_label_align_tl
 \bool_new:N \l__examzh_problem_hang_bool
+% question 环境中 verbatim 结束时的列表状态
+\bool_new:N \l__examzh_question_active_bool
+
+% verbatim 使用 trivlist。其结束代码会把内部列表的顶端间距再次加入
+% 外层垂直列表；question 已经将题内列表间距设为零，因此这里同步清除
+% 该待加入的间距，避免 verbatim 与后续 choices 之间出现额外空行。
+\AddToHook { env / verbatim / end }
+  {
+    \bool_if:NT \l__examzh_question_active_bool
+      {
+        \skip_zero:N \topsep
+        \skip_zero:N \partopsep
+        \skip_zero:N \@topsepadd
+      }
+  }
 
 
 \keys_define:nn { exam-zh }
@@ -272,10 +287,12 @@
   {
     % \bool_set_false:N \l__examzh_question_problem_style_bool
     \group_begin:
+      \bool_set_true:N \l__examzh_question_active_bool
       \__examzh_question_begin:nn {#1} { }
   }
   {
       \__examzh_question_end:nn { } { }
+      \bool_set_false:N \l__examzh_question_active_bool
     \group_end:
   }
 % \NewDocumentEnvironment { question } { O { } }

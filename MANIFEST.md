@@ -16,7 +16,8 @@ These are source files for a number of purposes, including the `unpack` process 
 generates the installation files of the package. Additional files included here will also
 be installed for processing such as testing.
 
-* exam-zh-chinese-english.sty 
+* exam-zh-chinese.sty
+* exam-zh-english.sty
 * exam-zh-choices.sty 
 * exam-zh-font.sty 
 * exam-zh-math.sty 

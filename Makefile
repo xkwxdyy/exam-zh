@@ -26,6 +26,8 @@ examples-basic:
 	cd examples-basic && latexmk -xelatex 00-minimal.tex
 	cd examples-basic && latexmk -xelatex 01-first-exam.tex
 	cd examples-basic && latexmk -xelatex 02-math-basic.tex
+	cd examples-basic && latexmk -xelatex 03-chinese-basic.tex
+	cd examples-basic && latexmk -xelatex 04-english-basic.tex
 
 ctan:
 	l3build ctan

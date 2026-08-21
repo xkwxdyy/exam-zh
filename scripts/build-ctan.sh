@@ -168,7 +168,7 @@ copy_example_files() {
   local basic_examples_dir="$CTAN_EXAMPLES_DIR/basic"
   mkdir -p "$basic_examples_dir"
 
-  for file in 00-minimal 01-first-exam 02-math-basic; do
+  for file in 00-minimal 01-first-exam 02-math-basic 03-chinese-basic 04-english-basic; do
     if [[ -f "$EXAMPLES_BASIC_DIR/${file}.tex" ]]; then
       cp "$EXAMPLES_BASIC_DIR/${file}.tex" "$basic_examples_dir/"
       if [[ -f "$EXAMPLES_BASIC_DIR/${file}.pdf" ]]; then

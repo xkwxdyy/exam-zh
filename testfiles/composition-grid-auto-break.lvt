@@ -1,0 +1,21 @@
+\documentclass{exam-zh}
+
+\input{regression-test}
+
+\begin{document}
+\pagestyle{empty}
+\START
+
+\vspace*{0.55\textheight}
+\compositiongrid
+  [
+    columns = 4,
+    row-sep-ratio = 3,
+    cell-size = 10pt,
+    count-marks = {164}
+  ]
+  {161}
+\TYPE{page-after-grid=\thepage}
+
+\END
+\end{document}
