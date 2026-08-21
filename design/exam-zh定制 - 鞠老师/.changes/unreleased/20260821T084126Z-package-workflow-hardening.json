@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "topic": "package-workflow-hardening",
+  "changes": [
+    {
+      "id": "package-workflow-hardening",
+      "type": "changed",
+      "zh": "加固定制版的开发与打包工作流，增加编译预检、版本日期校验、并发锁、试运行和显式覆盖控制。",
+      "changelog": true,
+      "announce": false
+    }
+  ]
+}

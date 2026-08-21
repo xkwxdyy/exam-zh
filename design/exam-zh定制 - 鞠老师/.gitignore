@@ -1,0 +1,23 @@
+# Reproducible build outputs
+build/
+dist/
+
+# Legacy local output directories (kept only for migration/cleanup)
+编译temp文件/
+生成的pdf文件/
+
+# LaTeX auxiliary files accidentally created in the project root
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex
+*.synctex.gz
+*.toc
+*.xdv
+*.solution
+
+# macOS metadata
+.DS_Store
+._*
