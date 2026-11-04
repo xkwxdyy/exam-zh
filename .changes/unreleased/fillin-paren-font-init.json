@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "topic": "fillin-paren-font-init",
+  "issues": [
+    "GitHub #68"
+  ],
+  "changes": [
+    {
+      "id": "fillin-paren-font-init",
+      "type": "fixed",
+      "zh": "将可断行括号填空的括号测宽延迟到文档字体初始化完成后，修复 fontset=none 且在导言区设置中文字体时的全角括号缺字提示和错误宽度。",
+      "en": "Defer breakable fill-in parenthesis measurement until document fonts are initialized, fixing missing fullwidth parentheses and incorrect cached widths when CJK fonts are configured in the preamble with fontset=none.",
+      "changelog": true,
+      "announce": true
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+\input{regression-test}
+\documentclass{article}
+\usepackage[fontset=none]{ctex}
+\usepackage{exam-zh-question}
+% Configure the Chinese font after loading the question module.
+\setCJKmainfont{FandolSong-Regular.otf}
+\begin{document}
+\START
+\ExplSyntaxOn
+\hbox_set:Nn \l_tmpa_box { ） }
+\dim_compare:nNnTF
+  {\c__examzh_quanjiao_right_brace_width_dim} = {\box_wd:N\l_tmpa_box}
+  {\TYPE{fullwidth-matches-body=true}}
+  {\TYPE{fullwidth-matches-body=false}}
+\hbox_set:Nn \l_tmpa_box { ) }
+\dim_compare:nNnTF
+  {\c__examzh_banjiao_right_brace_width_dim} = {\box_wd:N\l_tmpa_box}
+  {\TYPE{halfwidth-matches-body=true}}
+  {\TYPE{halfwidth-matches-body=false}}
+\ExplSyntaxOff
+\END
+\end{document}

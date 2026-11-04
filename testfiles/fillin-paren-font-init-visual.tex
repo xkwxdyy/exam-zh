@@ -1,0 +1,30 @@
+% Compile with XeLaTeX from the repository root.
+% CJK fonts are deliberately configured after loading the question module.
+\documentclass{article}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage[fontset=none]{ctex}
+\usepackage{exam-zh-question}
+\setCJKmainfont{FandolSong-Regular.otf}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+\pagestyle{empty}
+\newcommand{\ParenCases}{%
+全角短答案：\fillin[type=paren,paren-type=quanjiao,width=5em][答案]，后续文字。\par
+半角短答案：\fillin[type=paren,paren-type=banjiao,width=5em][answer]，后续文字。\par
+全角跨行：\fillin*[type=paren,paren-type=quanjiao,width=1.35\linewidth][这是一段用于检查换行及右括号定位的较长答案。答案应当在可用宽度内自然换行，末尾的右括号应与后续文字保持正常间距，并且不会与答案重叠。]，后续文字。\par
+半角跨行：\fillin*[type=paren,paren-type=banjiao,width=1.35\linewidth][A longer answer checks wrapping and closing parenthesis placement.]，后续文字。\par
+}
+\begin{document}
+\section*{括号填空：导言区配置中文字体}
+本例检查全角、半角括号及显示、隐藏答案时的换行和右括号位置。
+\subsection*{显示答案}
+\fillinsetup{show-answer=true,text-color=black,box-color=black}
+\begin{minipage}{0.78\linewidth}
+\ParenCases
+\end{minipage}
+\subsection*{隐藏答案}
+\fillinsetup{show-answer=false,no-answer-type=none}
+\begin{minipage}{0.78\linewidth}
+\ParenCases
+\end{minipage}
+\end{document}

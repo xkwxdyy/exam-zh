@@ -1688,12 +1688,19 @@
   }
 \box_new:N \g__examzh_banjiao_right_brace_box
 \box_new:N \g__examzh_quanjiao_right_brace_box
-\hbox_gset:Nn \g__examzh_banjiao_right_brace_box { ) }
-\hbox_gset:Nn \g__examzh_quanjiao_right_brace_box { ） }
-\dim_const:Nn \c__examzh_banjiao_right_brace_width_dim  % (
-  { \box_wd:N \g__examzh_banjiao_right_brace_box }
-\dim_const:Nn \c__examzh_quanjiao_right_brace_width_dim  % (
-  { \box_wd:N \g__examzh_quanjiao_right_brace_box }
+% With fontset=none, the document may configure its CJK font in the
+% preamble. Measure only after document font initialization is complete.
+\dim_new:N \c__examzh_banjiao_right_brace_width_dim
+\dim_new:N \c__examzh_quanjiao_right_brace_width_dim
+\AddToHook { begindocument/end }
+  {
+    \hbox_gset:Nn \g__examzh_banjiao_right_brace_box { ) }
+    \hbox_gset:Nn \g__examzh_quanjiao_right_brace_box { ） }
+    \dim_gset:Nn \c__examzh_banjiao_right_brace_width_dim
+      { \box_wd:N \g__examzh_banjiao_right_brace_box }
+    \dim_gset:Nn \c__examzh_quanjiao_right_brace_width_dim
+      { \box_wd:N \g__examzh_quanjiao_right_brace_box }
+  }
 \cs_new:Npn \__examzh_fillin_paren_breakable_F:
   {
     \unskip
